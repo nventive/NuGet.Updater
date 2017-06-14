@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Build">
@@ -26,6 +27,8 @@
 		</PackageReference>
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="Nuget.Updater.targets" />
+		<Content Include="build\Nuget.Updater.targets">
+			<PackagePath>build\$(TargetFramework)</PackagePath>
+		</Content>
 	</ItemGroup>
 </Project>
