@@ -2,6 +2,8 @@
 	<PropertyGroup>
 		<TargetFramework>net46</TargetFramework>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Authors>nventive</Authors>
+		<Description>Nuget Updater allows to automatically update the NuGet packages in a solution at build time</Description>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Build">
