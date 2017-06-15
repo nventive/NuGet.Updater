@@ -11,7 +11,7 @@ using Uno.Extensions;
 
 namespace Nuget.Updater
 {
-	public class NuGetUpdater
+	public class NuGetUpdaterExecution
 	{
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
 

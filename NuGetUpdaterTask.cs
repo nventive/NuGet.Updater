@@ -3,7 +3,7 @@ using Microsoft.Build.Utilities;
 
 namespace Nuget.Updater
 {
-	public class NuGetUpdaterTask : Task
+	public class NuGetUpdater : Task
 	{
 		[Required]
 		public string SpecialVersion { get; set; }
@@ -22,7 +22,7 @@ namespace Nuget.Updater
 
 		public override bool Execute()
 		{
-			return NuGetUpdater.Execute(Log, SolutionRoot, PackageSources, Packages, SpecialVersion, PAT: PAT);
+			return NuGetUpdaterExecution.Execute(Log, SolutionRoot, PackageSources, Packages, SpecialVersion, PAT: PAT);
 		}
 	}
 }
