@@ -6,6 +6,6 @@
 		<NugetUpdaterTasksImported>true</NugetUpdaterTasksImported>
 	</PropertyGroup>
 
-	<UsingTask AssemblyFile="$(NugetUpdaterTasksPath)" TaskName="Nuget.Updater.NuGetUpdaterTask" />
+	<UsingTask AssemblyFile="$(NugetUpdaterTasksPath)" TaskName="Nuget.Updater.NuGetUpdater" />
 
 </Project>
