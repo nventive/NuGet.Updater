@@ -151,25 +151,11 @@ namespace Nuget.Updater
 
 						var nsmgr = new XmlNamespaceManager(doc.NameTable);
 						nsmgr.AddNamespace("d", MsBuildNamespace);
+						modified |= UpdateProjectReferenceVersions(latestVersion, modified, doc, nsmgr);
 
-						foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{latestVersion.Id}']", nsmgr))
-						{
-							if (packageReference.HasAttribute("Version", MsBuildNamespace))
-							{
-								packageReference.SetAttribute("Version", MsBuildNamespace, latestVersion.Version.ToString());
-								modified = true;
-							}
-							else
-							{
-								var node = packageReference.SelectSingleNode("d:Version", nsmgr);
-
-								if (node != null)
-								{
-									node.InnerText = latestVersion.Version.ToString();
-									modified = true;
-								}
-							}
-						}
+						var nsmgr2 = new XmlNamespaceManager(doc.NameTable);
+						nsmgr2.AddNamespace("d", "");
+						modified |= UpdateProjectReferenceVersions(latestVersion, modified, doc, nsmgr2);
 
 						if (modified)
 						{
@@ -178,6 +164,30 @@ namespace Nuget.Updater
 					}
 				}
 			}
+		}
+
+		private static bool UpdateProjectReferenceVersions(IPackage latestVersion, bool modified, XmlDocument doc, XmlNamespaceManager nsmgr)
+		{
+			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{latestVersion.Id}']", nsmgr))
+			{
+				if (packageReference.HasAttribute("Version", MsBuildNamespace))
+				{
+					packageReference.SetAttribute("Version", MsBuildNamespace, latestVersion.Version.ToString());
+					modified = true;
+				}
+				else
+				{
+					var node = packageReference.SelectSingleNode("d:Version", nsmgr);
+
+					if (node != null)
+					{
+						node.InnerText = latestVersion.Version.ToString();
+						modified = true;
+					}
+				}
+			}
+
+			return modified;
 		}
 
 		private static IEnumerable<IPackage> GetPackagesVersion(string[] packageSources, string packageId, string specialVersion, string excludeTag)
