@@ -7,7 +7,6 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Build.Utilities;
 using NuGet;
-using Uno.Extensions;
 
 namespace Nuget.Updater
 {
@@ -17,7 +16,7 @@ namespace Nuget.Updater
 
 		public static bool Execute(TaskLoggingHelper log, string solutionRoot, string[] packageSources, string[] packages, string specialVersion, string excludeTag = "", string PAT = "")
 		{
-			if (excludeTag.IsNullOrWhiteSpace())
+			if (excludeTag == null || excludeTag.Trim() == "")
 			{
 				excludeTag = "clear";
 			}
@@ -221,7 +220,7 @@ namespace Nuget.Updater
 
 		private static bool IsSpecialVersion(string specialVersion, IPackage item)
 		{
-			if (item.Version.SpecialVersion.HasValue())
+			if (item.Version.SpecialVersion != null)
 			{
 				return Regex.IsMatch(item.Version.SpecialVersion, specialVersion, RegexOptions.IgnoreCase);
 			}
