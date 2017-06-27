@@ -4,6 +4,7 @@
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Authors>nventive</Authors>
 		<Description>Nuget Updater allows to automatically update the NuGet packages in a solution at build time</Description>
+		<IncludeBuildOutput>False</IncludeBuildOutput>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Build" Version="15.1.1012" />
@@ -15,14 +16,14 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Content Include="build\Nuget.Updater.targets">
-			<PackagePath>build\$(TargetFramework)</PackagePath>
+			<PackagePath>build</PackagePath>
 		</Content>
 	</ItemGroup>
 	<Target Name="IncludeDependencies" AfterTargets="AfterBuild">
 		<ItemGroup>
 			<Content Include="bin\$(Configuration)\$(TargetFramework)\*.dll">
 				<Pack>true</Pack>
-				<PackagePath>lib\$(TargetFramework)</PackagePath>
+				<PackagePath>tools</PackagePath>
 			</Content>
 		</ItemGroup>
 	</Target>
