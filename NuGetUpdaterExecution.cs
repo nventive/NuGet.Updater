@@ -4,9 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml;
 using Microsoft.Build.Utilities;
 using NuGet;
+using NuGet.Common;
+using NuGet.Configuration;
+using NuGet.Packaging.Core;
+using NuGet.Protocol;
+using NuGet.Protocol.Core.Types;
+using NuGet.Versioning;
 
 namespace Nuget.Updater
 {
@@ -14,23 +21,42 @@ namespace Nuget.Updater
 	{
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
 
-		public static bool Execute(TaskLoggingHelper log, string solutionRoot, string[] packageSources, string[] packages, string specialVersion, string excludeTag = "", string PAT = "")
+		public static bool Execute(TaskLoggingHelper log, string solutionRoot, string specialVersion, string excludeTag = "", string PAT = "")
 		{
 			if (excludeTag == null || excludeTag.Trim() == "")
 			{
 				excludeTag = "clear";
 			}
 
-			NuGet.HttpClient.DefaultCredentialProvider = new LocalNugetProvider("jerome.laban@nventive.com", PAT);
+			var packages = GetPackages(PAT);
 
-			UpdateProjectJson(log, solutionRoot, packageSources, packages, specialVersion, excludeTag);
-			UpdateProject(log, solutionRoot, packageSources, packages, specialVersion, excludeTag);
-			UpdateNuSpecs(log, solutionRoot, packageSources, packages, specialVersion, excludeTag);
+			UpdateProjectJson(log, solutionRoot, packages, specialVersion, excludeTag);
+			UpdateProject(log, solutionRoot, packages, specialVersion, excludeTag);
+			UpdateNuSpecs(log, solutionRoot, packages, specialVersion, excludeTag);
 
 			return true;
 		}
 
-		private static void UpdateNuSpecs(TaskLoggingHelper log, string solutionRoot, string[] packageSources, string[] packages, string specialVersion, string excludeTag)
+		private static IPackageSearchMetadata[] GetPackages(string PAT)
+		{
+			var settings = Settings.LoadDefaultSettings(null);
+			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
+
+			var source = new PackageSource("https://nventive.pkgs.visualstudio.com/_packaging/nventive/nuget/v3/index.json", "nventive")
+			{
+				Credentials = PackageSourceCredential.FromUserInput("nventive", "it@nventive.com", PAT, false)
+			};
+			var repository = repositoryProvider.CreateRepository(source);
+
+			var searchResource = repository.GetResource<PackageSearchResource>();
+
+			return searchResource
+				.SearchAsync("", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), CancellationToken.None)
+				.Result
+				.ToArray();
+		}
+
+		private static void UpdateNuSpecs(TaskLoggingHelper log, string solutionRoot, IPackageSearchMetadata[] packages, string specialVersion, string excludeTag)
 		{
 			var originalNuSpecFiles = Directory.GetFiles(solutionRoot, "*.nuspec", SearchOption.AllDirectories);
 
@@ -38,12 +64,17 @@ namespace Nuget.Updater
 
 			foreach (var package in packages)
 			{
-				var latestVersion = GetPackagesVersion(packageSources, package, specialVersion, excludeTag).FirstOrDefault();
+				var latestVersion = GetLatestVersion(package, specialVersion, excludeTag);
 
-				log?.LogMessage($"Latest version for [{package}] is [{latestVersion}]");
+				if(latestVersion == null)
+				{
+					continue;
+				}
+
+				log?.LogMessage($"Latest version for [{package.Title}] is [{latestVersion.Version}]");
 
 #if DEBUG
-				Console.WriteLine($"Latest version for [{package}] is [{latestVersion}]");
+				Console.WriteLine($"Latest version for [{package.Title}] is [{latestVersion.Version}]");
 #endif
 
 				if (latestVersion != null)
@@ -60,7 +91,7 @@ namespace Nuget.Updater
 						XmlNamespaceManager mgr = new XmlNamespaceManager(doc.NameTable);
 						mgr.AddNamespace("x", doc.DocumentElement.NamespaceURI);
 
-						var nodes = doc.SelectNodes($"//x:dependency[@id='{package}']", mgr).OfType<XmlElement>();
+						var nodes = doc.SelectNodes($"//x:dependency[@id='{package.Title}']", mgr).OfType<XmlElement>();
 
 						if (nodes.Any())
 						{
@@ -81,7 +112,7 @@ namespace Nuget.Updater
 			}
 		}
 
-		private static void UpdateProjectJson(TaskLoggingHelper log, string solutionRoot, string[] packageSources, string[] packages, string specialVersion, string excludeTag)
+		private static void UpdateProjectJson(TaskLoggingHelper log, string solutionRoot, IPackageSearchMetadata[] packages, string specialVersion, string excludeTag)
 		{
 			var originalFiles = Directory.GetFiles(solutionRoot, "project.json", SearchOption.AllDirectories);
 			var originalContent = originalFiles.Select(File.ReadAllText).ToArray();
@@ -91,16 +122,21 @@ namespace Nuget.Updater
 
 			foreach (var package in packages)
 			{
-				var latestVersion = GetPackagesVersion(packageSources, package, specialVersion, excludeTag).FirstOrDefault();
+				var latestVersion = GetLatestVersion(package, specialVersion, excludeTag);
 
-				log?.LogMessage($"Latest version for [{package}] is [{latestVersion}]");
+				if (latestVersion == null)
+				{
+					continue;
+				}
+
+				log?.LogMessage($"Latest version for [{package.Title}] is [{latestVersion.Version}]");
 
 				if (latestVersion != null)
 				{
 					for (int i = 0; i < filesContent.Length; i++)
 					{
-						var originalMatch = $@"\""{latestVersion.Id}\"".*?\:.*?\"".*?\""";
-						var replaced = $@"""{latestVersion.Id}"": ""{latestVersion.Version}""";
+						var originalMatch = $@"\""{package.Title}\"".*?\:.*?\"".*?\""";
+						var replaced = $@"""{package.Title}"": ""{latestVersion.Version}""";
 
 						var newContent = Regex.Replace(
 							filesContent[i],
@@ -124,7 +160,8 @@ namespace Nuget.Updater
 				}
 			}
 		}
-		private static void UpdateProject(TaskLoggingHelper log, string solutionRoot, string[] packageSources, string[] packages, string specialVersion, string excludeTag)
+
+		private static void UpdateProject(TaskLoggingHelper log, string solutionRoot, IPackageSearchMetadata[] packages, string specialVersion, string excludeTag)
 		{
 			var originalFiles = Directory.GetFiles(solutionRoot, "*.csproj", SearchOption.AllDirectories);
 
@@ -132,9 +169,14 @@ namespace Nuget.Updater
 
 			foreach (var package in packages)
 			{
-				var latestVersion = GetPackagesVersion(packageSources, package, specialVersion, excludeTag).FirstOrDefault();
+				var latestVersion = GetLatestVersion(package, specialVersion, excludeTag);
 
-				log?.LogMessage($"Latest version for [{package}] is [{latestVersion}]");
+				if (latestVersion == null)
+				{
+					continue;
+				}
+
+				log?.LogMessage($"Latest version for [{package.Title}] is [{latestVersion.Version}]");
 
 				if (latestVersion != null)
 				{
@@ -150,11 +192,11 @@ namespace Nuget.Updater
 
 						var nsmgr = new XmlNamespaceManager(doc.NameTable);
 						nsmgr.AddNamespace("d", MsBuildNamespace);
-						modified |= UpdateProjectReferenceVersions(latestVersion, modified, doc, nsmgr);
+						modified |= UpdateProjectReferenceVersions(package.Title, latestVersion.Version, modified, doc, nsmgr);
 
 						var nsmgr2 = new XmlNamespaceManager(doc.NameTable);
 						nsmgr2.AddNamespace("d", "");
-						modified |= UpdateProjectReferenceVersions(latestVersion, modified, doc, nsmgr2);
+						modified |= UpdateProjectReferenceVersions(package.Title, latestVersion.Version, modified, doc, nsmgr2);
 
 						if (modified)
 						{
@@ -165,13 +207,13 @@ namespace Nuget.Updater
 			}
 		}
 
-		private static bool UpdateProjectReferenceVersions(IPackage latestVersion, bool modified, XmlDocument doc, XmlNamespaceManager nsmgr)
+		private static bool UpdateProjectReferenceVersions(string packageName, NuGetVersion version, bool modified, XmlDocument doc, XmlNamespaceManager nsmgr)
 		{
-			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{latestVersion.Id}']", nsmgr))
+			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{packageName}']", nsmgr))
 			{
 				if (packageReference.HasAttribute("Version", MsBuildNamespace))
 				{
-					packageReference.SetAttribute("Version", MsBuildNamespace, latestVersion.Version.ToString());
+					packageReference.SetAttribute("Version", MsBuildNamespace, version.ToString());
 					modified = true;
 				}
 				else
@@ -180,7 +222,7 @@ namespace Nuget.Updater
 
 					if (node != null)
 					{
-						node.InnerText = latestVersion.Version.ToString();
+						node.InnerText = version.ToString();
 						modified = true;
 					}
 				}
@@ -189,43 +231,29 @@ namespace Nuget.Updater
 			return modified;
 		}
 
-		private static IEnumerable<IPackage> GetPackagesVersion(string[] packageSources, string packageId, string specialVersion, string excludeTag)
+		private static VersionInfo GetLatestVersion(IPackageSearchMetadata package, string specialVersion, string excludeTag)
 		{
-			foreach (var source in packageSources)
-			{
-				var repo = PackageRepositoryFactory.Default.CreateRepository("https://nventive.pkgs.visualstudio.com/_packaging/nventive/nuget/v2");
+			var versions = package.GetVersionsAsync().Result;
 
-				var packages = repo.FindPackagesById(packageId);
-
-				packages = packages
-					.Where(item => IsSpecialVersion(specialVersion, item) && !ContainsTag(excludeTag, item))
-					.OrderByDescending(item => item.Version);
-
-				foreach (IPackage p in packages)
-				{
-					yield return p;
-				}
-			}
+			return versions
+				.Where(v => IsSpecialVersion(specialVersion, v) && !ContainsTag(excludeTag, v))
+				.OrderByDescending(v => v.Version.Version)
+				.FirstOrDefault();
 		}
 
-		private static bool ContainsTag(string tag, IPackage item)
+		private static bool ContainsTag(string tag, VersionInfo version)
 		{
 			if (tag.Equals(""))
 			{
 				return true;
 			}
 
-			return item.Version.SpecialVersion?.Contains(tag) ?? false;
+			return version.Version?.ReleaseLabels?.Contains(tag) ?? false;
 		}
 
-		private static bool IsSpecialVersion(string specialVersion, IPackage item)
+		private static bool IsSpecialVersion(string specialVersion, VersionInfo version)
 		{
-			if (item.Version.SpecialVersion != null)
-			{
-				return Regex.IsMatch(item.Version.SpecialVersion, specialVersion, RegexOptions.IgnoreCase);
-			}
-
-			return false;
+			return version.Version?.ReleaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
 		}
 	}
 }

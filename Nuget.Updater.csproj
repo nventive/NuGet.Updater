@@ -10,9 +10,7 @@
 		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="NuGet.Core" Version="2.14.0">
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
+		<PackageReference Include="NuGet.PackageManagement" Version="4.3.0-preview3-4168" />
 	</ItemGroup>
 	<ItemGroup>
 		<Content Include="build\Nuget.Updater.targets">

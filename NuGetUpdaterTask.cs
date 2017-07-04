@@ -9,20 +9,14 @@ namespace Nuget.Updater
 		public string SpecialVersion { get; set; }
 
 		[Required]
-		public string[] Packages { get; set; }
-
-		[Required]
 		public string SolutionRoot { get; set; }
-
-		[Required]
-		public string[] PackageSources { get; set; }
 
 		[Required]
 		public string PAT { get; set; }
 
 		public override bool Execute()
 		{
-			return NuGetUpdaterExecution.Execute(Log, SolutionRoot, PackageSources, Packages, SpecialVersion, PAT: PAT);
+			return NuGetUpdaterExecution.Execute(Log, SolutionRoot, SpecialVersion, PAT: PAT);
 		}
 	}
 }
