@@ -192,7 +192,7 @@ namespace Nuget.Updater
 
 						var nsmgr = new XmlNamespaceManager(doc.NameTable);
 						nsmgr.AddNamespace("d", MsBuildNamespace);
-						modified |= UpdateProjectReferenceVersions(package.Title, latestVersion.Version, modified, doc, nsmgr);
+						modified |= UpdateProjectReferenceVersions(package.Title, latestVersion.Version, modified, doc, nsmgr, MsBuildNamespace);
 
 						var nsmgr2 = new XmlNamespaceManager(doc.NameTable);
 						nsmgr2.AddNamespace("d", "");
@@ -208,13 +208,13 @@ namespace Nuget.Updater
 			}
 		}
 
-		private static bool UpdateProjectReferenceVersions(string packageName, NuGetVersion version, bool modified, XmlDocument doc, XmlNamespaceManager nsmgr)
+		private static bool UpdateProjectReferenceVersions(string packageName, NuGetVersion version, bool modified, XmlDocument doc, XmlNamespaceManager nsmgr, string namespaceURI = "")
 		{
 			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{packageName}']", nsmgr))
 			{
-				if (packageReference.HasAttribute("Version", MsBuildNamespace))
+				if (packageReference.HasAttribute("Version", namespaceURI))
 				{
-					packageReference.SetAttribute("Version", MsBuildNamespace, version.ToString());
+					packageReference.SetAttribute("Version", namespaceURI, version.ToString());
 					modified = true;
 				}
 				else
