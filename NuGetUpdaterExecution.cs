@@ -200,6 +200,7 @@ namespace Nuget.Updater
 
 						if (modified)
 						{
+							log?.LogMessage($"Updating [{originalFiles[i]}] with [{specialVersion}] releases");
 							doc.Save(originalFiles[i]);
 						}
 					}
