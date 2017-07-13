@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -7,10 +6,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml;
 using Microsoft.Build.Utilities;
-using NuGet;
 using NuGet.Common;
 using NuGet.Configuration;
-using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
@@ -21,8 +18,12 @@ namespace Nuget.Updater
 	{
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
 
+		private static TaskLoggingHelper _log;
+
 		public static bool Execute(TaskLoggingHelper log, string solutionRoot, string specialVersion, string excludeTag = "", string PAT = "")
 		{
+			_log = log;
+
 			if (excludeTag == null || excludeTag.Trim() == "")
 			{
 				excludeTag = "clear";
@@ -30,9 +31,7 @@ namespace Nuget.Updater
 
 			var packages = GetPackages(PAT);
 
-			UpdateProjectJson(log, solutionRoot, packages, specialVersion, excludeTag);
-			UpdateProject(log, solutionRoot, packages, specialVersion, excludeTag);
-			UpdateNuSpecs(log, solutionRoot, packages, specialVersion, excludeTag);
+			UpdatePackages(solutionRoot, packages, specialVersion, excludeTag);
 
 			return true;
 		}
@@ -50,160 +49,153 @@ namespace Nuget.Updater
 
 			var searchResource = repository.GetResource<PackageSearchResource>();
 
+
+			_log?.LogMessage($"Pulling NuGet packages from {source.SourceUri}");
+#if DEBUG
+			Console.WriteLine($"Pulling NuGet packages from {source.SourceUri}");
+#endif
+
 			return searchResource
 				.SearchAsync("", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), CancellationToken.None)
 				.Result
 				.ToArray();
 		}
 
-		private static void UpdateNuSpecs(TaskLoggingHelper log, string solutionRoot, IPackageSearchMetadata[] packages, string specialVersion, string excludeTag)
+		private static void UpdatePackages(string solutionRoot, IPackageSearchMetadata[] packages, string specialVersion, string excludeTag)
 		{
 			var originalNuSpecFiles = Directory.GetFiles(solutionRoot, "*.nuspec", SearchOption.AllDirectories);
 
-			log?.LogMessage($"Updating nuspec files...");
+			var originalJsonFiles = Directory.GetFiles(solutionRoot, "project.json", SearchOption.AllDirectories);
+
+			var originalProjectFiles = Directory.GetFiles(solutionRoot, "*.csproj", SearchOption.AllDirectories);
 
 			foreach (var package in packages)
 			{
 				var latestVersion = GetLatestVersion(package, specialVersion, excludeTag);
 
-				if(latestVersion == null)
+				if (latestVersion == null)
 				{
 					continue;
 				}
 
-				log?.LogMessage($"Latest version for [{package.Title}] is [{latestVersion.Version}]");
-
+				_log?.LogMessage($"Latest {specialVersion} version for [{package.Title}] is [{latestVersion}]");
 #if DEBUG
-				Console.WriteLine($"Latest version for [{package.Title}] is [{latestVersion.Version}]");
+				Console.WriteLine($"Latest {specialVersion} version for [{package.Title}] is [{latestVersion}]");
 #endif
 
-				if (latestVersion != null)
+				UpdateNuSpecs(package.Title, latestVersion, originalNuSpecFiles);
+
+				UpdateProjectJson(package.Title, latestVersion, originalJsonFiles);
+
+				UpdateProjects(package.Title, latestVersion, originalProjectFiles);
+			}
+		}
+
+		private static void UpdateNuSpecs(string packageName, NuGetVersion latestVersion, string[] nuspecFiles)
+		{
+			foreach (var nuspecFile in nuspecFiles)
+			{
+				var doc = new XmlDocument()
 				{
-					foreach (var nuspecFile in originalNuSpecFiles)
+					PreserveWhitespace = true
+				};
+				doc.Load(nuspecFile);
+
+
+				var mgr = new XmlNamespaceManager(doc.NameTable);
+				mgr.AddNamespace("x", doc.DocumentElement.NamespaceURI);
+
+				var nodes = doc
+					.SelectNodes($"//x:dependency[@id='{packageName}']", mgr)
+					.OfType<XmlElement>();
+
+				foreach (var node in nodes)
+				{
+					var versionNodeValue = node.GetAttribute("version");
+
+					// only nodes with explicit version, skip expansion.
+					if (!versionNodeValue.Contains("{"))
 					{
-						var doc = new XmlDocument()
+						var currentVersion = new NuGetVersion(versionNodeValue);
+
+						if (currentVersion < latestVersion)
 						{
-							PreserveWhitespace = true
-						};
-						doc.Load(nuspecFile);
-
-
-						XmlNamespaceManager mgr = new XmlNamespaceManager(doc.NameTable);
-						mgr.AddNamespace("x", doc.DocumentElement.NamespaceURI);
-
-						var nodes = doc.SelectNodes($"//x:dependency[@id='{package.Title}']", mgr).OfType<XmlElement>();
-
-						if (nodes.Any())
+							node.SetAttribute("version", latestVersion.ToString());
+							LogUpdate(packageName, currentVersion, latestVersion, nuspecFile);
+						}
+						else
 						{
-							foreach (var node in nodes)
-							{
-								if (!node.GetAttribute("version").Contains("{"))
-								{
-									// only nodes with explicit version, skip expansion.
-									node.SetAttribute("version", latestVersion.Version.ToString());
-								}
-							}
-
-							doc.Save(nuspecFile);
+							LogNoUpdate(packageName, currentVersion, nuspecFile);
 						}
 					}
-					
+				}
+
+				if (nodes.Any())
+				{
+					doc.Save(nuspecFile);
 				}
 			}
 		}
 
-		private static void UpdateProjectJson(TaskLoggingHelper log, string solutionRoot, IPackageSearchMetadata[] packages, string specialVersion, string excludeTag)
+		private static void UpdateProjectJson(string packageName, NuGetVersion latestVersion, string[] jsonFiles)
 		{
-			var originalFiles = Directory.GetFiles(solutionRoot, "project.json", SearchOption.AllDirectories);
-			var originalContent = originalFiles.Select(File.ReadAllText).ToArray();
-			var filesContent = originalContent.ToArray();
+			var originalMatch = $@"\""{packageName}\"".*?:.?\""(.*)\""";
+			var replaced = $@"""{packageName}"": ""{latestVersion}""";
 
-			log?.LogMessage($"Updating project.json files...");
-
-			foreach (var package in packages)
+			for (int i = 0; i < jsonFiles.Length; i++)
 			{
-				var latestVersion = GetLatestVersion(package, specialVersion, excludeTag);
+				var file = jsonFiles[i];
+				var fileContent = File.ReadAllText(file);
 
-				if (latestVersion == null)
+				var match = Regex.Match(fileContent, originalMatch, RegexOptions.IgnoreCase);
+				if (match?.Success ?? false)
 				{
-					continue;
-				}
+					var currentVersion = new NuGetVersion(match.Groups[1].Value);
 
-				log?.LogMessage($"Latest version for [{package.Title}] is [{latestVersion.Version}]");
-
-				if (latestVersion != null)
-				{
-					for (int i = 0; i < filesContent.Length; i++)
+					if (currentVersion < latestVersion)
 					{
-						var originalMatch = $@"\""{package.Title}\"".*?\:.*?\"".*?\""";
-						var replaced = $@"""{package.Title}"": ""{latestVersion.Version}""";
-
 						var newContent = Regex.Replace(
-							filesContent[i],
+							fileContent,
 							originalMatch,
-							replaced
-							, RegexOptions.IgnoreCase
+							replaced,
+							RegexOptions.IgnoreCase
 						);
 
-						filesContent[i] = newContent;
+						File.WriteAllText(file, newContent, Encoding.UTF8);
+
+						LogUpdate(packageName, currentVersion, latestVersion, file);
 					}
-				}
-			}
-
-			for (int i = 0; i < originalFiles.Length; i++)
-			{
-				if (!filesContent[i].Equals(originalContent[i]))
-				{
-					log?.LogMessage($"Updating [{originalFiles[i]}] with [{specialVersion}] releases");
-
-					File.WriteAllText(originalFiles[i], filesContent[i], Encoding.UTF8);
+					else
+					{
+						LogNoUpdate(packageName, currentVersion, file);
+					}
 				}
 			}
 		}
 
-		private static void UpdateProject(TaskLoggingHelper log, string solutionRoot, IPackageSearchMetadata[] packages, string specialVersion, string excludeTag)
+		private static void UpdateProjects(string packageName, NuGetVersion latestVersion, string[] projectFiles)
 		{
-			var originalFiles = Directory.GetFiles(solutionRoot, "*.csproj", SearchOption.AllDirectories);
-
-			log?.LogMessage($"Updating PackageReference nodes...");
-
-			foreach (var package in packages)
+			for (int i = 0; i < projectFiles.Length; i++)
 			{
-				var latestVersion = GetLatestVersion(package, specialVersion, excludeTag);
+				var modified = false;
 
-				if (latestVersion == null)
+				var doc = new XmlDocument()
 				{
-					continue;
-				}
+					PreserveWhitespace = true
+				};
+				doc.Load(projectFiles[i]);
 
-				log?.LogMessage($"Latest version for [{package.Title}] is [{latestVersion.Version}]");
+				var nsmgr = new XmlNamespaceManager(doc.NameTable);
+				nsmgr.AddNamespace("d", MsBuildNamespace);
+				modified |= UpdateProjectReferenceVersions(packageName, latestVersion, modified, doc, nsmgr);
 
-				if (latestVersion != null)
+				var nsmgr2 = new XmlNamespaceManager(doc.NameTable);
+				nsmgr2.AddNamespace("d", "");
+				modified |= UpdateProjectReferenceVersions(packageName, latestVersion, modified, doc, nsmgr2);
+
+				if (modified)
 				{
-					for (int i = 0; i < originalFiles.Length; i++)
-					{
-						var modified = false;
-
-						var doc = new XmlDocument()
-						{
-							PreserveWhitespace = true
-						};
-						doc.Load(originalFiles[i]);
-
-						var nsmgr = new XmlNamespaceManager(doc.NameTable);
-						nsmgr.AddNamespace("d", MsBuildNamespace);
-						modified |= UpdateProjectReferenceVersions(package.Title, latestVersion.Version, modified, doc, nsmgr, MsBuildNamespace);
-
-						var nsmgr2 = new XmlNamespaceManager(doc.NameTable);
-						nsmgr2.AddNamespace("d", "");
-						modified |= UpdateProjectReferenceVersions(package.Title, latestVersion.Version, modified, doc, nsmgr2);
-
-						if (modified)
-						{
-							log?.LogMessage($"Updating [{originalFiles[i]}] with [{specialVersion}] releases");
-							doc.Save(originalFiles[i]);
-						}
-					}
+					doc.Save(projectFiles[i]);
 				}
 			}
 		}
@@ -214,8 +206,18 @@ namespace Nuget.Updater
 			{
 				if (packageReference.HasAttribute("Version", namespaceURI))
 				{
-					packageReference.SetAttribute("Version", namespaceURI, version.ToString());
-					modified = true;
+					var currentVersion = new NuGetVersion(packageReference.Attributes["Version"].Value);
+
+					if (currentVersion < version)
+					{
+						packageReference.SetAttribute("Version", namespaceURI, version.ToString());
+						modified = true;
+						LogUpdate(packageName, currentVersion, version, doc.BaseURI);
+					}
+					else
+					{
+						LogNoUpdate(packageName, currentVersion, doc.BaseURI);
+					}
 				}
 				else
 				{
@@ -223,8 +225,18 @@ namespace Nuget.Updater
 
 					if (node != null)
 					{
-						node.InnerText = version.ToString();
-						modified = true;
+						var currentVersion = new NuGetVersion(node.InnerText);
+
+						if (currentVersion < version)
+						{
+							node.InnerText = version.ToString();
+							modified = true;
+							LogUpdate(packageName, currentVersion, version, doc.BaseURI);
+						}
+						else
+						{
+							LogNoUpdate(packageName, currentVersion, doc.BaseURI);
+						}
 					}
 				}
 			}
@@ -232,14 +244,15 @@ namespace Nuget.Updater
 			return modified;
 		}
 
-		private static VersionInfo GetLatestVersion(IPackageSearchMetadata package, string specialVersion, string excludeTag)
+		private static NuGetVersion GetLatestVersion(IPackageSearchMetadata package, string specialVersion, string excludeTag)
 		{
-			var versions = package.GetVersionsAsync().Result;
+			var versions = package.GetVersionsAsync().Result.OrderByDescending(v => v.Version);
 
 			return versions
 				.Where(v => IsSpecialVersion(specialVersion, v) && !ContainsTag(excludeTag, v))
-				.OrderByDescending(v => v.Version.Version)
-				.FirstOrDefault();
+				.OrderByDescending(v => v.Version)
+				.FirstOrDefault()
+				?.Version;
 		}
 
 		private static bool ContainsTag(string tag, VersionInfo version)
@@ -255,6 +268,22 @@ namespace Nuget.Updater
 		private static bool IsSpecialVersion(string specialVersion, VersionInfo version)
 		{
 			return version.Version?.ReleaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
+		}
+
+		private static void LogUpdate(string packageName, NuGetVersion currentVersion, NuGetVersion newVersion, string file)
+		{
+			_log?.LogMessage($"Updating [{packageName}] from [{currentVersion}] to [{newVersion}] in [{file}]");
+#if DEBUG
+			Console.WriteLine($"Updating [{packageName}] from [{currentVersion}] to [{newVersion}] in [{file}]");
+#endif
+		}
+
+		private static void LogNoUpdate(string packageName, NuGetVersion currentVersion, string file)
+		{
+			_log?.LogMessage($"Found higher version of [{packageName}] ([{currentVersion}]) in [{file}]");
+#if DEBUG
+			Console.WriteLine($"Found higher version of [{packageName}] ([{currentVersion}]) in [{file}]");
+#endif
 		}
 	}
 }
