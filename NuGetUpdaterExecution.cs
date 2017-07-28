@@ -257,7 +257,7 @@ namespace Nuget.Updater
 				return false;
 			}
 
-			return version.Version?.ReleaseLabels?.Contains(tag) ?? false;
+			return version?.Version?.ReleaseLabels?.Contains(tag) ?? false;
 		}
 
 		private static bool IsSpecialVersion(string specialVersion, VersionInfo version)
