@@ -8,6 +8,8 @@ namespace Nuget.Updater
 		[Required]
 		public string SpecialVersion { get; set; }
 
+		public string ExcludeTag { get; set; }
+
 		[Required]
 		public string SolutionRoot { get; set; }
 
@@ -16,7 +18,7 @@ namespace Nuget.Updater
 
 		public override bool Execute()
 		{
-			return NuGetUpdaterExecution.Execute(Log, SolutionRoot, SpecialVersion, PAT: PAT);
+			return NuGetUpdaterExecution.Execute(Log, SolutionRoot, SpecialVersion, ExcludeTag, PAT: PAT);
 		}
 	}
 }

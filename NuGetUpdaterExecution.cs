@@ -24,11 +24,6 @@ namespace Nuget.Updater
 		{
 			_log = log;
 
-			if (excludeTag == null || excludeTag.Trim() == "")
-			{
-				excludeTag = "clear";
-			}
-
 			var packages = GetPackages(PAT);
 
 			UpdatePackages(solutionRoot, packages, specialVersion, excludeTag);
