@@ -252,9 +252,9 @@ namespace Nuget.Updater
 
 		private static bool ContainsTag(string tag, VersionInfo version)
 		{
-			if (tag.Equals(""))
+			if (tag?.Equals("") ?? true)
 			{
-				return true;
+				return false;
 			}
 
 			return version.Version?.ReleaseLabels?.Contains(tag) ?? false;
