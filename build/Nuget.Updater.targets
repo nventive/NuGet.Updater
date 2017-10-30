@@ -7,5 +7,6 @@
 	</PropertyGroup>
 
 	<UsingTask AssemblyFile="$(NugetUpdaterTasksPath)" TaskName="Nuget.Updater.NuGetUpdater" />
+	<UsingTask AssemblyFile="$(NugetUpdaterTasksPath)" TaskName="Nuget.Updater.NuGetBranchSwitch" />
 
 </Project>
