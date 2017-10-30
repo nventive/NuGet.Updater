@@ -7,7 +7,7 @@ using NuGet.Versioning;
 
 namespace Nuget.Updater
 {
-	public class NuGetBranchSwitchExection
+	public class NuGetBranchSwitchExecution
 	{
 		private static TaskLoggingHelper _log;
 
@@ -19,7 +19,7 @@ namespace Nuget.Updater
 		private readonly string _targetBranch;
 		private readonly string _solutionRoot;
 
-		public NuGetBranchSwitchExection(TaskLoggingHelper log, string solutionRoot, string[] packages, string sourceBranch, string targetBranch)
+		public NuGetBranchSwitchExecution(TaskLoggingHelper log, string solutionRoot, string[] packages, string sourceBranch, string targetBranch)
 		{
 			_packages = packages;
 			_sourceBranch = sourceBranch;
@@ -30,10 +30,16 @@ namespace Nuget.Updater
 		public bool Execute()
 		{
 			var projectFiles = Directory.GetFiles(_solutionRoot, "*.csproj", SearchOption.AllDirectories);
+			var nuspecFiles = Directory.GetFiles(_solutionRoot, "*.nuspec", SearchOption.AllDirectories);
 
-			foreach(var package in _packages)
+			foreach (var package in _packages)
 			{
 				UpdateProjects(package, projectFiles);
+			}
+
+			foreach (var package in _packages)
+			{
+				UpdateNuSpecs(package, nuspecFiles);
 			}
 
 			return true;
@@ -120,6 +126,62 @@ namespace Nuget.Updater
 			}
 
 			return modified;
+		}
+
+		private void UpdateNuSpecs(string packageName, string[] nuspecFiles)
+		{
+			foreach (var nuspecFile in nuspecFiles)
+			{
+				var doc = new XmlDocument()
+				{
+					PreserveWhitespace = true
+				};
+				doc.Load(nuspecFile);
+
+
+				var mgr = new XmlNamespaceManager(doc.NameTable);
+				mgr.AddNamespace("x", doc.DocumentElement.NamespaceURI);
+
+				var nodes = doc
+					.SelectNodes($"//x:dependency[@id='{packageName}']", mgr)
+					.OfType<XmlElement>();
+
+				foreach (var node in nodes)
+				{
+					var versionNodeValue = node.GetAttribute("version");
+
+					// only nodes with explicit version, skip expansion.
+					if (!versionNodeValue.Contains("{"))
+					{
+						var currentVersion = new NuGetVersion(versionNodeValue);
+
+						var hasUpdateableLabel = currentVersion.ReleaseLabels?.Any(l => l.Equals(_sourceBranch, StringComparison.OrdinalIgnoreCase));
+
+						if (hasUpdateableLabel ?? false)
+						{
+							var updatedLabels = currentVersion.ReleaseLabels.Select(l => l.Replace(_sourceBranch, _targetBranch)).ToArray();
+
+							var newVersion = new NuGetVersion(
+								major: currentVersion.Major,
+								minor: currentVersion.Minor,
+								patch: currentVersion.Patch,
+								revision: currentVersion.Revision,
+								releaseLabels: updatedLabels,
+								metadata: currentVersion.Metadata
+							);
+
+							node.SetAttribute("version", newVersion.ToFullString());
+
+							LogUpdate(packageName, currentVersion, newVersion, doc.BaseURI);
+						}
+					}
+				}
+
+				if (nodes.Any())
+				{
+					doc.Save(nuspecFile);
+				}
+			}
 		}
 
 		private static void LogUpdate(string packageName, NuGetVersion currentVersion, NuGetVersion newVersion, string file)

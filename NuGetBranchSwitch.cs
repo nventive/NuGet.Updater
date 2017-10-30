@@ -21,6 +21,6 @@ namespace Nuget.Updater
 		[Required]
 		public string TargetBranch { get; set; }
 
-		public override bool Execute() => new NuGetBranchSwitchExection(Log, SolutionRoot, Packages, SourceBranch, TargetBranch).Execute();
+		public override bool Execute() => new NuGetBranchSwitchExecution(Log, SolutionRoot, Packages, SourceBranch, TargetBranch).Execute();
 	}
 }
