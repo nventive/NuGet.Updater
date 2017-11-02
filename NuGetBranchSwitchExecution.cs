@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml;
 using Microsoft.Build.Utilities;
 using NuGet.Versioning;
@@ -74,7 +75,11 @@ namespace Nuget.Updater
 
 		private bool UpdateProjectReferenceVersions(string packageName, bool modified, XmlDocument doc, XmlNamespaceManager nsmgr, string namespaceURI = "")
 		{
-			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{packageName}']", nsmgr))
+			var nodes = doc.SelectNodes($"//d:PackageReference", nsmgr)
+				.OfType<XmlElement>()
+				.Where(e => Regex.Match(e.GetAttribute("Include"), $"^{packageName}$").Success);
+
+			foreach (var packageReference in nodes)
 			{
 				(string version, Action<string> updater) GetVersion()
 				{
@@ -119,7 +124,7 @@ namespace Nuget.Updater
 
 					updater(newVersion.ToFullString());
 
-					LogUpdate(packageName, currentVersion, newVersion, doc.BaseURI);
+					LogUpdate(packageReference.GetAttribute("Include"), currentVersion, newVersion, doc.BaseURI);
 
 					modified = true;
 				}
@@ -143,8 +148,9 @@ namespace Nuget.Updater
 				mgr.AddNamespace("x", doc.DocumentElement.NamespaceURI);
 
 				var nodes = doc
-					.SelectNodes($"//x:dependency[@id='{packageName}']", mgr)
-					.OfType<XmlElement>();
+					.SelectNodes($"//x:dependency", mgr)
+					.OfType<XmlElement>()
+					.Where(e => Regex.Match(e.GetAttribute("id"), $"^{packageName}$").Success);
 
 				foreach (var node in nodes)
 				{
@@ -172,7 +178,7 @@ namespace Nuget.Updater
 
 							node.SetAttribute("version", newVersion.ToFullString());
 
-							LogUpdate(packageName, currentVersion, newVersion, doc.BaseURI);
+							LogUpdate(node.GetAttribute("id"), currentVersion, newVersion, doc.BaseURI);
 						}
 					}
 				}
