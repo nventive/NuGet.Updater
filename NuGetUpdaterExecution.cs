@@ -244,7 +244,7 @@ namespace Nuget.Updater
 			var versions = package.GetVersionsAsync().Result.OrderByDescending(v => v.Version);
 
 			return versions
-				.Where(v => IsSpecialVersion(specialVersion, v) && !ContainsTag(excludeTag, v))
+				.Where(v => IsMatchingSpecialVersion(specialVersion, v) && !ContainsTag(excludeTag, v))
 				.OrderByDescending(v => v.Version)
 				.FirstOrDefault()
 				?.Version;
@@ -260,10 +260,17 @@ namespace Nuget.Updater
 			return version?.Version?.ReleaseLabels?.Contains(tag) ?? false;
 		}
 
-		private static bool IsSpecialVersion(string specialVersion, VersionInfo version)
+		private static bool IsMatchingSpecialVersion(string specialVersion, VersionInfo version)
 		{
-			return version.Version?.ReleaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
-		}
+            if(string.IsNullOrEmpty(specialVersion))
+            {
+                return !version.Version?.ReleaseLabels?.Any() ?? true;
+            }
+            else
+            {
+                return version.Version?.ReleaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
+            }
+        }
 
 		private static void LogUpdate(string packageName, NuGetVersion currentVersion, NuGetVersion newVersion, string file)
 		{
