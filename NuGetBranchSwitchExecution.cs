@@ -23,9 +23,9 @@ namespace Nuget.Updater
 		public NuGetBranchSwitchExecution(TaskLoggingHelper log, string solutionRoot, string[] packages, string sourceBranch, string targetBranch)
 		{
 			_packages = packages;
-			_sourceBranch = sourceBranch;
-			_targetBranch = targetBranch;
-			_solutionRoot = solutionRoot;
+			_sourceBranch = sourceBranch?.Trim() ?? "";
+			_targetBranch = targetBranch?.Trim() ?? "";
+            _solutionRoot = solutionRoot;
 		}
 
 		public bool Execute()
@@ -80,60 +80,81 @@ namespace Nuget.Updater
 				.Where(e => Regex.Match(e.GetAttribute("Include"), $"^{packageName}$").Success);
 
 			foreach (var packageReference in nodes)
-			{
-				(string version, Action<string> updater) GetVersion()
-				{
-					if (packageReference.HasAttribute("Version", namespaceURI))
-					{
-						return (
-							packageReference.Attributes["Version"].Value,
-							v => packageReference.SetAttribute("Version", namespaceURI, v)
-						);
-					}
-					else if(packageReference.SelectSingleNode("d:Version", nsmgr) is XmlNode node)
-					{
-						return (
-							node.InnerText,
-							v => node.InnerText = v
-						);
-					}
-					else
-					{
-						return (null, null);
-					}
-				}
+            {
+                (string version, Action<string> updater) GetVersion()
+                {
+                    if (packageReference.HasAttribute("Version", namespaceURI))
+                    {
+                        return (
+                            packageReference.Attributes["Version"].Value,
+                            v => packageReference.SetAttribute("Version", namespaceURI, v)
+                        );
+                    }
+                    else if (packageReference.SelectSingleNode("d:Version", nsmgr) is XmlNode node)
+                    {
+                        return (
+                            node.InnerText,
+                            v => node.InnerText = v
+                        );
+                    }
+                    else
+                    {
+                        return (null, null);
+                    }
+                }
 
-				var (version, updater) = GetVersion();
+                var (version, updater) = GetVersion();
 
-				var currentVersion = new NuGetVersion(version);
+                var currentVersion = new NuGetVersion(version);
 
-				var hasUpdateableLabel = currentVersion.ReleaseLabels?.Any(l => l.Equals(_sourceBranch, StringComparison.OrdinalIgnoreCase));
+                var hasUpdateableLabel = GetHasUpdateableLabel(currentVersion);
 
-				if (hasUpdateableLabel ?? false)
-				{
-					var updatedLabels = currentVersion.ReleaseLabels.Select(l => l.Replace(_sourceBranch, _targetBranch)).ToArray();
+                if (hasUpdateableLabel ?? false)
+                {
+                    var newVersion = UpdateVersion(currentVersion);
 
-					var newVersion = new NuGetVersion(
-						major: currentVersion.Major, 
-						minor: currentVersion.Minor,
-						patch: currentVersion.Patch, 
-						revision: currentVersion.Revision, 
-						releaseLabels: updatedLabels, 
-						metadata: currentVersion.Metadata
-					);
+                    updater(newVersion.ToFullString());
 
-					updater(newVersion.ToFullString());
+                    LogUpdate(packageReference.GetAttribute("Include"), currentVersion, newVersion, doc.BaseURI);
 
-					LogUpdate(packageReference.GetAttribute("Include"), currentVersion, newVersion, doc.BaseURI);
+                    modified = true;
+                }
+            }
 
-					modified = true;
-				}
-			}
-
-			return modified;
+            return modified;
 		}
 
-		private void UpdateNuSpecs(string packageName, string[] nuspecFiles)
+        private bool? GetHasUpdateableLabel(NuGetVersion currentVersion)
+        {
+            if (currentVersion.ReleaseLabels?.Any() ?? false)
+            {
+                return currentVersion.ReleaseLabels?.Any(l => l.Equals(_sourceBranch, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                return string.IsNullOrEmpty(_sourceBranch);
+            }
+        }
+
+        private NuGetVersion UpdateVersion(NuGetVersion currentVersion)
+        {
+            var updatedLabels = string.IsNullOrEmpty(_sourceBranch)
+                ? new[] { _targetBranch }
+                : currentVersion.ReleaseLabels.Select(l => l.Replace(_sourceBranch, _targetBranch)).ToArray();
+
+            var newVersion = new NuGetVersion(
+                major: currentVersion.Major,
+                minor: currentVersion.Minor,
+                patch: currentVersion.Patch,
+                revision: currentVersion.Revision,
+                releaseLabels: updatedLabels,
+                metadata: currentVersion.Metadata
+            );
+
+            return newVersion;
+        }
+
+        private void UpdateNuSpecs(string packageName, string[] nuspecFiles)
 		{
 			foreach (var nuspecFile in nuspecFiles)
 			{
@@ -165,16 +186,7 @@ namespace Nuget.Updater
 
 						if (hasUpdateableLabel ?? false)
 						{
-							var updatedLabels = currentVersion.ReleaseLabels.Select(l => l.Replace(_sourceBranch, _targetBranch)).ToArray();
-
-							var newVersion = new NuGetVersion(
-								major: currentVersion.Major,
-								minor: currentVersion.Minor,
-								patch: currentVersion.Patch,
-								revision: currentVersion.Revision,
-								releaseLabels: updatedLabels,
-								metadata: currentVersion.Metadata
-							);
+							var newVersion = UpdateVersion(currentVersion);
 
 							node.SetAttribute("version", newVersion.ToFullString());
 
