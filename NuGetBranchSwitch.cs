@@ -15,7 +15,6 @@ namespace Nuget.Updater
 		[Required]
 		public string[] Packages { get; set; }
 
-		[Required]
 		public string SourceBranch { get; set; }
 
 		[Required]
