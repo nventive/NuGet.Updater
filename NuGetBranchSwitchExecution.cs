@@ -182,7 +182,7 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(versionNodeValue);
 
-						var hasUpdateableLabel = currentVersion.ReleaseLabels?.Any(l => l.Equals(_sourceBranch, StringComparison.OrdinalIgnoreCase));
+						var hasUpdateableLabel = GetHasUpdateableLabel(currentVersion);
 
 						if (hasUpdateableLabel ?? false)
 						{
