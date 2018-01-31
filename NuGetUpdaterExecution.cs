@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -31,7 +32,41 @@ namespace Nuget.Updater
 			return true;
 		}
 
-		private static IPackageSearchMetadata[] GetPackages(string PAT)
+		private static (string, IPackageSearchMetadata[])[] GetPackages(string PAT)
+		{
+			var q = from package in GetVSTSPackages(PAT)
+						   .Concat(GetNuGetOrgPackages())
+					group package by package.Identity.Id into p
+					select (
+						Name: p.Key,
+						Sources: p.ToArray()
+					);
+
+			return q.ToArray();
+		}
+
+		private static IEnumerable<IPackageSearchMetadata> GetNuGetOrgPackages()
+		{
+			var settings = Settings.LoadDefaultSettings(null);
+			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
+
+			var source = new PackageSource("https://api.nuget.org/v3/index.json");
+			var repository = repositoryProvider.CreateRepository(source);
+
+			_log?.LogMessage($"Pulling NuGet packages from {source.SourceUri}");
+#if DEBUG
+			Console.WriteLine($"Pulling NuGet packages from {source.SourceUri}");
+#endif
+
+			var searchResource = repository.GetResource<PackageSearchResource>();
+
+			return searchResource
+				.SearchAsync("author:nventive", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), CancellationToken.None)
+				.Result
+				.ToArray();
+		}
+
+		private static IPackageSearchMetadata[] GetVSTSPackages(string PAT)
 		{
 			var settings = Settings.LoadDefaultSettings(null);
 			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
@@ -56,7 +91,7 @@ namespace Nuget.Updater
 				.ToArray();
 		}
 
-		private static void UpdatePackages(string solutionRoot, IPackageSearchMetadata[] packages, string specialVersion, string excludeTag)
+		private static void UpdatePackages(string solutionRoot, (string title, IPackageSearchMetadata[] sources)[] packages, string specialVersion, string excludeTag)
 		{
 			var originalNuSpecFiles = Directory.GetFiles(solutionRoot, "*.nuspec", SearchOption.AllDirectories);
 
@@ -66,6 +101,11 @@ namespace Nuget.Updater
 
 			foreach (var package in packages)
 			{
+				if (package.title != "Uno.SourceGeneration")
+				{
+					continue;
+				}
+
 				var latestVersion = GetLatestVersion(package, specialVersion, excludeTag);
 
 				if (latestVersion == null)
@@ -73,16 +113,16 @@ namespace Nuget.Updater
 					continue;
 				}
 
-				_log?.LogMessage($"Latest {specialVersion} version for [{package.Title}] is [{latestVersion}]");
+				_log?.LogMessage($"Latest {specialVersion} version for [{package.title}] is [{latestVersion}]");
 #if DEBUG
-				Console.WriteLine($"Latest {specialVersion} version for [{package.Title}] is [{latestVersion}]");
+				Console.WriteLine($"Latest {specialVersion} version for [{package.title}] is [{latestVersion}]");
 #endif
 
-				UpdateNuSpecs(package.Title, latestVersion, originalNuSpecFiles);
+				UpdateNuSpecs(package.title, latestVersion, originalNuSpecFiles);
 
-				UpdateProjectJson(package.Title, latestVersion, originalJsonFiles);
+				UpdateProjectJson(package.title, latestVersion, originalJsonFiles);
 
-				UpdateProjects(package.Title, latestVersion, originalProjectFiles);
+				UpdateProjects(package.title, latestVersion, originalProjectFiles);
 			}
 		}
 
@@ -239,9 +279,12 @@ namespace Nuget.Updater
 			return modified;
 		}
 
-		private static NuGetVersion GetLatestVersion(IPackageSearchMetadata package, string specialVersion, string excludeTag)
+		private static NuGetVersion GetLatestVersion((string, IPackageSearchMetadata[]) package, string specialVersion, string excludeTag)
 		{
-			var versions = package.GetVersionsAsync().Result.OrderByDescending(v => v.Version);
+			var versions = package
+				.Item2
+				.SelectMany(s => s.GetVersionsAsync().Result)
+				.OrderByDescending(v => v.Version);
 
 			return versions
 				.Where(v => IsMatchingSpecialVersion(specialVersion, v) && !ContainsTag(excludeTag, v))
