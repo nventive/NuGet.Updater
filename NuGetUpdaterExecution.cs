@@ -101,11 +101,6 @@ namespace Nuget.Updater
 
 			foreach (var package in packages)
 			{
-				if (package.title != "Uno.SourceGeneration")
-				{
-					continue;
-				}
-
 				var latestVersion = GetLatestVersion(package, specialVersion, excludeTag);
 
 				if (latestVersion == null)
