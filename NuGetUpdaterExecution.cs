@@ -21,9 +21,12 @@ namespace Nuget.Updater
 
 		private static TaskLoggingHelper _log;
 
-		public static bool Execute(TaskLoggingHelper log, string solutionRoot, string specialVersion, string excludeTag = "", string PAT = "")
+		private static bool _allowDowngrade;
+
+		public static bool Execute(TaskLoggingHelper log, string solutionRoot, string specialVersion, string excludeTag = "", string PAT = "", bool allowDowngrade = false)
 		{
 			_log = log;
+			_allowDowngrade = allowDowngrade;
 
 			var packages = GetPackages(PAT);
 
@@ -148,7 +151,7 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(versionNodeValue);
 
-						if (currentVersion < latestVersion)
+						if (currentVersion < latestVersion || _allowDowngrade)
 						{
 							node.SetAttribute("version", latestVersion.ToString());
 							LogUpdate(packageName, currentVersion, latestVersion, nuspecFile);
@@ -182,7 +185,7 @@ namespace Nuget.Updater
 				{
 					var currentVersion = new NuGetVersion(match.Groups[1].Value);
 
-					if (currentVersion < latestVersion)
+					if (currentVersion < latestVersion || _allowDowngrade)
 					{
 						var newContent = Regex.Replace(
 							fileContent,
@@ -238,7 +241,7 @@ namespace Nuget.Updater
 				{
 					var currentVersion = new NuGetVersion(packageReference.Attributes["Version"].Value);
 
-					if (currentVersion < version)
+					if (currentVersion < version || _allowDowngrade)
 					{
 						packageReference.SetAttribute("Version", namespaceURI, version.ToString());
 						modified = true;
@@ -257,7 +260,7 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(node.InnerText);
 
-						if (currentVersion < version)
+						if (currentVersion < version || _allowDowngrade)
 						{
 							node.InnerText = version.ToString();
 							modified = true;
@@ -300,15 +303,15 @@ namespace Nuget.Updater
 
 		private static bool IsMatchingSpecialVersion(string specialVersion, VersionInfo version)
 		{
-            if(string.IsNullOrEmpty(specialVersion))
-            {
-                return !version.Version?.ReleaseLabels?.Any() ?? true;
-            }
-            else
-            {
-                return version.Version?.ReleaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
-            }
-        }
+			if (string.IsNullOrEmpty(specialVersion))
+			{
+				return !version.Version?.ReleaseLabels?.Any() ?? true;
+			}
+			else
+			{
+				return version.Version?.ReleaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
+			}
+		}
 
 		private static void LogUpdate(string packageName, NuGetVersion currentVersion, NuGetVersion newVersion, string file)
 		{
