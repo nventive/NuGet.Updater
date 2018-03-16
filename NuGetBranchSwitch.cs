@@ -7,7 +7,7 @@ using Microsoft.Build.Utilities;
 
 namespace Nuget.Updater
 {
-    public class NuGetBranchSwitch : Task
+	public class NuGetBranchSwitch : Task
 	{
 		[Required]
 		public string SolutionRoot { get; set; }
