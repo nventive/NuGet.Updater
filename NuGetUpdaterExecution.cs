@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,14 +24,21 @@ namespace Nuget.Updater
 
 		private static bool _allowDowngrade;
 
-		public static bool Execute(TaskLoggingHelper log, string solutionRoot, string specialVersion, string excludeTag = "", string PAT = "", bool allowDowngrade = false)
+		public static bool Execute(
+			TaskLoggingHelper log,
+			string solutionRoot,
+			string targetVersion,
+			string excludeTag = "",
+			string PAT = "",
+			bool allowDowngrade = false,
+			IEnumerable<string> keepLatestDev = null)
 		{
 			_log = log;
 			_allowDowngrade = allowDowngrade;
 
 			var packages = GetPackages(PAT);
 
-			UpdatePackages(solutionRoot, packages, specialVersion, excludeTag);
+			UpdatePackages(solutionRoot, packages, targetVersion, excludeTag, keepLatestDev);
 
 			return true;
 		}
@@ -94,7 +102,12 @@ namespace Nuget.Updater
 				.ToArray();
 		}
 
-		private static void UpdatePackages(string solutionRoot, (string title, IPackageSearchMetadata[] sources)[] packages, string specialVersion, string excludeTag)
+		private static void UpdatePackages(
+			string solutionRoot,
+			(string title, IPackageSearchMetadata[] sources)[] packages,
+			string targetVersion,
+			string excludeTag,
+			IEnumerable<string> keepLatestDev = null)
 		{
 			var originalNuSpecFiles = Directory.GetFiles(solutionRoot, "*.nuspec", SearchOption.AllDirectories);
 
@@ -104,16 +117,16 @@ namespace Nuget.Updater
 
 			foreach (var package in packages)
 			{
-				var latestVersion = GetLatestVersion(package, specialVersion, excludeTag);
+				var latestVersion = GetLatestVersion(package, targetVersion, excludeTag, keepLatestDev);
 
 				if (latestVersion == null)
 				{
 					continue;
 				}
 
-				_log?.LogMessage($"Latest {specialVersion} version for [{package.title}] is [{latestVersion}]");
+				_log?.LogMessage($"Latest {targetVersion} version for [{package.title}] is [{latestVersion}]");
 #if DEBUG
-				Console.WriteLine($"Latest {specialVersion} version for [{package.title}] is [{latestVersion}]");
+				Console.WriteLine($"Latest {targetVersion} version for [{package.title}] is [{latestVersion}]");
 #endif
 
 				UpdateNuSpecs(package.title, latestVersion, originalNuSpecFiles);
@@ -151,7 +164,11 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(versionNodeValue);
 
-						if (currentVersion < latestVersion || _allowDowngrade)
+						if (currentVersion == latestVersion)
+						{
+							LogNoUpdate(packageName, currentVersion, nuspecFile, isLatest: true);
+						}
+						else if (currentVersion < latestVersion || _allowDowngrade)
 						{
 							node.SetAttribute("version", latestVersion.ToString());
 							LogUpdate(packageName, currentVersion, latestVersion, nuspecFile);
@@ -185,7 +202,11 @@ namespace Nuget.Updater
 				{
 					var currentVersion = new NuGetVersion(match.Groups[1].Value);
 
-					if (currentVersion < latestVersion || _allowDowngrade)
+					if (currentVersion == latestVersion)
+					{
+						LogNoUpdate(packageName, currentVersion, file, isLatest: true);
+					}
+					else if (currentVersion < latestVersion || _allowDowngrade)
 					{
 						var newContent = Regex.Replace(
 							fileContent,
@@ -241,7 +262,11 @@ namespace Nuget.Updater
 				{
 					var currentVersion = new NuGetVersion(packageReference.Attributes["Version"].Value);
 
-					if (currentVersion < version || _allowDowngrade)
+					if (currentVersion == version)
+					{
+						LogNoUpdate(packageName, currentVersion, doc.BaseURI, isLatest: true);
+					}
+					else if (currentVersion < version || _allowDowngrade)
 					{
 						packageReference.SetAttribute("Version", namespaceURI, version.ToString());
 						modified = true;
@@ -260,7 +285,11 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(node.InnerText);
 
-						if (currentVersion < version || _allowDowngrade)
+						if (currentVersion == version)
+						{
+							LogNoUpdate(packageName, currentVersion, doc.BaseURI, isLatest: true);
+						}
+						else if (currentVersion < version || _allowDowngrade)
 						{
 							node.InnerText = version.ToString();
 							modified = true;
@@ -277,12 +306,14 @@ namespace Nuget.Updater
 			return modified;
 		}
 
-		private static NuGetVersion GetLatestVersion((string, IPackageSearchMetadata[]) package, string specialVersion, string excludeTag)
+		private static NuGetVersion GetLatestVersion((string title, IPackageSearchMetadata[] sources) package, string targetVersion, string excludeTag, IEnumerable<string> keepLatestDev = null)
 		{
 			var versions = package
-				.Item2
+				.sources
 				.SelectMany(s => s.GetVersionsAsync().Result)
 				.OrderByDescending(v => v.Version);
+
+			var specialVersion = keepLatestDev.Contains(package.title, StringComparer.OrdinalIgnoreCase) ? "dev" : targetVersion;
 
 			return versions
 				.Where(v => IsMatchingSpecialVersion(specialVersion, v) && !ContainsTag(excludeTag, v))
@@ -321,11 +352,11 @@ namespace Nuget.Updater
 #endif
 		}
 
-		private static void LogNoUpdate(string packageName, NuGetVersion currentVersion, string file)
+		private static void LogNoUpdate(string packageName, NuGetVersion currentVersion, string file, bool isLatest = false)
 		{
-			_log?.LogMessage($"Found higher version of [{packageName}] ([{currentVersion}]) in [{file}]");
+			_log?.LogMessage($"Found {(isLatest ? "latest" : "higher")} version of [{packageName}] ([{currentVersion}]) in [{file}]");
 #if DEBUG
-			Console.WriteLine($"Found higher version of [{packageName}] ([{currentVersion}]) in [{file}]");
+			Console.WriteLine($"Found {(isLatest ? "latest" : "higher")} version of [{packageName}] ([{currentVersion}]) in [{file}]");
 #endif
 		}
 	}
