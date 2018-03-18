@@ -313,7 +313,7 @@ namespace Nuget.Updater
 				.SelectMany(s => s.GetVersionsAsync().Result)
 				.OrderByDescending(v => v.Version);
 
-			var specialVersion = keepLatestDev.Contains(package.title, StringComparer.OrdinalIgnoreCase) ? "dev" : targetVersion;
+			var specialVersion = (keepLatestDev?.Contains(package.title, StringComparer.OrdinalIgnoreCase) ?? false) ? "dev" : targetVersion;
 
 			return versions
 				.Where(v => IsMatchingSpecialVersion(specialVersion, v) && !ContainsTag(excludeTag, v))
