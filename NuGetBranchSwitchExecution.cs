@@ -12,7 +12,6 @@ namespace Nuget.Updater
 	{
 		private static TaskLoggingHelper _log;
 
-
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
 
 		private readonly string[] _packages;
@@ -22,6 +21,7 @@ namespace Nuget.Updater
 
 		public NuGetBranchSwitchExecution(TaskLoggingHelper log, string solutionRoot, string[] packages, string sourceBranch, string targetBranch)
 		{
+			_log = log;
 			_packages = packages;
 			_sourceBranch = sourceBranch?.Trim() ?? "";
 			_targetBranch = targetBranch?.Trim() ?? "";
@@ -56,7 +56,7 @@ namespace Nuget.Updater
 				{
 					PreserveWhitespace = true
 				};
-				doc.Load(projectFiles[i]);
+				doc.Load(File.OpenRead(projectFiles[i]));
 
 				var nsmgr = new XmlNamespaceManager(doc.NameTable);
 				nsmgr.AddNamespace("d", MsBuildNamespace);
@@ -68,7 +68,7 @@ namespace Nuget.Updater
 
 				if (modified)
 				{
-					doc.Save(projectFiles[i]);
+					doc.Save(File.OpenWrite(projectFiles[i]));
 				}
 			}
 		}
@@ -162,7 +162,7 @@ namespace Nuget.Updater
 				{
 					PreserveWhitespace = true
 				};
-				doc.Load(nuspecFile);
+				doc.Load(File.OpenRead(nuspecFile));
 
 
 				var mgr = new XmlNamespaceManager(doc.NameTable);
@@ -197,7 +197,7 @@ namespace Nuget.Updater
 
 				if (nodes.Any())
 				{
-					doc.Save(nuspecFile);
+					doc.Save(File.OpenWrite(nuspecFile));
 				}
 			}
 		}
