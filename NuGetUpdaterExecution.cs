@@ -31,14 +31,15 @@ namespace Nuget.Updater
 			string excludeTag = "",
 			string PAT = "",
 			bool allowDowngrade = false,
-			IEnumerable<string> keepLatestDev = null)
+			IEnumerable<string> keepLatestDev = null,
+			IEnumerable<string> ignorePackages = null)
 		{
 			_log = log;
 			_allowDowngrade = allowDowngrade;
 
 			var packages = GetPackages(PAT);
 
-			UpdatePackages(solutionRoot, packages, targetVersion, excludeTag, keepLatestDev);
+			UpdatePackages(solutionRoot, packages, targetVersion, excludeTag, keepLatestDev, ignorePackages);
 
 			return true;
 		}
@@ -107,7 +108,8 @@ namespace Nuget.Updater
 			(string title, IPackageSearchMetadata[] sources)[] packages,
 			string targetVersion,
 			string excludeTag,
-			IEnumerable<string> keepLatestDev = null)
+			IEnumerable<string> keepLatestDev = null,
+			IEnumerable<string> ignoredPackages = null)
 		{
 			var originalNuSpecFiles = Directory.GetFiles(solutionRoot, "*.nuspec", SearchOption.AllDirectories);
 
@@ -117,6 +119,11 @@ namespace Nuget.Updater
 
 			foreach (var package in packages)
 			{
+				if (ignoredPackages != null && ignoredPackages.Contains(package.title))
+				{
+					continue;
+				}
+
 				var latestVersion = GetLatestVersion(package, targetVersion, excludeTag, keepLatestDev);
 
 				if (latestVersion == null)
