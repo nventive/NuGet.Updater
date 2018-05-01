@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -31,6 +30,7 @@ namespace Nuget.Updater
 			string excludeTag = "",
 			string PAT = "",
 			bool allowDowngrade = false,
+			bool strict = true,
 			IEnumerable<string> keepLatestDev = null,
 			IEnumerable<string> ignorePackages = null)
 		{
@@ -39,7 +39,7 @@ namespace Nuget.Updater
 
 			var packages = GetPackages(PAT);
 
-			UpdatePackages(solutionRoot, packages, targetVersion, excludeTag, keepLatestDev, ignorePackages);
+			UpdatePackages(solutionRoot, packages, targetVersion, excludeTag, strict, keepLatestDev, ignorePackages);
 
 			return true;
 		}
@@ -108,6 +108,7 @@ namespace Nuget.Updater
 			(string title, IPackageSearchMetadata[] sources)[] packages,
 			string targetVersion,
 			string excludeTag,
+			bool strict,
 			IEnumerable<string> keepLatestDev = null,
 			IEnumerable<string> ignoredPackages = null)
 		{
@@ -124,7 +125,7 @@ namespace Nuget.Updater
 					continue;
 				}
 
-				var latestVersion = GetLatestVersion(package, targetVersion, excludeTag, keepLatestDev);
+				var latestVersion = GetLatestVersion(package, targetVersion, excludeTag, strict, keepLatestDev);
 
 				if (latestVersion == null)
 				{
@@ -313,7 +314,7 @@ namespace Nuget.Updater
 			return modified;
 		}
 
-		private static NuGetVersion GetLatestVersion((string title, IPackageSearchMetadata[] sources) package, string targetVersion, string excludeTag, IEnumerable<string> keepLatestDev = null)
+		private static NuGetVersion GetLatestVersion((string title, IPackageSearchMetadata[] sources) package, string targetVersion, string excludeTag, bool strict, IEnumerable<string> keepLatestDev = null)
 		{
 			var versions = package
 				.sources
@@ -323,7 +324,7 @@ namespace Nuget.Updater
 			var specialVersion = (keepLatestDev?.Contains(package.title, StringComparer.OrdinalIgnoreCase) ?? false) ? "dev" : targetVersion;
 
 			return versions
-				.Where(v => IsMatchingSpecialVersion(specialVersion, v) && !ContainsTag(excludeTag, v))
+				.Where(v => IsMatchingSpecialVersion(specialVersion, v, strict) && !ContainsTag(excludeTag, v))
 				.OrderByDescending(v => v.Version)
 				.FirstOrDefault()
 				?.Version;
@@ -339,7 +340,7 @@ namespace Nuget.Updater
 			return version?.Version?.ReleaseLabels?.Contains(tag) ?? false;
 		}
 
-		private static bool IsMatchingSpecialVersion(string specialVersion, VersionInfo version)
+		private static bool IsMatchingSpecialVersion(string specialVersion, VersionInfo version, bool strict)
 		{
 			if (string.IsNullOrEmpty(specialVersion))
 			{
@@ -347,7 +348,12 @@ namespace Nuget.Updater
 			}
 			else
 			{
-				return version.Version?.ReleaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
+				var releaseLabels = version.Version?.ReleaseLabels;
+				var isMathingSpecialVersion = releaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
+
+				return strict
+					? releaseLabels?.Count() == 2 && isMathingSpecialVersion  // Check strictly for packages with versions "dev.XXXX"
+					: isMathingSpecialVersion; // Allow packages with versions "dev.XXXX.XXXX"
 			}
 		}
 
