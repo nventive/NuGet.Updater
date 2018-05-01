@@ -349,11 +349,11 @@ namespace Nuget.Updater
 			else
 			{
 				var releaseLabels = version.Version?.ReleaseLabels;
-				var isMathingSpecialVersion = releaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
+				var isMatchingSpecialVersion = releaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
 
 				return strict
-					? releaseLabels?.Count() == 2 && isMathingSpecialVersion  // Check strictly for packages with versions "dev.XXXX"
-					: isMathingSpecialVersion; // Allow packages with versions "dev.XXXX.XXXX"
+					? releaseLabels?.Count() == 2 && isMatchingSpecialVersion  // Check strictly for packages with versions "dev.XXXX"
+					: isMatchingSpecialVersion; // Allow packages with versions "dev.XXXX.XXXX"
 			}
 		}
 
