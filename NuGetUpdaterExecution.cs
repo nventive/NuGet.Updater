@@ -73,7 +73,7 @@ namespace Nuget.Updater
 			var searchResource = repository.GetResource<PackageSearchResource>();
 
 			return searchResource
-				.SearchAsync("author:nventive", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), CancellationToken.None)
+				.SearchAsync("owner:nventive", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), CancellationToken.None)
 				.Result
 				.ToArray();
 		}
