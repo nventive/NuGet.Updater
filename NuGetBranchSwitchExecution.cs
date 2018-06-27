@@ -8,7 +8,7 @@ using NuGet.Versioning;
 
 namespace Nuget.Updater
 {
-	public class NuGetBranchSwitchExecution
+	public class NuGetBranchSwitch
 	{
 		private static TaskLoggingHelper _log;
 
@@ -19,7 +19,7 @@ namespace Nuget.Updater
 		private readonly string _targetBranch;
 		private readonly string _solutionRoot;
 
-		public NuGetBranchSwitchExecution(TaskLoggingHelper log, string solutionRoot, string[] packages, string sourceBranch, string targetBranch)
+		public NuGetBranchSwitch(TaskLoggingHelper log, string solutionRoot, string[] packages, string sourceBranch, string targetBranch)
 		{
 			_log = log;
 			_packages = packages;

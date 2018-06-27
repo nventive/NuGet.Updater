@@ -7,7 +7,7 @@ using Microsoft.Build.Utilities;
 
 namespace Nuget.Updater
 {
-	public class NuGetBranchSwitch : Task
+	public class NuGetBranchSwitchTask : Task
 	{
 		[Required]
 		public string SolutionRoot { get; set; }
@@ -20,6 +20,6 @@ namespace Nuget.Updater
 		[Required]
 		public string TargetBranch { get; set; }
 
-		public override bool Execute() => new NuGetBranchSwitchExecution(Log, SolutionRoot, Packages, SourceBranch, TargetBranch).Execute();
+		public override bool Execute() => new NuGetBranchSwitch(Log, SolutionRoot, Packages, SourceBranch, TargetBranch).Execute();
 	}
 }

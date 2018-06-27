@@ -15,16 +15,16 @@ using NuGet.Versioning;
 
 namespace Nuget.Updater
 {
-	public class NuGetUpdaterExecution
+	public class NuGetUpdater
 	{
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
 
-		private static TaskLoggingHelper _log;
+		private static Action<string> _logAction;
 
 		private static bool _allowDowngrade;
 
-		public static bool Execute(
-			TaskLoggingHelper log,
+		public static bool Update(
+			Action<string> logAction,
 			string solutionRoot,
 			string targetVersion,
 			string excludeTag = "",
@@ -34,7 +34,20 @@ namespace Nuget.Updater
 			IEnumerable<string> keepLatestDev = null,
 			IEnumerable<string> ignorePackages = null)
 		{
-			_log = log;
+			_logAction = logAction;
+
+			return Update(solutionRoot, targetVersion, excludeTag, PAT, allowDowngrade, keepLatestDev);
+		}
+
+		public static bool Update(
+			string solutionRoot,
+			string targetVersion,
+			string excludeTag = "",
+			string PAT = "",
+			bool allowDowngrade = false,
+			IEnumerable<string> keepLatestDev = null
+		)
+		{
 			_allowDowngrade = allowDowngrade;
 
 			var packages = GetPackages(PAT);
@@ -65,7 +78,7 @@ namespace Nuget.Updater
 			var source = new PackageSource("https://api.nuget.org/v3/index.json");
 			var repository = repositoryProvider.CreateRepository(source);
 
-			_log?.LogMessage($"Pulling NuGet packages from {source.SourceUri}");
+			_logAction($"Pulling NuGet packages from {source.SourceUri}");
 #if DEBUG
 			Console.WriteLine($"Pulling NuGet packages from {source.SourceUri}");
 #endif
@@ -92,7 +105,7 @@ namespace Nuget.Updater
 			var searchResource = repository.GetResource<PackageSearchResource>();
 
 
-			_log?.LogMessage($"Pulling NuGet packages from {source.SourceUri}");
+			_logAction($"Pulling NuGet packages from {source.SourceUri}");
 #if DEBUG
 			Console.WriteLine($"Pulling NuGet packages from {source.SourceUri}");
 #endif
@@ -132,7 +145,7 @@ namespace Nuget.Updater
 					continue;
 				}
 
-				_log?.LogMessage($"Latest {targetVersion} version for [{package.title}] is [{latestVersion}]");
+				_logAction($"Latest {targetVersion} version for [{package.title}] is [{latestVersion}]");
 #if DEBUG
 				Console.WriteLine($"Latest {targetVersion} version for [{package.title}] is [{latestVersion}]");
 #endif
@@ -359,7 +372,7 @@ namespace Nuget.Updater
 
 		private static void LogUpdate(string packageName, NuGetVersion currentVersion, NuGetVersion newVersion, string file)
 		{
-			_log?.LogMessage($"Updating [{packageName}] from [{currentVersion}] to [{newVersion}] in [{file}]");
+			_logAction($"Updating [{packageName}] from [{currentVersion}] to [{newVersion}] in [{file}]");
 #if DEBUG
 			Console.WriteLine($"Updating [{packageName}] from [{currentVersion}] to [{newVersion}] in [{file}]");
 #endif
@@ -367,7 +380,7 @@ namespace Nuget.Updater
 
 		private static void LogNoUpdate(string packageName, NuGetVersion currentVersion, string file, bool isLatest = false)
 		{
-			_log?.LogMessage($"Found {(isLatest ? "latest" : "higher")} version of [{packageName}] ([{currentVersion}]) in [{file}]");
+			_logAction($"Found {(isLatest ? "latest" : "higher")} version of [{packageName}] ([{currentVersion}]) in [{file}]");
 #if DEBUG
 			Console.WriteLine($"Found {(isLatest ? "latest" : "higher")} version of [{packageName}] ([{currentVersion}]) in [{file}]");
 #endif
