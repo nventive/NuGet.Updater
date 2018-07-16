@@ -24,7 +24,6 @@ namespace Nuget.Updater
 		private static bool _allowDowngrade;
 
 		public static bool Update(
-			Action<string> logAction,
 			string solutionRoot,
 			string targetVersion,
 			string excludeTag = "",
@@ -32,24 +31,11 @@ namespace Nuget.Updater
 			bool allowDowngrade = false,
 			bool strict = true,
 			IEnumerable<string> keepLatestDev = null,
-			IEnumerable<string> ignorePackages = null)
-		{
-			_logAction = logAction;
-
-			return Update(solutionRoot, targetVersion, excludeTag, PAT, strict, allowDowngrade, keepLatestDev, ignorePackages);
-		}
-
-		public static bool Update(
-			string solutionRoot,
-			string targetVersion,
-			string excludeTag = "",
-			string PAT = "",
-			bool allowDowngrade = false,
-			bool strict = true,
-			IEnumerable<string> keepLatestDev = null,
-			IEnumerable<string> ignorePackages = null
+			IEnumerable<string> ignorePackages = null,
+			Action<string> logAction = null
 		)
 		{
+			_logAction = logAction ?? new Action<string>(_ => { });
 			_allowDowngrade = allowDowngrade;
 
 			var packages = GetPackages(PAT);

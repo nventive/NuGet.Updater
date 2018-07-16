@@ -18,7 +18,7 @@ namespace Nuget.Updater
 
 		public override bool Execute()
 		{
-			return NuGetUpdater.Update(message => Log.LogMessage(message), SolutionRoot, SpecialVersion, ExcludeTag, PAT: PAT);
+			return NuGetUpdater.Update(SolutionRoot, SpecialVersion, ExcludeTag, PAT: PAT, logAction: message => Log.LogMessage(message));
 		}
 	}
 }
