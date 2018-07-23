@@ -1,12 +1,12 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 	<PropertyGroup>
-		<TargetFrameworks>net46;uap10.0.16299</TargetFrameworks>
+		<TargetFrameworks>net46;uap10.0.17134</TargetFrameworks>
 		<Authors>nventive</Authors>
 		<Description>Nuget Updater allows to automatically update the NuGet packages in a solution at build time</Description>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)'=='uap10.0.16299'">
+	<PropertyGroup Condition="'$(TargetFramework)'=='uap10.0.17134'">
 		<DefineConstants>UAP</DefineConstants>
 	</PropertyGroup>
 
@@ -15,23 +15,21 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012">
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net46'">
 		<PackageReference Include="NuGet.Protocol" Version="4.7.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012">
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)'=='uap10.0.16299'">
+	<ItemGroup Condition="'$(TargetFramework)'=='uap10.0.17134'">
 		<PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-		<PackageReference Include="System.Dynamic.Runtime" Version="4.0.11" />
-		<PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XPath.XmlDocument" Version="4.3.0" />
 		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.3.0" />
-		<PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
 		<Reference Include="../Packages/Nuget.Protocol/netstandard1.6/*.dll">
 			<Private>true</Private>
 		</Reference>
@@ -44,7 +42,7 @@
 			</Content>
 			<Content Include="../Packages/Nuget.Protocol/netstandard1.6/*.dll">
 				<Pack>true</Pack>
-				<PackagePath>lib/uap10.0.16299</PackagePath>
+				<PackagePath>lib/uap10.0.17134</PackagePath>
 			</Content>
 		</ItemGroup>
 	</Target>

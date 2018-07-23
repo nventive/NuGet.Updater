@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿#if !UAP
+using System;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -20,6 +18,7 @@ namespace Nuget.Updater
 		[Required]
 		public string TargetBranch { get; set; }
 
-		public override bool Execute() => new NuGetBranchSwitch(Log, SolutionRoot, Packages, SourceBranch, TargetBranch).Execute();
+		public override bool Execute() => new NuGetBranchSwitch(message => Log.LogMessage(message), SolutionRoot, Packages, SourceBranch, TargetBranch).Execute();
 	}
 }
+#endif

@@ -1,4 +1,5 @@
-﻿using Microsoft.Build.Framework;
+﻿#if !UAP
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Nuget.Updater
@@ -22,3 +23,4 @@ namespace Nuget.Updater
 		}
 	}
 }
+#endif

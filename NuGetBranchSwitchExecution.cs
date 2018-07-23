@@ -3,14 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
-using Microsoft.Build.Utilities;
 using NuGet.Versioning;
 
 namespace Nuget.Updater
 {
 	public class NuGetBranchSwitch
 	{
-		private static TaskLoggingHelper _log;
+		private static Action<string> _log;
 
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
 
@@ -19,7 +18,7 @@ namespace Nuget.Updater
 		private readonly string _targetBranch;
 		private readonly string _solutionRoot;
 
-		public NuGetBranchSwitch(TaskLoggingHelper log, string solutionRoot, string[] packages, string sourceBranch, string targetBranch)
+		public NuGetBranchSwitch(Action<string> log, string solutionRoot, string[] packages, string sourceBranch, string targetBranch)
 		{
 			_log = log;
 			_packages = packages;
@@ -204,7 +203,7 @@ namespace Nuget.Updater
 
 		private static void LogUpdate(string packageName, NuGetVersion currentVersion, NuGetVersion newVersion, string file)
 		{
-			_log?.LogMessage($"Updating [{packageName}] from [{currentVersion}] to [{newVersion}] in [{file}]");
+			_log($"Updating [{packageName}] from [{currentVersion}] to [{newVersion}] in [{file}]");
 #if DEBUG
 			Console.WriteLine($"Updating [{packageName}] from [{currentVersion}] to [{newVersion}] in [{file}]");
 #endif
