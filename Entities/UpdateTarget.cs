@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace Nuget.Updater
 {
+	/// <summary>
+	/// The type of files to update
+	/// </summary>
 	public enum UpdateTarget
 	{
 		Nuspec = 2,

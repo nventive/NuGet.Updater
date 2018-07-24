@@ -4,6 +4,7 @@
 		<Authors>nventive</Authors>
 		<Description>Nuget Updater allows to automatically update the NuGet packages in a solution at build time</Description>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<LangVersion>7.1</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='uap10.0.17134'">
