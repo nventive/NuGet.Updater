@@ -9,6 +9,7 @@ using Nuget.Updater.Entities;
 using NuGet.Versioning;
 using Windows.Data.Xml.Dom;
 using Windows.Storage;
+using Windows.Storage.Search;
 
 namespace Nuget.Updater
 {
@@ -18,19 +19,27 @@ namespace Nuget.Updater
 		{
 			var folder = await StorageFolder.GetFolderFromPathAsync(path);
 
-			var folders = await folder.GetFoldersAsync();
-			var subFoldersContent = (await Task.WhenAll(folders.Select(f => GetFiles(ct, f.Path, extensionFilter, nameFilter)))).SelectMany(x => x);
+			var searchFilter = extensionFilter == null
+				? $"filename:\"{nameFilter}\""
+				: $"extension:{extensionFilter}";
 
-			var files = await folder.GetFilesAsync();
+			var queryOptions = new QueryOptions
+			{
+				UserSearchFilter = searchFilter,
+				IndexerOption = IndexerOption.UseIndexerWhenAvailable,
+				FolderDepth = FolderDepth.Deep
+			};
+
+			var query = folder.CreateFileQueryWithOptions(queryOptions);
+
+			var files = await query.GetFilesAsync();
 
 			return files
-				.Where(f => (extensionFilter == null && nameFilter == null) || (extensionFilter != null && f.FileType == extensionFilter) || (nameFilter != null && f.Name == nameFilter))
 				.Select(f =>
 				{
 					_logAction($"Found {f.Path}");
 					return f.Path;
 				})
-				.Concat(subFoldersContent)
 				.ToArray();
 		}
 
