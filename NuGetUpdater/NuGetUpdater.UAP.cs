@@ -97,7 +97,7 @@ namespace Nuget.Updater
 
 		private static async Task<XmlDocument> GetDocument(CancellationToken ct, string path)
 		{
-			return await XmlDocument.LoadFromFileAsync(await StorageFile.GetFileFromPathAsync(path));
+			return await XmlDocument.LoadFromFileAsync(await StorageFile.GetFileFromPathAsync(path), new XmlLoadSettings { ElementContentWhiteSpace = true });
 		}
 
 		private static async Task SaveDocument(CancellationToken ct, XmlDocument document, string path)
