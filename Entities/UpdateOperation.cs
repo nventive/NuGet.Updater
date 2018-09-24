@@ -33,7 +33,7 @@ namespace Nuget.Updater.Entities
 
 		public string FilePath { get; }
 
-		public bool ShouldProceed => PreviousVersion < UpdatedVersion || (_isDowngradeAllowed && PreviousVersion > UpdatedVersion);
+		public bool ShouldProceed => PreviousVersion < UpdatedVersion || (_isDowngradeAllowed && PreviousVersion.IsGreaterThan(UpdatedVersion));
 
 		public bool IsLatestVersion => PreviousVersion == UpdatedVersion;
 
