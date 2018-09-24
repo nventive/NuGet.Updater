@@ -31,7 +31,7 @@ namespace Nuget.Updater
 
 		private static bool UpdateProjectReferenceVersions(string packageName, NuGetVersion version, bool modified, XmlDocument doc, string documentPath, XmlNamespaceManager namespaceManager)
 	{
-			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{packageName}']"))
+			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{packageName}']", namespaceManager))
 			{
 				if (packageReference.HasAttribute("Version"))
 				{
