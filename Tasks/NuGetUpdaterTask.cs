@@ -16,10 +16,13 @@ namespace Nuget.Updater
 
 		[Required]
 		public string PAT { get; set; }
+		
+		[Required]
+		public bool AllowDowngrade { get; set; }
 
 		public override bool Execute()
 		{
-			return NuGetUpdater.Update(SolutionRoot, SpecialVersion, ExcludeTag, PAT: PAT, logAction: message => Log.LogMessage(message));
+			return NuGetUpdater.Update(SolutionRoot, SpecialVersion, ExcludeTag, PAT: PAT, allowDowngrade: AllowDowngrade, logAction: message => Log.LogMessage(message));
 		}
 	}
 }
