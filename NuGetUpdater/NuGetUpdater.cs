@@ -55,7 +55,7 @@ namespace Nuget.Updater
 
 			var packages = GetPackages(CancellationToken.None, PAT).Result;
 
-			UpdatePackages(CancellationToken.None, solutionRoot, packages, targetVersion, excludeTag, strict, keepLatestDev, ignorePackages, target).RunSynchronously();
+			UpdatePackages(CancellationToken.None, solutionRoot, packages, targetVersion, excludeTag, strict, keepLatestDev, ignorePackages, target).Wait();
 
 			LogUpdateSummary();
 
