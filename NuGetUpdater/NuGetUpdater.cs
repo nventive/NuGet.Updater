@@ -398,6 +398,11 @@ namespace Nuget.Updater
 
 			var specialVersion = (keepLatestDev?.Contains(package.title, StringComparer.OrdinalIgnoreCase) ?? false) ? "dev" : targetVersion;
 
+			if(specialVersion == "stable")
+			{
+				specialVersion = "";
+			}
+
 			return versions
 				.Where(v => IsMatchingSpecialVersion(specialVersion, v, strict) && !ContainsTag(excludeTag, v))
 				.OrderByDescending(v => v.Version)
