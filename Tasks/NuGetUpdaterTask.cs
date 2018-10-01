@@ -11,6 +11,8 @@ namespace Nuget.Updater
 
 		public string ExcludeTag { get; set; }
 
+		public string IgnorePackages { get; set; }
+
 		[Required]
 		public string SolutionRoot { get; set; }
 
@@ -22,7 +24,33 @@ namespace Nuget.Updater
 
 		public override bool Execute()
 		{
-			return NuGetUpdater.Update(SolutionRoot, SpecialVersion, ExcludeTag, PAT: PAT, allowDowngrade: AllowDowngrade, logAction: message => Log.LogMessage(message));
+			string[] packagesToIgnore;
+
+			switch (IgnorePackages)
+			{
+				case var p when p == null:
+					packagesToIgnore = new string[0];
+					break;
+				case var p when p.Contains(";"):
+					packagesToIgnore = p.Split(';');
+					break;
+				case var p when p != null:
+					packagesToIgnore = new[] { IgnorePackages };
+					break;
+				default:
+					packagesToIgnore = null;
+					break;
+			}
+
+			return NuGetUpdater.Update(
+				SolutionRoot,
+				SpecialVersion,
+				ExcludeTag,
+				PAT: PAT,
+				allowDowngrade: AllowDowngrade,
+				ignorePackages: packagesToIgnore,
+				logAction: message => Log.LogMessage(message)
+			);
 		}
 	}
 }
