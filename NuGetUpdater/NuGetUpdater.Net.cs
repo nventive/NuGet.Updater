@@ -12,8 +12,23 @@ using NuGet.Versioning;
 
 namespace Nuget.Updater
 {
-	partial class NuGetUpdater
+	public partial class NuGetUpdater
 	{
+		private static void LogUpdateSummaryToFile(string outputFilePath)
+		{
+			try
+			{
+				using (var file = File.OpenWrite(outputFilePath))
+				using (var writer = new StreamWriter(file))
+				{
+					LogSummary(line => writer.WriteLine(line));
+				}
+			}
+			catch(Exception ex)
+			{
+				_logAction($"Failed to write to {outputFilePath}. Reason : {ex.Message}");
+			}
+		}
 
 		private static async Task<string[]> GetFiles(CancellationToken ct, string path, string extensionFilter = null, string nameFilter = null)
 		{
@@ -30,7 +45,7 @@ namespace Nuget.Updater
 		}
 
 		private static bool UpdateProjectReferenceVersions(string packageName, NuGetVersion version, bool modified, XmlDocument doc, string documentPath, XmlNamespaceManager namespaceManager)
-	{
+		{
 			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{packageName}']", namespaceManager))
 			{
 				if (packageReference.HasAttribute("Version"))

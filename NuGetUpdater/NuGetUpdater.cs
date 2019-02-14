@@ -33,47 +33,56 @@ namespace Nuget.Updater
 
 		public static bool Update(
 			string solutionRoot,
+			string sourceFeed,
 			string targetVersion,
 			string excludeTag = "",
 			string PAT = "",
+			bool includeNuGetOrg = true,
 			bool allowDowngrade = false,
 			bool strict = true,
 			IEnumerable<string> keepLatestDev = null,
 			IEnumerable<string> ignorePackages = null,
+			IEnumerable<string> updatePackages = null,
 			UpdateTarget target = UpdateTarget.All,
-			Action<string> logAction = null
+			Action<string> logAction = null,
+			string summaryOutputFilePath = null
 		)
 		{
-			_updateOperations.Clear();
-
-#if DEBUG
-			_logAction = logAction ?? Console.WriteLine;
-#else
-			_logAction = logAction ?? new Action<string>(_ => { });
-#endif
-			_allowDowngrade = allowDowngrade;
-
-			var packages = GetPackages(CancellationToken.None, PAT).Result;
-
-			UpdatePackages(CancellationToken.None, solutionRoot, packages, targetVersion, excludeTag, strict, keepLatestDev, ignorePackages, target).Wait();
-
-			LogUpdateSummary();
-
-			return true;
+			return UpdateAsync(
+				CancellationToken.None,
+				solutionRoot,
+				sourceFeed,
+				targetVersion,
+				excludeTag,
+				PAT,
+				includeNuGetOrg,
+				allowDowngrade,
+				strict,
+				keepLatestDev,
+				ignorePackages,
+				updatePackages,
+				target,
+				logAction,
+				summaryOutputFilePath
+			).Result;
 		}
 
 		public static async Task<bool> UpdateAsync(
 			CancellationToken ct,
 			string solutionRoot,
+			string sourceFeed,
 			string targetVersion,
 			string excludeTag = "",
 			string PAT = "",
+			bool includeNuGetOrg = true,
 			bool allowDowngrade = false,
 			bool strict = true,
 			IEnumerable<string> keepLatestDev = null,
 			IEnumerable<string> ignorePackages = null,
+			IEnumerable<string> updatePackages = null,
 			UpdateTarget target = UpdateTarget.All,
-			Action<string> logAction = null
+			Action<string> logAction = null,
+			string summaryOutputFilePath = null
 		)
 		{
 			_updateOperations.Clear();
@@ -85,19 +94,34 @@ namespace Nuget.Updater
 #endif
 			_allowDowngrade = allowDowngrade;
 
-			var packages = await GetPackages(ct, PAT);
+			var packages = await GetPackages(ct, sourceFeed, PAT, includeNuGetOrg);
 
-			await UpdatePackages(ct, solutionRoot, packages, targetVersion, excludeTag, strict, keepLatestDev, ignorePackages, target);
+			await UpdatePackages(ct, solutionRoot, packages, targetVersion, excludeTag, strict, keepLatestDev, ignorePackages, updatePackages, target);
 
-			LogUpdateSummary();
+			LogUpdateSummary(summaryOutputFilePath);
 
 			return true;
 		}
 
-		private static void LogUpdateSummary()
+		private static void LogUpdateSummary(string outputFilePath = null)
+		{
+			LogSummary(_logAction);
+
+			if (outputFilePath != null)
+			{
+				LogUpdateSummaryToFile(outputFilePath);
+			}
+		}
+
+		private static void LogSummary(Action<string> logAction)
 		{
 			var completedUpdates = _updateOperations.Where(o => o.ShouldProceed).ToArray();
 			var skippedUpdates = _updateOperations.Where(o => !o.ShouldProceed).ToArray();
+
+			if(completedUpdates.Any() || skippedUpdates.Any())
+			{
+				logAction($"# Package update summary");
+			}
 
 			if (completedUpdates.Any())
 			{
@@ -106,11 +130,11 @@ namespace Nuget.Updater
 					.Distinct()
 					.ToArray();
 
-				_logAction($"Updated {updatedPackages.Length} packages:");
+				logAction($"## Updated {updatedPackages.Length} packages:");
 
-				foreach(var p in updatedPackages)
+				foreach (var p in updatedPackages)
 				{
-					_logAction($"[{p.PackageName}] to [{p.UpdatedVersion}]");
+					logAction($"- [{p.PackageName}] to [{p.UpdatedVersion}]");
 				}
 			}
 
@@ -121,24 +145,26 @@ namespace Nuget.Updater
 					.Distinct()
 					.ToArray();
 
-				_logAction($"Skipped {skippedPackages.Length} packages:");
+				logAction($"## Skipped {skippedPackages.Length} packages:");
 
 				foreach (var p in skippedPackages)
 				{
-					_logAction($"[{p.PackageName}] is at version [{p.PreviousVersion}]");
+					logAction($"- [{p.PackageName}] is at version [{p.PreviousVersion}]");
 				}
 			}
 		}
 
-		private static async Task<(string, IPackageSearchMetadata[])[]> GetPackages(CancellationToken ct, string PAT)
+		private static async Task<(string, IPackageSearchMetadata[])[]> GetPackages(CancellationToken ct, string feed, string PAT, bool includNuGetOrg)
 		{
-			var q = from package in (await GetVSTSPackages(ct, PAT))
-						   .Concat(await GetNuGetOrgPackages(ct))
+			var packages = await GetFeedPackages(ct, feed, PAT);
+
+			if (includNuGetOrg) {
+				packages = packages.Concat(await GetNuGetOrgPackages(ct));
+			}
+
+			var q = from package in packages
 					group package by package.Identity.Id into p
-					select (
-						Name: p.Key,
-						Sources: p.ToArray()
-					);
+					select (Name: p.Key, Sources: p.ToArray());
 
 			return q.ToArray();
 		}
@@ -160,14 +186,14 @@ namespace Nuget.Updater
 			return packages.ToArray();
 		}
 
-		private static async Task<IPackageSearchMetadata[]> GetVSTSPackages(CancellationToken ct, string PAT)
+		private static async Task<IEnumerable<IPackageSearchMetadata>> GetFeedPackages(CancellationToken ct, string feed, string PAT)
 		{
 			var settings = Settings.LoadDefaultSettings(null);
 			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
 
-			var source = new PackageSource("https://nventive.pkgs.visualstudio.com/_packaging/nventive/nuget/v3/index.json", "nventive")
+			var source = new PackageSource(feed, "Feed")
 			{
-				Credentials = PackageSourceCredential.FromUserInput("nventive", "it@nventive.com", PAT, false)
+				Credentials = PackageSourceCredential.FromUserInput("Feed", "user", PAT, false)
 			};
 			var repository = repositoryProvider.CreateRepository(source);
 
@@ -177,7 +203,7 @@ namespace Nuget.Updater
 
 			var packages = await searchResource.SearchAsync("", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), ct);
 
-			return packages.ToArray();
+			return packages;
 		}
 
 		private static async Task UpdatePackages(
@@ -189,6 +215,7 @@ namespace Nuget.Updater
 			bool strict,
 			IEnumerable<string> keepLatestDev = null,
 			IEnumerable<string> ignoredPackages = null,
+			IEnumerable<string> packagesToUpdate = null,
 			UpdateTarget target = UpdateTarget.All
 		)
 		{
@@ -218,6 +245,11 @@ namespace Nuget.Updater
 			foreach (var package in packages)
 			{
 				if (ignoredPackages != null && ignoredPackages.Contains(package.title))
+				{
+					continue;
+				}
+
+				if(packagesToUpdate != null && !packagesToUpdate.Contains(package.title))
 				{
 					continue;
 				}

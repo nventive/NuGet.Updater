@@ -15,6 +15,10 @@ namespace Nuget.Updater
 {
 	partial class NuGetUpdater
 	{
+		private static void LogUpdateSummaryToFile(string path)
+		{
+		}
+
 		private static async Task<string[]> GetFiles(CancellationToken ct, string path, string extensionFilter = null, string nameFilter = null)
 		{
 			var folder = await StorageFolder.GetFolderFromPathAsync(path);
