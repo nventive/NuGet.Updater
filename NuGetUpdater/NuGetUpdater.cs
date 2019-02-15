@@ -187,7 +187,9 @@ namespace Nuget.Updater
 
 			var searchResource = repository.GetResource<PackageSearchResource>();
 
-			var packages = await searchResource.SearchAsync("owner:nventive", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), ct);
+			var packages = (await searchResource.SearchAsync("owner:nventive", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), ct)).ToArray();
+
+			_logAction($"FOund {packages.Length} packages");
 
 			return (sourceUri: source.SourceUri, packages);
 		}
@@ -207,7 +209,9 @@ namespace Nuget.Updater
 
 			_logAction($"Pulling NuGet packages from {source.SourceUri}");
 
-			var packages = await searchResource.SearchAsync("", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), ct);
+			var packages = (await searchResource.SearchAsync("", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), ct)).ToArray();
+
+			_logAction($"FOund {packages.Length} packages");
 
 			return (sourceUri: source.SourceUri, packages);
 		}
