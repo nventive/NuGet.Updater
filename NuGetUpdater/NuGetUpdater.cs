@@ -25,7 +25,8 @@ namespace Nuget.Updater
 	public partial class NuGetUpdater
 	{
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
-		private const string AzureArtifactsFeedUrlPattern = @"https:\/\/(?'account'[^.]*).*_packaging\/(?'feed'[^\/]*)";
+		private const string LegacyAzureArtifactsFeedUrlPattern = @"https:\/\/(?'account'[^.]*).*_packaging\/(?'feed'[^\/]*)";
+		private const string AzureArtifactsFeedUrlPattern = @"https:\/\/pkgs\.dev.azure.com\/(?'account'[^\/]*).*_packaging\/(?'feed'[^\/]*)";
 
 		private static Action<string> _logAction;
 		private static bool _allowDowngrade;
@@ -483,7 +484,14 @@ namespace Nuget.Updater
 				return $"https://www.nuget.org/packages/{packageId}/{version.ToFullString()}";
 			}
 
-			var match = Regex.Match(feedUri.AbsoluteUri, AzureArtifactsFeedUrlPattern);
+			var pattern = LegacyAzureArtifactsFeedUrlPattern;
+
+			if(feedUri.AbsoluteUri.StartsWith("https://pkgs.dev.azure.com"))
+			{
+				pattern = AzureArtifactsFeedUrlPattern;
+			}
+
+			var match = Regex.Match(feedUri.AbsoluteUri, pattern);
 
 			if(match.Length > 0)
 			{
