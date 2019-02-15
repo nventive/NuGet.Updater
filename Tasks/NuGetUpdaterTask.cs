@@ -76,7 +76,8 @@ namespace Nuget.Updater
 				allowDowngrade: AllowDowngrade,
 				ignorePackages: packagesToIgnore,
 				updatePackages: packagesToUpdate,
-				logAction: message => Log.LogMessage(message)
+				logAction: message => Log.LogMessage(message),
+				summaryOutputFilePath: UpdateSummaryFile
 			);
 		}
 	}
