@@ -47,7 +47,7 @@ namespace Nuget.Updater
 				.ToArray();
 		}
 
-		private static bool UpdateProjectReferenceVersions(string packageName, NuGetVersion version, bool modified, XmlDocument doc, string documentPath)
+		private static bool UpdateProjectReferenceVersions(string packageName, NuGetVersion version, bool modified, XmlDocument doc, string documentPath, Uri feedUri)
 		{
 			var packageReferences = doc.GetElementsByTagName("PackageReference")
 				.Cast<XmlElement>()
@@ -61,7 +61,7 @@ namespace Nuget.Updater
 				{
 					var currentVersion = new NuGetVersion(versionAttribute);
 
-					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath);
+					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath, feedUri);
 
 					if (operation.ShouldProceed)
 					{
@@ -80,7 +80,7 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(node.InnerText);
 
-						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath);
+						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath, feedUri);
 
 						if (operation.ShouldProceed)
 						{

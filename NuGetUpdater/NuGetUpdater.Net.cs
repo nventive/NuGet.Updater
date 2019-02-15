@@ -21,7 +21,7 @@ namespace Nuget.Updater
 				using (var file = File.OpenWrite(outputFilePath))
 				using (var writer = new StreamWriter(file))
 				{
-					LogSummary(line => writer.WriteLine(line));
+					LogSummary(line => writer.WriteLine(line), includeUrl: true);
 				}
 			}
 			catch(Exception ex)
@@ -44,7 +44,15 @@ namespace Nuget.Updater
 			return Directory.GetFiles(path, filter, SearchOption.AllDirectories);
 		}
 
-		private static bool UpdateProjectReferenceVersions(string packageName, NuGetVersion version, bool modified, XmlDocument doc, string documentPath, XmlNamespaceManager namespaceManager)
+		private static bool UpdateProjectReferenceVersions(
+			string packageName,
+			NuGetVersion version,
+			bool modified,
+			XmlDocument doc,
+			string documentPath,
+			XmlNamespaceManager namespaceManager,
+			Uri feedUri
+		)
 		{
 			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{packageName}']", namespaceManager))
 			{
@@ -52,7 +60,7 @@ namespace Nuget.Updater
 				{
 					var currentVersion = new NuGetVersion(packageReference.Attributes["Version"].Value);
 
-					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath);
+					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath, feedUri);
 
 					if (operation.ShouldProceed)
 					{
@@ -71,7 +79,7 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(node.InnerText);
 
-						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath);
+						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath, feedUri);
 
 						if (operation.ShouldProceed)
 						{
