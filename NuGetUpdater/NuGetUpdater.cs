@@ -5,10 +5,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Nuget.Updater.Entities;
-using NuGet.Common;
+using Nuget.Updater.Extensions;
 using NuGet.Configuration;
-using NuGet.Protocol;
-using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
 #if UAP
@@ -25,13 +23,8 @@ namespace Nuget.Updater
 	public partial class NuGetUpdater
 	{
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
-		private const string LegacyAzureArtifactsFeedUrlPattern = @"https:\/\/(?'account'[^.]*).*_packaging\/(?'feed'[^\/]*)";
-		private const string AzureArtifactsFeedUrlPattern = @"https:\/\/pkgs\.dev.azure.com\/(?'account'[^\/]*).*_packaging\/(?'feed'[^\/]*)";
 
-		private static Action<string> _logAction;
 		private static bool _allowDowngrade;
-
-		private static readonly List<UpdateOperation> _updateOperations = new List<UpdateOperation>();
 
 		public static bool Update(
 			string solutionRoot,
@@ -89,10 +82,11 @@ namespace Nuget.Updater
 		{
 			_updateOperations.Clear();
 
+			_logAction = logAction
 #if DEBUG
-			_logAction = logAction ?? Console.WriteLine;
+				?? Console.WriteLine;
 #else
-			_logAction = logAction ?? new Action<string>(_ => { });
+				?? new Action<string>(_ => { });
 #endif
 			_allowDowngrade = allowDowngrade;
 
@@ -105,121 +99,35 @@ namespace Nuget.Updater
 			return true;
 		}
 
-		private static void LogUpdateSummary(string outputFilePath = null)
+		private static async Task<NuGetPackage[]> GetPackages(CancellationToken ct, string feed, string PAT, bool includNuGetOrg)
 		{
-			LogSummary(_logAction);
-
-			if (outputFilePath != null)
-			{
-				LogUpdateSummaryToFile(outputFilePath);
-			}
-		}
-
-		private static void LogSummary(Action<string> logAction, bool includeUrl = false)
-		{
-			var completedUpdates = _updateOperations.Where(o => o.ShouldProceed).ToArray();
-			var skippedUpdates = _updateOperations.Where(o => !o.ShouldProceed).ToArray();
-
-			if(completedUpdates.Any() || skippedUpdates.Any())
-			{
-				logAction($"# Package update summary");
-			}
-
-			if (completedUpdates.Any())
-			{
-				var updatedPackages = completedUpdates
-					.Select(o => (o.PackageName, o.UpdatedVersion, o.FeedUri))
-					.Distinct()
-					.ToArray();
-
-				logAction($"## Updated {updatedPackages.Length} packages:");
-
-				foreach (var p in updatedPackages)
-				{
-					var logMessage = $"[{p.PackageName}] to [{p.UpdatedVersion}]";
-					var url = includeUrl ? GetPackageUrl(p.PackageName, p.UpdatedVersion, p.FeedUri) : default;
-
-					logAction(url == null ? $"- {logMessage}" : $"- [{logMessage}]({url})");
-				}
-			}
-
-			if (skippedUpdates.Any())
-			{
-				var skippedPackages = skippedUpdates
-					.Select(o => (o.PackageName, o.PreviousVersion, o.FeedUri))
-					.Distinct()
-					.ToArray();
-
-				logAction($"## Skipped {skippedPackages.Length} packages:");
-
-				foreach (var p in skippedPackages)
-				{
-					var logMessage = $"[{p.PackageName}] is at version [{p.PreviousVersion}]";
-					var url = includeUrl ? GetPackageUrl(p.PackageName, p.PreviousVersion, p.FeedUri) : default;
-
-					logAction(url == null ? $"- {logMessage}" : $"- [{logMessage}]({url})");
-				}
-			}
-		}
-
-		private static async Task<(Uri, IEnumerable<IPackageSearchMetadata>)[]> GetPackages(CancellationToken ct, string feed, string PAT, bool includNuGetOrg)
-		{
-			var packages = new List<(Uri, IEnumerable<IPackageSearchMetadata>)>();
-
-			packages.Add(await GetFeedPackages(ct, feed, PAT));
-
-			if (includNuGetOrg) {
-				packages.Add(await GetNuGetOrgPackages(ct));
-			}
-
-			return packages.ToArray();
-		}
-
-		private static async Task<(Uri sourceUri, IEnumerable<IPackageSearchMetadata> packages)> GetNuGetOrgPackages(CancellationToken ct)
-		{
-			var settings = Settings.LoadDefaultSettings(null);
-			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
-
-			var source = new PackageSource("https://api.nuget.org/v3/index.json");
-			var repository = repositoryProvider.CreateRepository(source);
-
-			_logAction($"Pulling NuGet packages from {source.SourceUri}");
-
-			var searchResource = repository.GetResource<PackageSearchResource>();
-
-			var packages = (await searchResource.SearchAsync("owner:nventive", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), ct)).ToArray();
-
-			_logAction($"FOund {packages.Length} packages");
-
-			return (sourceUri: source.SourceUri, packages);
-		}
-
-		private static async Task<(Uri sourceUri, IEnumerable<IPackageSearchMetadata> packages)> GetFeedPackages(CancellationToken ct, string feed, string PAT)
-		{
-			var settings = Settings.LoadDefaultSettings(null);
-			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
-
-			var source = new PackageSource(feed, "Feed")
+			var privateSource = new PackageSource(feed, "Feed")
 			{
 				Credentials = PackageSourceCredential.FromUserInput("Feed", "user", PAT, false)
 			};
-			var repository = repositoryProvider.CreateRepository(source);
 
-			var searchResource = repository.GetResource<PackageSearchResource>();
+			//Using search instead of list because the latter forces the v2 api
+			var packages = await privateSource.SearchPackages(ct, Log);
 
-			_logAction($"Pulling NuGet packages from {source.SourceUri}");
+			if (includNuGetOrg)
+			{
+				var publicSource = new PackageSource("https://api.nuget.org/v3/index.json");
 
-			var packages = (await searchResource.SearchAsync("", new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), 0, 1000, new NullLogger(), ct)).ToArray();
+				//Using search instead of list because the latter forces the v2 api
+				packages = packages
+					.Concat(await publicSource.SearchPackages(ct, Log, searchTerm: "owner:nventive"))
+					.GroupBy(p => p.PackageId)
+					.Select(g => new NuGetPackage(g.Key, g.ToArray()))
+					.ToArray();
+			}
 
-			_logAction($"FOund {packages.Length} packages");
-
-			return (sourceUri: source.SourceUri, packages);
+			return packages;
 		}
 
 		private static async Task UpdatePackages(
 			CancellationToken ct,
 			string solutionRoot,
-			(Uri sourceUri, IEnumerable<IPackageSearchMetadata> packages)[] sources,
+			NuGetPackage[] packages,
 			string targetVersion,
 			string excludeTag,
 			bool strict,
@@ -245,50 +153,47 @@ namespace Nuget.Updater
 			{
 				var paths = await GetTargetFiles(ct, solutionRoot, UpdateTarget.PackageReference);
 
-				foreach(var p in paths)
+				foreach (var p in paths)
 				{
 					var document = await GetDocument(ct, p);
 					originalProjectFiles.Add(p, document);
 				}
 			}
 
-			foreach (var source in sources)
+			foreach (var package in packages)
 			{
-				foreach (var package in source.packages)
+				var packageId = package.PackageId;
+
+				if (ignoredPackages != null && ignoredPackages.Contains(packageId))
 				{
-					var packageId = package.Identity.Id;
+					continue;
+				}
 
-					if (ignoredPackages != null && ignoredPackages.Contains(packageId))
-					{
-						continue;
-					}
+				if ((packagesToUpdate?.Any() ?? false) && !packagesToUpdate.Contains(packageId))
+				{
+					continue;
+				}
 
-					if (packagesToUpdate != null && !packagesToUpdate.Contains(packageId))
-					{
-						continue;
-					}
+				var latest = await package.GetLatestVersion(ct, targetVersion, excludeTag, strict, keepLatestDev);
 
-					var latestVersion = await GetLatestVersion(ct, package, targetVersion, excludeTag, strict, keepLatestDev);
+				if (latest == null)
+				{
+					continue;
+				}
 
-					if (latestVersion == null)
-					{
-						continue;
-					}
+				Log($"Latest {targetVersion} version for [{packageId}] is [{latest.Version}]");
 
-					_logAction($"Latest {targetVersion} version for [{packageId}] is [{latestVersion}]");
-
-					if ((target & UpdateTarget.Nuspec) == UpdateTarget.Nuspec)
-					{
-						await UpdateNuSpecs(ct, packageId, latestVersion, originalNuSpecFiles, source.sourceUri);
-					}
-					if ((target & UpdateTarget.ProjectJson) == UpdateTarget.ProjectJson)
-					{
-						await UpdateProjectJson(ct, packageId, latestVersion, originalJsonFiles, source.sourceUri);
-					}
-					if ((target & UpdateTarget.PackageReference) == UpdateTarget.PackageReference)
-					{
-						await UpdateProjects(ct, packageId, latestVersion, originalProjectFiles, source.sourceUri);
-					}
+				if ((target & UpdateTarget.Nuspec) == UpdateTarget.Nuspec)
+				{
+					await UpdateNuSpecs(ct, packageId, latest, originalNuSpecFiles);
+				}
+				if ((target & UpdateTarget.ProjectJson) == UpdateTarget.ProjectJson)
+				{
+					await UpdateProjectJson(ct, packageId, latest, originalJsonFiles);
+				}
+				if ((target & UpdateTarget.PackageReference) == UpdateTarget.PackageReference)
+				{
+					await UpdateProjects(ct, packageId, latest, originalProjectFiles);
 				}
 			}
 		}
@@ -313,21 +218,21 @@ namespace Nuget.Updater
 					break;
 			}
 
-			if(extensionFilter == null && nameFilter == null)
+			if (extensionFilter == null && nameFilter == null)
 			{
 				return new string[0];
 			}
 
-			_logAction($"Retrieving {nameFilter ?? extensionFilter} files");
+			Log($"Retrieving {nameFilter ?? extensionFilter} files");
 
 			var files = await GetFiles(ct, solutionRootPath, extensionFilter, nameFilter);
 
-			_logAction($"Found {files.Length} {nameFilter ?? extensionFilter} file(s)");
+			Log($"Found {files.Length} {nameFilter ?? extensionFilter} file(s)");
 
 			return files;
 		}
 
-		private static async Task UpdateNuSpecs(CancellationToken ct, string packageName, NuGetVersion latestVersion, string[] nuspecFiles, Uri feedUri)
+		private static async Task UpdateNuSpecs(CancellationToken ct, string packageName, FeedNuGetVersion latestVersion, string[] nuspecFiles)
 		{
 			foreach (var nuspecFile in nuspecFiles)
 			{
@@ -355,15 +260,14 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(versionNodeValue);
 
-						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, latestVersion, nuspecFile, feedUri);
+						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, latestVersion, nuspecFile);
 
 						if (operation.ShouldProceed)
 						{
 							node.SetAttribute("version", latestVersion.ToString());
 						}
 
-						_logAction(operation.GetLogMessage());
-						_updateOperations.Add(operation);
+						Log(operation);
 					}
 				}
 
@@ -374,7 +278,7 @@ namespace Nuget.Updater
 			}
 		}
 
-		private static async Task UpdateProjectJson(CancellationToken ct, string packageName, NuGetVersion latestVersion, string[] jsonFiles, Uri feedUri)
+		private static async Task UpdateProjectJson(CancellationToken ct, string packageName, FeedNuGetVersion latestVersion, string[] jsonFiles)
 		{
 			var originalMatch = $@"\""{packageName}\"".*?:.?\""(.*)\""";
 			var replaced = $@"""{packageName}"": ""{latestVersion}""";
@@ -389,7 +293,7 @@ namespace Nuget.Updater
 				{
 					var currentVersion = new NuGetVersion(match.Groups[1].Value);
 
-					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, latestVersion, file, feedUri);
+					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, latestVersion, file);
 
 					if (operation.ShouldProceed)
 					{
@@ -403,109 +307,23 @@ namespace Nuget.Updater
 						await SetFileContent(ct, file, newContent);
 					}
 
-					_logAction(operation.GetLogMessage());
-					_updateOperations.Add(operation);
+					Log(operation);
 				}
 			}
 		}
 
-		private static async Task UpdateProjects(CancellationToken ct, string packageName, NuGetVersion latestVersion, Dictionary<string, XmlDocument> projectFiles, Uri feedUri)
+		private static async Task UpdateProjects(CancellationToken ct, string packageName, FeedNuGetVersion latestVersion, Dictionary<string, XmlDocument> projectFiles)
 		{
 			for (int i = 0; i < projectFiles.Count; i++)
 			{
-				var modified = false;
 				var path = projectFiles.ElementAt(i).Key;
 				var document = projectFiles.ElementAt(i).Value;
 
-#if UAP
-				modified = UpdateProjectReferenceVersions(packageName, latestVersion, modified, document, path, feedUri);
-#else
-				var nsmgr = new XmlNamespaceManager(document.NameTable);
-				nsmgr.AddNamespace("d", MsBuildNamespace);
-				modified |= UpdateProjectReferenceVersions(packageName, latestVersion, modified, document, path, nsmgr, feedUri);
-
-				var nsmgr2 = new XmlNamespaceManager(document.NameTable);
-				nsmgr2.AddNamespace("d", "");
-				modified |= UpdateProjectReferenceVersions(packageName, latestVersion, modified, document, path, nsmgr2, feedUri);
-#endif
-
-				if (modified)
+				if (UpdateProjectReferenceVersions(packageName, latestVersion, document, path))
 				{
 					await SaveDocument(ct, document, path);
 				}
 			}
-		}
-
-		private static async Task<NuGetVersion> GetLatestVersion(CancellationToken ct, IPackageSearchMetadata package, string targetVersion, string excludeTag, bool strict, IEnumerable<string> keepLatestDev = null)
-		{
-			var versions = (await package.GetVersionsAsync()).OrderByDescending(v => v.Version);
-
-			var specialVersion = (keepLatestDev?.Contains(package.Identity.Id, StringComparer.OrdinalIgnoreCase) ?? false) ? "dev" : targetVersion;
-
-			if(specialVersion == "stable")
-			{
-				specialVersion = "";
-			}
-
-			return versions
-				.Where(v => IsMatchingSpecialVersion(specialVersion, v, strict) && !ContainsTag(excludeTag, v))
-				.OrderByDescending(v => v.Version)
-				.FirstOrDefault()
-				?.Version;
-		}
-
-		private static bool ContainsTag(string tag, VersionInfo version)
-		{
-			if (tag?.Equals("") ?? true)
-			{
-				return false;
-			}
-
-			return version?.Version?.ReleaseLabels?.Contains(tag) ?? false;
-		}
-
-		private static bool IsMatchingSpecialVersion(string specialVersion, VersionInfo version, bool strict)
-		{
-			if (string.IsNullOrEmpty(specialVersion))
-			{
-				return !version.Version?.ReleaseLabels?.Any() ?? true;
-			}
-			else
-			{
-				var releaseLabels = version.Version?.ReleaseLabels;
-				var isMatchingSpecialVersion = releaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
-
-				return strict
-					? releaseLabels?.Count() == 2 && isMatchingSpecialVersion  // Check strictly for packages with versions "dev.XXXX"
-					: isMatchingSpecialVersion; // Allow packages with versions "dev.XXXX.XXXX"
-			}
-		}
-
-		private static string GetPackageUrl(string packageId, NuGetVersion version, Uri feedUri)
-		{
-			if(feedUri.AbsoluteUri.StartsWith("https://api.nuget.org"))
-			{
-				return $"https://www.nuget.org/packages/{packageId}/{version.ToFullString()}";
-			}
-
-			var pattern = LegacyAzureArtifactsFeedUrlPattern;
-
-			if(feedUri.AbsoluteUri.StartsWith("https://pkgs.dev.azure.com"))
-			{
-				pattern = AzureArtifactsFeedUrlPattern;
-			}
-
-			var match = Regex.Match(feedUri.AbsoluteUri, pattern);
-
-			if(match.Length > 0)
-			{
-				string accountName = match.Groups["account"].Value;
-				string feedName = match.Groups["feed"].Value;
-
-				return $"https://dev.azure.com/{accountName}/_packaging?_a=package&feed={feedName}&package={packageId}&version={version.ToFullString()}&protocolType=NuGet";
-			}
-
-			return default;
 		}
 	}
 }

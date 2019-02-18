@@ -1,8 +1,6 @@
 ﻿#if !UAP
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,15 +16,15 @@ namespace Nuget.Updater
 		{
 			try
 			{
-				using (var file = File.OpenWrite(outputFilePath))
+				using (var file = File.Open(outputFilePath, FileMode.Open | FileMode.Truncate, FileAccess.Write))
 				using (var writer = new StreamWriter(file))
 				{
 					LogSummary(line => writer.WriteLine(line), includeUrl: true);
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
-				_logAction($"Failed to write to {outputFilePath}. Reason : {ex.Message}");
+				Log($"Failed to write to {outputFilePath}. Reason : {ex.Message}");
 			}
 		}
 
@@ -43,33 +41,45 @@ namespace Nuget.Updater
 
 			return Directory.GetFiles(path, filter, SearchOption.AllDirectories);
 		}
+		private static bool UpdateProjectReferenceVersions(string packageName, FeedNuGetVersion version, XmlDocument document, string documentPath)
+		{
+			var modified = false;
+
+			var nsmgr = new XmlNamespaceManager(document.NameTable);
+			nsmgr.AddNamespace("d", MsBuildNamespace);
+			modified |= UpdateProjectReferenceVersions(packageName, version, document, documentPath, nsmgr);
+
+			var nsmgr2 = new XmlNamespaceManager(document.NameTable);
+			nsmgr2.AddNamespace("d", "");
+			modified |= UpdateProjectReferenceVersions(packageName, version, document, documentPath, nsmgr2);
+
+			return modified;
+		}
 
 		private static bool UpdateProjectReferenceVersions(
 			string packageName,
-			NuGetVersion version,
-			bool modified,
+			FeedNuGetVersion version,
 			XmlDocument doc,
 			string documentPath,
-			XmlNamespaceManager namespaceManager,
-			Uri feedUri
+			XmlNamespaceManager namespaceManager
 		)
 		{
+			var modified = false;
 			foreach (XmlElement packageReference in doc.SelectNodes($"//d:PackageReference[@Include='{packageName}']", namespaceManager))
 			{
 				if (packageReference.HasAttribute("Version"))
 				{
 					var currentVersion = new NuGetVersion(packageReference.Attributes["Version"].Value);
 
-					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath, feedUri);
+					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath);
 
 					if (operation.ShouldProceed)
 					{
-						packageReference.SetAttribute("Version", version.ToString());
+						packageReference.SetAttribute("Version", version.Version.ToString());
 						modified = true;
 					}
 
-					_logAction(operation.GetLogMessage());
-					_updateOperations.Add(operation);
+					Log(operation);
 				}
 				else
 				{
@@ -79,16 +89,15 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(node.InnerText);
 
-						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath, feedUri);
+						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath);
 
 						if (operation.ShouldProceed)
 						{
-							node.InnerText = version.ToString();
+							node.InnerText = version.Version.ToString();
 							modified = true;
 						}
 
-						_logAction(operation.GetLogMessage());
-						_updateOperations.Add(operation);
+						Log(operation);
 					}
 				}
 			}

@@ -1,8 +1,6 @@
 ﻿#if UAP
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Nuget.Updater.Entities;
@@ -41,14 +39,16 @@ namespace Nuget.Updater
 			return files
 				.Select(f =>
 				{
-					_logAction($"Found {f.Path}");
+					Log($"Found {f.Path}");
 					return f.Path;
 				})
 				.ToArray();
 		}
 
-		private static bool UpdateProjectReferenceVersions(string packageName, NuGetVersion version, bool modified, XmlDocument doc, string documentPath, Uri feedUri)
+		private static bool UpdateProjectReferenceVersions(string packageName, FeedNuGetVersion version, XmlDocument doc, string documentPath)
 		{
+			var modified = false;
+
 			var packageReferences = doc.GetElementsByTagName("PackageReference")
 				.Cast<XmlElement>()
 				.Where(p => p.Attributes.GetNamedItem("Include")?.NodeValue?.ToString() == packageName);
@@ -61,16 +61,15 @@ namespace Nuget.Updater
 				{
 					var currentVersion = new NuGetVersion(versionAttribute);
 
-					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath, feedUri);
+					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath);
 
 					if (operation.ShouldProceed)
 					{
-						packageReference.SetAttribute("Version", version.ToString());
+						packageReference.SetAttribute("Version", version.Version.ToString());
 						modified = true;
 					}
 
-					_logAction(operation.GetLogMessage());
-					_updateOperations.Add(operation);
+					Log(operation);
 				}
 				else
 				{
@@ -80,23 +79,20 @@ namespace Nuget.Updater
 					{
 						var currentVersion = new NuGetVersion(node.InnerText);
 
-						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath, feedUri);
+						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, version, documentPath);
 
 						if (operation.ShouldProceed)
 						{
-							node.InnerText = version.ToString();
+							node.InnerText = version.Version.ToString();
 							modified = true;
 						}
 
-						_logAction(operation.GetLogMessage());
-						_updateOperations.Add(operation);
+						Log(operation);
 					}
 				}
 			}
 
 			return modified;
-
-			return false;
 		}
 
 		private static async Task<XmlDocument> GetDocument(CancellationToken ct, string path)

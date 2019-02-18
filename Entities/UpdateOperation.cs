@@ -11,7 +11,7 @@ namespace Nuget.Updater.Entities
 	{
 		private readonly bool _isDowngradeAllowed;
 
-		public UpdateOperation(bool isDowngradeAllowed, string packageName, NuGetVersion previousVersion, NuGetVersion updatedVersion, string filePath, Uri feedUri)
+		public UpdateOperation(bool isDowngradeAllowed, string packageName, NuGetVersion previousVersion, FeedNuGetVersion updatedVersion, string filePath)
 		{
 			_isDowngradeAllowed = isDowngradeAllowed;
 
@@ -19,9 +19,9 @@ namespace Nuget.Updater.Entities
 
 			PackageName = packageName;
 			PreviousVersion = previousVersion;
-			UpdatedVersion = updatedVersion;
+			UpdatedVersion = updatedVersion.Version;
 			FilePath = filePath;
-			FeedUri = feedUri;
+			FeedUri = updatedVersion.FeedUri;
 		}
 
 		public DateTimeOffset Date { get; }
