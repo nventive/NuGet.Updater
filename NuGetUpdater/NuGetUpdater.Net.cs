@@ -16,7 +16,12 @@ namespace Nuget.Updater
 		{
 			try
 			{
-				using (var file = File.Open(outputFilePath, FileMode.Open | FileMode.Truncate, FileAccess.Write))
+				if(File.Exists(outputFilePath))
+				{
+					File.WriteAllText(outputFilePath, "");
+				}
+
+				using (var file = File.OpenWrite(outputFilePath))
 				using (var writer = new StreamWriter(file))
 				{
 					LogSummary(line => writer.WriteLine(line), includeUrl: true);
