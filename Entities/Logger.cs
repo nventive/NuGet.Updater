@@ -1,47 +1,82 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
-using Nuget.Updater.Entities;
+using System.Threading.Tasks;
+using Nuget.Updater.Helpers;
 using NuGet.Versioning;
 
-namespace Nuget.Updater
+namespace Nuget.Updater.Entities
 {
-	partial class NuGetUpdater
+	public class Logger
 	{
 		private const string LegacyAzureArtifactsFeedUrlPattern = @"https:\/\/(?'account'[^.]*).*_packaging\/(?'feed'[^\/]*)";
 		private const string AzureArtifactsFeedUrlPattern = @"https:\/\/pkgs\.dev.azure.com\/(?'account'[^\/]*).*_packaging\/(?'feed'[^\/]*)";
 
-		private static readonly List<UpdateOperation> _updateOperations = new List<UpdateOperation>();
+		private readonly List<UpdateOperation> _updateOperations = new List<UpdateOperation>();
+		private readonly Action<string> _logAction;
+		private readonly string _summaryFilePath;
 
-		private static Action<string> _logAction;
-
-		private static void Log(string message) => _logAction(message);
-
-		private static void Log(UpdateOperation operation)
+		public Logger(Action<string> logAction = null, string summaryFilePath = null)
 		{
-			Log(operation.GetLogMessage());
-			_updateOperations.Add(operation);
+			_logAction = logAction
+#if DEBUG
+				?? Console.WriteLine;
+#else
+				?? new Action<string>(_ => { });
+#endif
+			_summaryFilePath = summaryFilePath;
 		}
 
-		private static void LogUpdateSummary(string outputFilePath = null)
-		{
-			LogSummary(_logAction);
+		public void Clear() => _updateOperations.Clear();
 
-			if (outputFilePath != null)
+		public void Write(string message) => _logAction(message);
+
+		public void Write(IEnumerable<UpdateOperation> operations)
+		{
+			foreach (var o in operations)
 			{
-				LogUpdateSummaryToFile(outputFilePath);
+				Write(o);
 			}
 		}
 
-		private static void LogSummary(Action<string> logAction, bool includeUrl = false)
+		public void Write(UpdateOperation operation)
+		{
+			Write(operation.GetLogMessage());
+			_updateOperations.Add(operation);
+		}
+
+		public void WriteSummary()
+		{
+			var summary = GetSummary().ToArray();
+
+			foreach (var line in summary)
+			{
+				Write(line);
+			}
+
+			if (_summaryFilePath != null)
+			{
+				try
+				{
+					FileHelper.LogToFile(_summaryFilePath, summary);
+				}
+				catch (Exception ex)
+				{
+					Write($"Failed to write to {_summaryFilePath}. Reason : {ex.Message}");
+				}
+			}
+		}
+
+		private IEnumerable<string> GetSummary(bool includeUrl = false)
 		{
 			var completedUpdates = _updateOperations.Where(o => o.ShouldProceed).ToArray();
 			var skippedUpdates = _updateOperations.Where(o => !o.ShouldProceed).ToArray();
 
 			if (completedUpdates.Any() || skippedUpdates.Any())
 			{
-				logAction($"# Package update summary");
+				yield return $"# Package update summary";
 			}
 
 			if (completedUpdates.Any())
@@ -51,14 +86,14 @@ namespace Nuget.Updater
 					.Distinct()
 					.ToArray();
 
-				logAction($"## Updated {updatedPackages.Length} packages:");
+				yield return $"## Updated {updatedPackages.Length} packages:";
 
 				foreach (var p in updatedPackages)
 				{
 					var logMessage = $"[{p.PackageName}] to [{p.UpdatedVersion}]";
 					var url = includeUrl ? GetPackageUrl(p.PackageName, p.UpdatedVersion, p.FeedUri) : default;
 
-					logAction(url == null ? $"- {logMessage}" : $"- [{logMessage}]({url})");
+					yield return url == null ? $"- {logMessage}" : $"- [{logMessage}]({url})";
 				}
 			}
 
@@ -69,18 +104,17 @@ namespace Nuget.Updater
 					.Distinct()
 					.ToArray();
 
-				logAction($"## Skipped {skippedPackages.Length} packages:");
+				yield return $"## Skipped {skippedPackages.Length} packages:";
 
 				foreach (var p in skippedPackages)
 				{
 					var logMessage = $"[{p.PackageName}] is at version [{p.PreviousVersion}]";
 					var url = includeUrl ? GetPackageUrl(p.PackageName, p.PreviousVersion, p.FeedUri) : default;
 
-					logAction(url == null ? $"- {logMessage}" : $"- [{logMessage}]({url})");
+					yield return url == null ? $"- {logMessage}" : $"- [{logMessage}]({url})";
 				}
 			}
 		}
-
 		private static string GetPackageUrl(string packageId, NuGetVersion version, Uri feedUri)
 		{
 			if (feedUri.AbsoluteUri.StartsWith("https://api.nuget.org"))

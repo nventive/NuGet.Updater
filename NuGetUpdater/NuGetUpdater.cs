@@ -6,116 +6,88 @@ using System.Threading;
 using System.Threading.Tasks;
 using Nuget.Updater.Entities;
 using Nuget.Updater.Extensions;
+using Nuget.Updater.Helpers;
 using NuGet.Configuration;
 using NuGet.Versioning;
 
 #if UAP
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
-using XmlElement = System.Xml.XmlElement;
 #else
 using XmlDocument = System.Xml.XmlDocument;
-using XmlElement = System.Xml.XmlElement;
-using XmlNamespaceManager = System.Xml.XmlNamespaceManager;
 #endif
 
 namespace Nuget.Updater
 {
 	public partial class NuGetUpdater
 	{
-		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
+		private static readonly PackageSource NuGetOrgSource = new PackageSource("https://api.nuget.org/v3/index.json");
 
-		private static bool _allowDowngrade;
+		private readonly Parameters _parameters;
+		private readonly Logger _log;
 
-		public static bool Update(
-			string solutionRoot,
-			string sourceFeed,
-			string targetVersion,
-			string excludeTag = "",
-			string PAT = "",
-			bool includeNuGetOrg = true,
-			bool allowDowngrade = false,
-			bool strict = true,
-			IEnumerable<string> keepLatestDev = null,
-			IEnumerable<string> ignorePackages = null,
-			IEnumerable<string> updatePackages = null,
-			UpdateTarget target = UpdateTarget.All,
-			Action<string> logAction = null,
-			string summaryOutputFilePath = null
-		)
+		private NuGetUpdater(Parameters parameters, Logger log)
 		{
-			return UpdateAsync(
-				CancellationToken.None,
-				solutionRoot,
-				sourceFeed,
-				targetVersion,
-				excludeTag,
-				PAT,
-				includeNuGetOrg,
-				allowDowngrade,
-				strict,
-				keepLatestDev,
-				ignorePackages,
-				updatePackages,
-				target,
-				logAction,
-				summaryOutputFilePath
-			).Result;
+			_parameters = parameters;
+			_log = log;
 		}
 
-		public static async Task<bool> UpdateAsync(
-			CancellationToken ct,
-			string solutionRoot,
-			string sourceFeed,
-			string targetVersion,
-			string excludeTag = "",
-			string PAT = "",
-			bool includeNuGetOrg = true,
-			bool allowDowngrade = false,
-			bool strict = true,
-			IEnumerable<string> keepLatestDev = null,
-			IEnumerable<string> ignorePackages = null,
-			IEnumerable<string> updatePackages = null,
-			UpdateTarget target = UpdateTarget.All,
-			Action<string> logAction = null,
-			string summaryOutputFilePath = null
-		)
+		private async Task<bool> UpdatePackages(CancellationToken ct)
 		{
-			_updateOperations.Clear();
+			_log.Clear();
 
-			_logAction = logAction
-#if DEBUG
-				?? Console.WriteLine;
-#else
-				?? new Action<string>(_ => { });
-#endif
-			_allowDowngrade = allowDowngrade;
+			var packages = await GetPackages(ct);
+			var targetFiles = await GetTargetFiles(ct);
 
-			var packages = await GetPackages(ct, sourceFeed, PAT, includeNuGetOrg);
+			foreach(var package in packages.Where(p => _parameters.ShouldUpdatePackage(p)))
+			{
+				var latest = await package.GetLatestVersion(ct, _parameters);
 
-			await UpdatePackages(ct, solutionRoot, packages, targetVersion, excludeTag, strict, keepLatestDev, ignorePackages, updatePackages, target);
+				if (latest == null)
+				{
+					_log.Write($"Skipping [{package.PackageId}]: no {_parameters.TargetVersion} version found.");
+					continue;
+				}
 
-			LogUpdateSummary(summaryOutputFilePath);
+				_log.Write($"Latest {_parameters.TargetVersion} version for [{package.PackageId}] is [{latest.Version}]");
+
+				foreach(var files in targetFiles)
+				{
+					var updates = new UpdateOperation[0];
+
+					switch (files.Key)
+					{
+						case UpdateTarget.Nuspec:
+							updates = await UpdateNuSpecs(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
+							break;
+						case UpdateTarget.ProjectJson:
+							updates = await UpdateProjectJson(ct, package.PackageId, latest, files.Value.Select(p => p.Key).ToArray(), _parameters.IsDowngradeAllowed);
+							break;
+						case UpdateTarget.PackageReference:
+							updates = await UpdateProjects(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
+							break;
+						default:
+							break;
+					}
+
+					_log.Write(updates);
+				}
+			}
+
+			_log.WriteSummary();
 
 			return true;
 		}
 
-		private static async Task<NuGetPackage[]> GetPackages(CancellationToken ct, string feed, string PAT, bool includNuGetOrg)
+		private async Task<NuGetPackage[]> GetPackages(CancellationToken ct)
 		{
-			var privateSource = new PackageSource(feed, "Feed")
-			{
-				Credentials = PackageSourceCredential.FromUserInput("Feed", "user", PAT, false)
-			};
-
 			//Using search instead of list because the latter forces the v2 api
-			var packages = await privateSource.SearchPackages(ct, Log);
+			var packages = await _parameters.GetFeedPackageSource().SearchPackages(ct, _log.Write);
 
-			if (includNuGetOrg)
+			if (_parameters.IncludeNuGetOrg)
 			{
-				var publicSource = new PackageSource("https://api.nuget.org/v3/index.json");
-
 				//Using search instead of list because the latter forces the v2 api
 				packages = packages
-					.Concat(await publicSource.SearchPackages(ct, Log, searchTerm: "owner:nventive"))
+					.Concat(await NuGetOrgSource.SearchPackages(ct, _log.Write, searchTerm: "owner:nventive"))
 					.GroupBy(p => p.PackageId)
 					.Select(g => new NuGetPackage(g.Key, g.ToArray()))
 					.ToArray();
@@ -124,81 +96,22 @@ namespace Nuget.Updater
 			return packages;
 		}
 
-		private static async Task UpdatePackages(
-			CancellationToken ct,
-			string solutionRoot,
-			NuGetPackage[] packages,
-			string targetVersion,
-			string excludeTag,
-			bool strict,
-			IEnumerable<string> keepLatestDev = null,
-			IEnumerable<string> ignoredPackages = null,
-			IEnumerable<string> packagesToUpdate = null,
-			UpdateTarget target = UpdateTarget.All
-		)
+		private async Task<Dictionary<UpdateTarget, Dictionary<string, XmlDocument>>> GetTargetFiles(CancellationToken ct)
 		{
-			var originalNuSpecFiles = new string[0];
-			var originalJsonFiles = new string[0];
-			var originalProjectFiles = new Dictionary<string, XmlDocument>();
+			var targetFiles = new Dictionary<UpdateTarget, Dictionary<string, XmlDocument>>();
 
-			if ((target & UpdateTarget.Nuspec) == UpdateTarget.Nuspec)
+			foreach (var target in new[] { UpdateTarget.Nuspec, UpdateTarget.PackageReference, UpdateTarget.ProjectJson })
 			{
-				originalNuSpecFiles = await GetTargetFiles(ct, solutionRoot, UpdateTarget.Nuspec);
-			}
-			if ((target & UpdateTarget.ProjectJson) == UpdateTarget.ProjectJson)
-			{
-				originalJsonFiles = await GetTargetFiles(ct, solutionRoot, UpdateTarget.ProjectJson);
-			}
-			if ((target & UpdateTarget.PackageReference) == UpdateTarget.PackageReference)
-			{
-				var paths = await GetTargetFiles(ct, solutionRoot, UpdateTarget.PackageReference);
-
-				foreach (var p in paths)
+				if (_parameters.HasUpdateTarget(target))
 				{
-					var document = await GetDocument(ct, p);
-					originalProjectFiles.Add(p, document);
+					targetFiles.Add(target, await GetFilesForTarget(ct, target));
 				}
 			}
 
-			foreach (var package in packages)
-			{
-				var packageId = package.PackageId;
-
-				if (ignoredPackages != null && ignoredPackages.Contains(packageId))
-				{
-					continue;
-				}
-
-				if ((packagesToUpdate?.Any() ?? false) && !packagesToUpdate.Contains(packageId))
-				{
-					continue;
-				}
-
-				var latest = await package.GetLatestVersion(ct, targetVersion, excludeTag, strict, keepLatestDev);
-
-				if (latest == null)
-				{
-					continue;
-				}
-
-				Log($"Latest {targetVersion} version for [{packageId}] is [{latest.Version}]");
-
-				if ((target & UpdateTarget.Nuspec) == UpdateTarget.Nuspec)
-				{
-					await UpdateNuSpecs(ct, packageId, latest, originalNuSpecFiles);
-				}
-				if ((target & UpdateTarget.ProjectJson) == UpdateTarget.ProjectJson)
-				{
-					await UpdateProjectJson(ct, packageId, latest, originalJsonFiles);
-				}
-				if ((target & UpdateTarget.PackageReference) == UpdateTarget.PackageReference)
-				{
-					await UpdateProjects(ct, packageId, latest, originalProjectFiles);
-				}
-			}
+			return targetFiles;
 		}
 
-		private static async Task<string[]> GetTargetFiles(CancellationToken ct, string solutionRootPath, UpdateTarget target)
+		private async Task<Dictionary<string, XmlDocument>> GetFilesForTarget(CancellationToken ct, UpdateTarget target)
 		{
 			string extensionFilter = null, nameFilter = null;
 
@@ -213,87 +126,110 @@ namespace Nuget.Updater
 				case UpdateTarget.PackageReference:
 					extensionFilter = ".csproj";
 					break;
-				case UpdateTarget.All:
 				default:
 					break;
 			}
 
 			if (extensionFilter == null && nameFilter == null)
 			{
-				return new string[0];
+				return new Dictionary<string, XmlDocument>();
 			}
 
-			Log($"Retrieving {nameFilter ?? extensionFilter} files");
+			_log.Write($"Retrieving {nameFilter ?? extensionFilter} files");
 
-			var files = await GetFiles(ct, solutionRootPath, extensionFilter, nameFilter);
+			var files = await FileHelper.GetFiles(ct, _parameters.SolutionRoot, extensionFilter, nameFilter);
 
-			Log($"Found {files.Length} {nameFilter ?? extensionFilter} file(s)");
+			_log.Write($"Found {files.Length} {nameFilter ?? extensionFilter} file(s)");
 
-			return files;
-		}
-
-		private static async Task UpdateNuSpecs(CancellationToken ct, string packageName, FeedNuGetVersion latestVersion, string[] nuspecFiles)
-		{
-			foreach (var nuspecFile in nuspecFiles)
+			if(target == UpdateTarget.ProjectJson)
 			{
-				var doc = await GetDocument(ct, nuspecFile);
-
-#if UAP
-				var nodes = doc
-					.SelectNodes($"//x:dependency[@id='{packageName}']")
-					.OfType<XmlElement>();
-#else
-				var mgr = new XmlNamespaceManager(doc.NameTable);
-				mgr.AddNamespace("x", doc.DocumentElement.NamespaceURI);
-
-				var nodes = doc
-					.SelectNodes($"//x:dependency[@id='{packageName}']", mgr)
-					.OfType<XmlElement>();
-#endif
-
-				foreach (var node in nodes)
-				{
-					var versionNodeValue = node.GetAttribute("version");
-
-					// only nodes with explicit version, skip expansion.
-					if (!versionNodeValue.Contains("{"))
-					{
-						var currentVersion = new NuGetVersion(versionNodeValue);
-
-						var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, latestVersion, nuspecFile);
-
-						if (operation.ShouldProceed)
-						{
-							node.SetAttribute("version", latestVersion.ToString());
-						}
-
-						Log(operation);
-					}
-				}
-
-				if (nodes.Any())
-				{
-					await SaveDocument(ct, doc, nuspecFile);
-				}
+				return files.ToDictionary(f => f, f => default(XmlDocument));
 			}
+
+			return (await Task.WhenAll(files.Select(f => f.GetDocument(ct))))
+				.ToDictionary(p => p.Key, p => p.Value);
 		}
 
-		private static async Task UpdateProjectJson(CancellationToken ct, string packageName, FeedNuGetVersion latestVersion, string[] jsonFiles)
+		private static async Task<UpdateOperation[]> UpdateNuSpecs(
+			CancellationToken ct,
+			string packageId,
+			FeedNuGetVersion version,
+			Dictionary<string, XmlDocument> nuspecDocuments,
+			bool isDowngradeAllowed
+		)
 		{
+			var operations = new List<UpdateOperation>();
+
+			foreach (var document in nuspecDocuments)
+			{
+				var path = document.Key;
+				var xmlDocument = document.Value;
+
+				var updates = xmlDocument.UpdateNuSpecVersions(packageId, version, path, isDowngradeAllowed);
+
+				if (updates.Any(u => u.ShouldProceed))
+				{
+					await xmlDocument.Save(ct, path);
+				}
+
+				operations.AddRange(updates);
+			}
+
+			return operations.ToArray();
+		}
+
+		private static async Task<UpdateOperation[]> UpdateProjects(
+			CancellationToken ct,
+			string packageId,
+			FeedNuGetVersion version,
+			Dictionary<string, XmlDocument> projectDocuments,
+			bool isDowngradeAllowed
+		)
+		{
+			var operations = new List<UpdateOperation>();
+
+			foreach (var document in projectDocuments)
+			{
+				var path = document.Key;
+				var xmlDocument = document.Value;
+
+				var updates = xmlDocument.UpdateProjectReferenceVersions(packageId, version, path, isDowngradeAllowed);
+
+				if (updates.Any(u => u.ShouldProceed))
+				{
+					await xmlDocument.Save(ct, path);
+				}
+
+				operations.AddRange(updates);
+			}
+
+			return operations.ToArray();
+		}
+
+		private static async Task<UpdateOperation[]> UpdateProjectJson(
+			CancellationToken ct,
+			string packageName,
+			FeedNuGetVersion latestVersion,
+			string[] jsonFiles,
+			bool isDowngradeAllowed
+		)
+		{
+			var operations = new List<UpdateOperation>();
+
 			var originalMatch = $@"\""{packageName}\"".*?:.?\""(.*)\""";
 			var replaced = $@"""{packageName}"": ""{latestVersion}""";
 
 			for (int i = 0; i < jsonFiles.Length; i++)
 			{
 				var file = jsonFiles[i];
-				var fileContent = await ReadFileContent(ct, file);
+				var fileContent = await FileHelper.ReadFileContent(ct, file);
 
 				var match = Regex.Match(fileContent, originalMatch, RegexOptions.IgnoreCase);
 				if (match?.Success ?? false)
 				{
 					var currentVersion = new NuGetVersion(match.Groups[1].Value);
 
-					var operation = new UpdateOperation(_allowDowngrade, packageName, currentVersion, latestVersion, file);
+					var operation = new UpdateOperation(isDowngradeAllowed, packageName, currentVersion, latestVersion, file);
 
 					if (operation.ShouldProceed)
 					{
@@ -304,26 +240,14 @@ namespace Nuget.Updater
 							RegexOptions.IgnoreCase
 						);
 
-						await SetFileContent(ct, file, newContent);
+						await FileHelper.SetFileContent(ct, file, newContent);
 					}
 
-					Log(operation);
+					operations.Add(operation);
 				}
 			}
-		}
 
-		private static async Task UpdateProjects(CancellationToken ct, string packageName, FeedNuGetVersion latestVersion, Dictionary<string, XmlDocument> projectFiles)
-		{
-			for (int i = 0; i < projectFiles.Count; i++)
-			{
-				var path = projectFiles.ElementAt(i).Key;
-				var document = projectFiles.ElementAt(i).Value;
-
-				if (UpdateProjectReferenceVersions(packageName, latestVersion, document, path))
-				{
-					await SaveDocument(ct, document, path);
-				}
-			}
+			return operations.ToArray();
 		}
 	}
 }

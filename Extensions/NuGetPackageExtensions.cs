@@ -14,18 +14,12 @@ namespace Nuget.Updater.Extensions
 		public static async Task<FeedNuGetVersion> GetLatestVersion(
 			this NuGetPackage package,
 			CancellationToken ct,
-			string targetVersion,
-			string excludeTag,
-			bool strict,
-			IEnumerable<string> keepLatestDev = null
+			NuGetUpdater.Parameters parameters
 		)
 		{
-			var versions = (await package.GetVersions(ct)).OrderByDescending(v => v.Version);
+			var specialVersion = parameters.TargetVersion;
 
-
-			var specialVersion = targetVersion;
-
-			if ((keepLatestDev?.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase) ?? false))
+			if (parameters.ShouldKeepPackageAtLatestDev(package.PackageId))
 			{
 				specialVersion = "dev";
 			}
@@ -35,8 +29,10 @@ namespace Nuget.Updater.Extensions
 				specialVersion = "";
 			}
 
+			var versions = (await package.GetVersions(ct)).OrderByDescending(v => v.Version);
+
 			var version = versions
-				.Where(v => IsMatchingSpecialVersion(specialVersion, v.Version, strict) && !ContainsTag(excludeTag, v.Version))
+				.Where(v => v.IsMatchingSpecialVersion(specialVersion, parameters.Strict) && !v.ContainsTag(parameters.TagToExclude))
 				.OrderByDescending(v => v.Version)
 				.FirstOrDefault();
 
@@ -55,33 +51,6 @@ namespace Nuget.Updater.Extensions
 			}
 
 			return versions;
-		}
-
-		private static bool ContainsTag(string tag, NuGetVersion version)
-		{
-			if (tag?.Equals("") ?? true)
-			{
-				return false;
-			}
-
-			return version?.ReleaseLabels?.Contains(tag) ?? false;
-		}
-
-		private static bool IsMatchingSpecialVersion(string specialVersion, NuGetVersion version, bool strict)
-		{
-			if (string.IsNullOrEmpty(specialVersion))
-			{
-				return !version?.ReleaseLabels?.Any() ?? true;
-			}
-			else
-			{
-				var releaseLabels = version?.ReleaseLabels;
-				var isMatchingSpecialVersion = releaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
-
-				return strict
-					? releaseLabels?.Count() == 2 && isMatchingSpecialVersion  // Check strictly for packages with versions "dev.XXXX"
-					: isMatchingSpecialVersion; // Allow packages with versions "dev.XXXX.XXXX"
-			}
 		}
 	}
 }
