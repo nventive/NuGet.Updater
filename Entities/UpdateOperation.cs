@@ -36,7 +36,7 @@ namespace Nuget.Updater.Entities
 
 		public Uri FeedUri { get; }
 
-		public bool ShouldProceed => PreviousVersion < UpdatedVersion || (_isDowngradeAllowed && PreviousVersion.IsGreaterThan(UpdatedVersion));
+		public bool ShouldProceed => UpdatedVersion.IsGreaterThan(PreviousVersion) || _isDowngradeAllowed;
 
 		public bool IsLatestVersion => PreviousVersion == UpdatedVersion;
 
