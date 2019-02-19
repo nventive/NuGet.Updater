@@ -22,7 +22,8 @@ namespace Nuget.Updater
 			IEnumerable<string> updatePackages = null,
 			UpdateTarget target = UpdateTarget.All,
 			Action<string> logAction = null,
-			string summaryOutputFilePath = null
+			string summaryOutputFilePath = null,
+			bool useStableIfMoreRecent = false
 		)
 		{
 			return UpdateAsync(
@@ -40,9 +41,16 @@ namespace Nuget.Updater
 				updatePackages,
 				target,
 				logAction,
-				summaryOutputFilePath
+				summaryOutputFilePath,
+				useStableIfMoreRecent
 			).Result;
 		}
+
+		public static bool Update(
+			Parameters parameters,
+			Action<string> logAction = null,
+			string summaryOutputFilePath = null
+		) => UpdateAsync(CancellationToken.None, parameters, new Logger(logAction)).Result;
 
 		public static async Task<bool> UpdateAsync(
 			CancellationToken ct,
@@ -59,7 +67,8 @@ namespace Nuget.Updater
 			IEnumerable<string> packagesToUpdate = null,
 			UpdateTarget updateTarget = UpdateTarget.All,
 			Action<string> logAction = null,
-			string summaryOutputFilePath = null
+			string summaryOutputFilePath = null,
+			bool useStableIfMoreRecent = false
 		)
 		{
 			var parameters = new Parameters
@@ -76,12 +85,18 @@ namespace Nuget.Updater
 				PackagesToKeepAtLatestDev = packagesTokeepAtLatestDev,
 				PackagesToIgnore = packagesToIgnore,
 				PackagesToUpdate = packagesToUpdate,
+				UseStableIfMoreRecent = useStableIfMoreRecent,
 			};
 
-			var log = new Logger(logAction, summaryOutputFilePath);
-
-			return await UpdateAsync(ct, parameters, log);
+			return await UpdateAsync(ct, parameters, logAction, summaryOutputFilePath);
 		}
+
+		public static Task<bool> UpdateAsync(
+			CancellationToken ct,
+			Parameters parameters,
+			Action<string> logAction = null,
+			string summaryOutputFilePath = null
+		) => UpdateAsync(ct, parameters, new Logger(logAction, summaryOutputFilePath));
 
 		public static async Task<bool> UpdateAsync(
 			CancellationToken ct,

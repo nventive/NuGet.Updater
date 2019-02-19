@@ -69,6 +69,11 @@ namespace Nuget.Updater
 			/// A list of packages to update. Will update all packages found if nothing is specified.
 			/// </summary>
 			public IEnumerable<string> PackagesToUpdate { get; set; }
+
+			/// <summary>
+			/// Whether to use the stable version if a more recent version is available
+			/// </summary>
+			public bool UseStableIfMoreRecent { get; set; }
 		}
 	}
 }

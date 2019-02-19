@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Nuget.Updater.Entities;
-using NuGet.Versioning;
 
 namespace Nuget.Updater.Extensions
 {
@@ -35,6 +32,19 @@ namespace Nuget.Updater.Extensions
 				.Where(v => v.IsMatchingSpecialVersion(specialVersion, parameters.Strict) && !v.ContainsTag(parameters.TagToExclude))
 				.OrderByDescending(v => v.Version)
 				.FirstOrDefault();
+
+			if(version != null && parameters.UseStableIfMoreRecent && specialVersion != "")
+			{
+				var stableVersion = versions
+					.Where(v => v.IsMatchingSpecialVersion("", parameters.Strict) && !v.ContainsTag(parameters.TagToExclude))
+					.OrderByDescending(v => v.Version)
+					.FirstOrDefault();
+
+				if (stableVersion?.Version.IsGreaterThan(version.Version) ?? false)
+				{
+					return stableVersion;
+				}
+			}
 
 			return version;
 		}

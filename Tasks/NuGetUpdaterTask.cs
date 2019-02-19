@@ -9,14 +9,6 @@ namespace Nuget.Updater
 		[Required]
 		public string SpecialVersion { get; set; }
 
-		public string ExcludeTag { get; set; }
-
-		public string IgnorePackages { get; set; }
-
-		public string UpdatePackages { get; set; }
-
-		public string UpdateSummaryFile { get; set; }
-
 		[Required]
 		public string SolutionRoot { get; set; }
 
@@ -29,56 +21,56 @@ namespace Nuget.Updater
 		[Required]
 		public bool AllowDowngrade { get; set; }
 
+		public string ExcludeTag { get; set; }
+
+		public string IgnorePackages { get; set; }
+
+		public string UpdatePackages { get; set; }
+
+		public string UpdateSummaryFile { get; set; }
+
+		public bool UseStableIfMoreRecent { get; set; }
+
 		public override bool Execute()
 		{
-			string[] packagesToIgnore;
-
-			switch (IgnorePackages)
+			var parameters = new NuGetUpdater.Parameters
 			{
-				case var p when p == null:
-					packagesToIgnore = new string[0];
-					break;
-				case var p when p.Contains(";"):
-					packagesToIgnore = p.Split(';');
-					break;
-				case var p when p != null:
-					packagesToIgnore = new[] { p };
-					break;
-				default:
-					packagesToIgnore = null;
-					break;
-			}
-
-			string[] packagesToUpdate;
-
-			switch (UpdatePackages)
-			{
-				case var p when p == null:
-					packagesToUpdate = new string[0];
-					break;
-				case var p when p.Contains(";"):
-					packagesToUpdate = p.Split(';');
-					break;
-				case var p when p != null:
-					packagesToUpdate = new[] { p };
-					break;
-				default:
-					packagesToUpdate = null;
-					break;
-			}
+				SolutionRoot = SolutionRoot,
+				SourceFeed = NuGetFeed,
+				SourceFeedPersonalAccessToken = PAT,
+				TargetVersion = SpecialVersion,
+				IsDowngradeAllowed = AllowDowngrade,
+				PackagesToIgnore = GetPackages(IgnorePackages),
+				PackagesToUpdate = GetPackages(UpdatePackages),
+				TagToExclude = ExcludeTag,
+				UseStableIfMoreRecent = UseStableIfMoreRecent,
+				//Default values
+				PackagesToKeepAtLatestDev = new string[0],
+				IncludeNuGetOrg = true,
+				Strict = true,
+				UpdateTarget = UpdateTarget.All,
+			};
 
 			return NuGetUpdater.Update(
-				SolutionRoot,
-				NuGetFeed,
-				SpecialVersion,
-				ExcludeTag,
-				PAT: PAT,
-				allowDowngrade: AllowDowngrade,
-				ignorePackages: packagesToIgnore,
-				updatePackages: packagesToUpdate,
-				logAction: message => Log.LogMessage(message),
-				summaryOutputFilePath: UpdateSummaryFile
+				parameters,
+				message => Log.LogMessage(message),
+				UpdateSummaryFile
 			);
+		}
+
+		private string[] GetPackages(string input)
+		{
+			switch (input)
+			{
+				case var p when p == null:
+					return new string[0];
+				case var p when p.Contains(";"):
+					return p.Split(';');
+				case var p when p != null:
+					return new[] { p };
+				default:
+					return new string[0];
+			}
 		}
 	}
 }
