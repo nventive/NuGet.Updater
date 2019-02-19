@@ -62,14 +62,12 @@ namespace Nuget.Updater
 		{
 			switch (input)
 			{
-				case var p when p == null:
-					return new string[0];
 				case var p when p.Contains(";"):
 					return p.Split(';');
 				case var p when p != null:
 					return new[] { p };
 				default:
-					return new string[0];
+					return null;
 			}
 		}
 	}

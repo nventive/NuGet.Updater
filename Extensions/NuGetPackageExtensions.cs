@@ -33,14 +33,14 @@ namespace Nuget.Updater.Extensions
 				.OrderByDescending(v => v.Version)
 				.FirstOrDefault();
 
-			if(version != null && parameters.UseStableIfMoreRecent && specialVersion != "")
+			if(parameters.UseStableIfMoreRecent && specialVersion != "")
 			{
 				var stableVersion = versions
 					.Where(v => v.IsMatchingSpecialVersion("", parameters.Strict) && !v.ContainsTag(parameters.TagToExclude))
 					.OrderByDescending(v => v.Version)
 					.FirstOrDefault();
 
-				if (stableVersion?.Version.IsGreaterThan(version.Version) ?? false)
+				if (version == null || (stableVersion?.Version.IsGreaterThan(version.Version) ?? false))
 				{
 					return stableVersion;
 				}

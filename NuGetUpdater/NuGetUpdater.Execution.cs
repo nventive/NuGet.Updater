@@ -50,7 +50,7 @@ namespace Nuget.Updater
 			Parameters parameters,
 			Action<string> logAction = null,
 			string summaryOutputFilePath = null
-		) => UpdateAsync(CancellationToken.None, parameters, new Logger(logAction)).Result;
+		) => UpdateAsync(CancellationToken.None, parameters, new Logger(logAction, summaryOutputFilePath)).Result;
 
 		public static async Task<bool> UpdateAsync(
 			CancellationToken ct,
