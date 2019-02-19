@@ -44,7 +44,9 @@ namespace Nuget.Updater.Entities
 		{
 			if (ShouldProceed)
 			{
-				return $"Updating [{PackageName}] from [{PreviousVersion}] to [{UpdatedVersion}] in [{FilePath}]";
+				return UpdatedVersion.IsGreaterThan(PreviousVersion)
+					? $"Updating [{PackageName}] from [{PreviousVersion}] to [{UpdatedVersion}] in [{FilePath}]"
+					: $"Downgrading [{PackageName}] from [{PreviousVersion}] to [{UpdatedVersion}] in [{FilePath}]";
 			}
 			else
 			{
