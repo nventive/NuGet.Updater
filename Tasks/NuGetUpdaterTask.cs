@@ -62,6 +62,8 @@ namespace Nuget.Updater
 		{
 			switch (input)
 			{
+				case var p when p == null:
+					return null;
 				case var p when p.Contains(";"):
 					return p.Split(';');
 				case var p when p != null:
