@@ -23,5 +23,41 @@ namespace Nuget.Updater.Extensions
 
 		internal static bool ShouldKeepPackageAtLatestDev(this NuGetUpdater.Parameters parameters, string packageId) =>
 			parameters.PackagesToKeepAtLatestDev != null && parameters.PackagesToKeepAtLatestDev.Contains(packageId, StringComparer.OrdinalIgnoreCase);
+
+		internal static IEnumerable<string> GetSummary(this NuGetUpdater.Parameters parameters)
+		{
+			yield return $"## Configuration";
+
+			var packageSources = parameters.IncludeNuGetOrg ? $"NuGet.org and {parameters.SourceFeed}" : parameters.SourceFeed;
+			yield return $"- Using NuGet pacakges from {packageSources}";
+
+			var targetVersion = parameters.UseStableIfMoreRecent ? $"{parameters.TargetVersion} with fallback to stable if a more recent version is available" : parameters.TargetVersion;
+			yield return $"- Targeting version {targetVersion}";
+
+			if (parameters.IsDowngradeAllowed)
+			{
+				yield return $"- Allowing package downgrade if a lower version is found";
+			}
+
+			if(parameters.TagToExclude != null && parameters.TagToExclude != "")
+			{
+				yield return $"- Excluding versions with the {parameters.TagToExclude} tag";
+			}
+
+			if(parameters.PackagesToKeepAtLatestDev?.Any() ?? false)
+			{
+				yield return $"- Keeping {string.Join(",", parameters.PackagesToKeepAtLatestDev)} at latest dev";
+			}
+
+			if (parameters.PackagesToIgnore?.Any() ?? false)
+			{
+				yield return $"- Ignoring {string.Join(",", parameters.PackagesToKeepAtLatestDev)}";
+			}
+
+			if (parameters.PackagesToUpdate?.Any() ?? false)
+			{
+				yield return $"- Updating only {string.Join(",", parameters.PackagesToKeepAtLatestDev)}";
+			}
+		}
 	}
 }

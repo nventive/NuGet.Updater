@@ -73,7 +73,7 @@ namespace Nuget.Updater
 				}
 			}
 
-			_log.WriteSummary();
+			_log.WriteSummary(_parameters);
 
 			return true;
 		}

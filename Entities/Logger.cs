@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Nuget.Updater.Extensions;
 using Nuget.Updater.Helpers;
 using NuGet.Versioning;
 
@@ -47,11 +48,9 @@ namespace Nuget.Updater.Entities
 			_updateOperations.Add(operation);
 		}
 
-		public void WriteSummary()
+		public void WriteSummary(NuGetUpdater.Parameters parameters)
 		{
-			var summary = GetSummary().ToArray();
-
-			foreach (var line in summary)
+			foreach (var line in GetSummary(parameters))
 			{
 				Write(line);
 			}
@@ -60,7 +59,7 @@ namespace Nuget.Updater.Entities
 			{
 				try
 				{
-					FileHelper.LogToFile(_summaryFilePath, summary);
+					FileHelper.LogToFile(_summaryFilePath, GetSummary(parameters, includeUrl: true));
 				}
 				catch (Exception ex)
 				{
@@ -69,14 +68,21 @@ namespace Nuget.Updater.Entities
 			}
 		}
 
-		private IEnumerable<string> GetSummary(bool includeUrl = false)
+		private IEnumerable<string> GetSummary(NuGetUpdater.Parameters parameters, bool includeUrl = false)
 		{
 			var completedUpdates = _updateOperations.Where(o => o.ShouldProceed).ToArray();
 			var skippedUpdates = _updateOperations.Where(o => !o.ShouldProceed).ToArray();
 
-			if (completedUpdates.Any() || skippedUpdates.Any())
+			yield return $"# Package update summary";
+
+			if (_updateOperations.Count == 0)
 			{
-				yield return $"# Package update summary";
+				yield return $"No packages have been updated.";
+			}
+
+			foreach(var line in parameters.GetSummary())
+			{
+				yield return line;
 			}
 
 			if (completedUpdates.Any())
