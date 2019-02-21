@@ -29,7 +29,7 @@ namespace Nuget.Updater.Extensions
 			yield return $"## Configuration";
 
 			var packageSources = parameters.IncludeNuGetOrg ? $"NuGet.org and {parameters.SourceFeed}" : parameters.SourceFeed;
-			yield return $"- Using NuGet pacakges from {packageSources}";
+			yield return $"- Using NuGet packages from {packageSources}";
 
 			var targetVersion = parameters.UseStableIfMoreRecent ? $"{parameters.TargetVersion} with fallback to stable if a more recent version is available" : parameters.TargetVersion;
 			yield return $"- Targeting version {targetVersion}";
