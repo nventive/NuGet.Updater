@@ -51,12 +51,12 @@ namespace Nuget.Updater.Extensions
 
 			if (parameters.PackagesToIgnore?.Any() ?? false)
 			{
-				yield return $"- Ignoring {string.Join(",", parameters.PackagesToKeepAtLatestDev)}";
+				yield return $"- Ignoring {string.Join(",", parameters.PackagesToIgnore)}";
 			}
 
 			if (parameters.PackagesToUpdate?.Any() ?? false)
 			{
-				yield return $"- Updating only {string.Join(",", parameters.PackagesToKeepAtLatestDev)}";
+				yield return $"- Updating only {string.Join(",", parameters.PackagesToUpdate)}";
 			}
 		}
 	}

@@ -66,7 +66,7 @@ namespace Nuget.Updater
 					return null;
 				case var p when p.Contains(";"):
 					return p.Split(';');
-				case var p when p != null:
+				case var p when p != null && p != "":
 					return new[] { p };
 				default:
 					return null;
