@@ -29,7 +29,9 @@ namespace Nuget.Updater.Extensions
 
 			var packageReferences = document.GetElementsByTagName("PackageReference")
 				.Cast<XmlElement>()
-				.Where(p => p.Attributes.GetNamedItem("Include")?.NodeValue?.ToString() == packageId);
+				.Where(p => p.Attributes.GetNamedItem("Include")?.NodeValue?.ToString() == packageId 
+					|| p.Attributes.GetNamedItem("Update")?.NodeValue?.ToString() == packageId
+				);
 
 			foreach (var packageReference in packageReferences)
 			{

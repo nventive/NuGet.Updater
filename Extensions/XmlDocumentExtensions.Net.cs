@@ -44,7 +44,7 @@ namespace Nuget.Updater.Extensions
 		{
 			var operations = new List<UpdateOperation>();
 
-			foreach (XmlElement packageReference in document.SelectNodes($"//d:PackageReference[@Include='{packageId}']", namespaceManager))
+			foreach (XmlElement packageReference in document.SelectNodes($"//d:PackageReference[@Include='{packageId}' or @Updated='{packageId}']", namespaceManager))
 			{
 				if (packageReference.HasAttribute("Version"))
 				{
