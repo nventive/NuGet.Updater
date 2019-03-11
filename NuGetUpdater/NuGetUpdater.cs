@@ -62,8 +62,10 @@ namespace Nuget.Updater
 						case UpdateTarget.ProjectJson:
 							updates = await UpdateProjectJson(ct, package.PackageId, latest, files.Value.Select(p => p.Key).ToArray(), _parameters.IsDowngradeAllowed);
 							break;
-						case UpdateTarget.PackageReference:
-							updates = await UpdateProjects(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
+                        case UpdateTarget.DirectoryProps:
+                        case UpdateTarget.DirectoryTargets:
+                        case UpdateTarget.PackageReference:
+                            updates = await UpdateProjects(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
 							break;
 						default:
 							break;
@@ -100,7 +102,15 @@ namespace Nuget.Updater
 		{
 			var targetFiles = new Dictionary<UpdateTarget, Dictionary<string, XmlDocument>>();
 
-			foreach (var target in new[] { UpdateTarget.Nuspec, UpdateTarget.PackageReference, UpdateTarget.ProjectJson })
+            var updateTarget = new[] {
+                UpdateTarget.Nuspec,
+                UpdateTarget.PackageReference,
+                UpdateTarget.ProjectJson,
+                UpdateTarget.DirectoryProps,
+                UpdateTarget.DirectoryTargets,
+            };
+
+            foreach (var target in updateTarget)
 			{
 				if (_parameters.HasUpdateTarget(target))
 				{
@@ -120,13 +130,24 @@ namespace Nuget.Updater
 				case UpdateTarget.Nuspec:
 					extensionFilter = ".nuspec";
 					break;
+
 				case UpdateTarget.ProjectJson:
 					nameFilter = "project.json";
 					break;
-				case UpdateTarget.PackageReference:
-					extensionFilter = ".csproj";
-					break;
-				default:
+
+                case UpdateTarget.PackageReference:
+                    extensionFilter = ".csproj";
+                    break;
+
+                case UpdateTarget.DirectoryTargets:
+                    extensionFilter = "Directory.Build.targets";
+                    break;
+
+                case UpdateTarget.DirectoryProps:
+                    extensionFilter = "Directory.Build.props";
+                    break;
+
+                default:
 					break;
 			}
 

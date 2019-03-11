@@ -14,7 +14,9 @@ namespace Nuget.Updater
 		Nuspec = 2,
 		ProjectJson = 4,
 		PackageReference = 8,
+        DirectoryProps = 16,
+        DirectoryTargets = 32,
 
-		All = Nuspec | ProjectJson | PackageReference
-	}
+		All = Nuspec | ProjectJson | PackageReference | DirectoryProps | DirectoryTargets,
+    }
 }
