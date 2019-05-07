@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -86,7 +87,11 @@ namespace Nuget.Updater.Extensions
 
 		public static async Task Save(this XmlDocument document, CancellationToken ct, string path)
 		{
-			await document.SaveToFileAsync(await StorageFile.GetFileFromPathAsync(path));
+			var xml = document.GetXml();
+			xml = Regex.Replace(xml, "(\\?>)(<)", "$1\n$2"); // xml declaration should follow by a new line
+			xml = Regex.Replace(xml, "([^ ])(/>)", "$1 $2"); // self-enclosing tag should end with a space
+
+			await FileIO.WriteTextAsync(await StorageFile.GetFileFromPathAsync(path), xml);
 		}
 	}
 }
