@@ -88,6 +88,10 @@ namespace Nuget.Updater.Extensions
 		public static async Task Save(this XmlDocument document, CancellationToken ct, string path)
 		{
 			var xml = document.GetXml();
+			xml = Regex.Replace(xml, @"(<\? ?xml)(?<declaration>.+)( ?\?>)", x => !x.Groups["declaration"].Value.Contains("encoding")
+				? x.Result("$1${declaration} encoding=\"utf-8\"$2") // restore encoding declaration that is stripped by `GetXml`
+				: x.Value
+			);
 			xml = Regex.Replace(xml, "(\\?>)(<)", "$1\n$2"); // xml declaration should follow by a new line
 			xml = Regex.Replace(xml, "([^ ])(/>)", "$1 $2"); // self-enclosing tag should end with a space
 
