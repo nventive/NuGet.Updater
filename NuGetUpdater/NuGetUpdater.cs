@@ -140,11 +140,11 @@ namespace Nuget.Updater
                     break;
 
                 case UpdateTarget.DirectoryTargets:
-                    extensionFilter = "Directory.Build.targets";
+                    nameFilter = "Directory.Build.targets";
                     break;
 
                 case UpdateTarget.DirectoryProps:
-                    extensionFilter = "Directory.Build.props";
+                    nameFilter = "Directory.Build.props";
                     break;
 
                 default:
