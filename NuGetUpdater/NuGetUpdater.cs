@@ -238,7 +238,7 @@ namespace Nuget.Updater
 			var operations = new List<UpdateOperation>();
 
 			var originalMatch = $@"\""{packageName}\"".*?:.?\""(.*)\""";
-			var replaced = $@"""{packageName}"": ""{latestVersion}""";
+			var replaced = $@"""{packageName}"": ""{latestVersion.Version.ToString()}""";
 
 			for (int i = 0; i < jsonFiles.Length; i++)
 			{
