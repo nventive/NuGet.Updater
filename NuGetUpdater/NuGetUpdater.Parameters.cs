@@ -74,6 +74,11 @@ namespace Nuget.Updater
 			/// Whether to use the stable version if a more recent version is available
 			/// </summary>
 			public bool UseStableIfMoreRecent { get; set; }
+
+			/// <summary>
+			/// The name of the owner of the public packages to update; specify if <see cref="IncludeNuGetOrg"/> is set to true
+			/// </summary>
+			public string PublickPackageOwner { get; set; }
 		}
 	}
 }

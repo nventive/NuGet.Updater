@@ -89,7 +89,7 @@ namespace Nuget.Updater
 			{
 				//Using search instead of list because the latter forces the v2 api
 				packages = packages
-					.Concat(await NuGetOrgSource.SearchPackages(ct, _log.Write, searchTerm: "owner:nventive"))
+					.Concat(await NuGetOrgSource.SearchPackages(ct, _log.Write, searchTerm: $"owner:{_parameters.PublickPackageOwner}"))
 					.GroupBy(p => p.PackageId)
 					.Select(g => new NuGetPackage(g.Key, g.ToArray()))
 					.ToArray();
