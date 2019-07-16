@@ -1,4 +1,4 @@
-﻿#if !UAP
+﻿#if !UAP && !NETSTANDARD
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 	<PropertyGroup>
-		<TargetFrameworks>net46;uap10.0.17134</TargetFrameworks>
+		<TargetFrameworks>netstandard20;net472;uap10.0.17134</TargetFrameworks>
 		<Authors>nventive</Authors>
 		<Description>Nuget Updater allows to automatically update the NuGet packages in a solution at build time</Description>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
@@ -18,8 +18,13 @@
 		</PackageReference>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)'=='net46'">
-		<PackageReference Include="NuGet.Protocol" Version="4.7.0" />
+	<ItemGroup Condition="'$(TargetFramework)'=='netstandard20'">
+		<PackageReference Include="NuGet.Protocol" Version="5.1.0" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
+		<PackageReference Include="NuGet.Protocol" Version="5.1.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
 		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012">
 			<PrivateAssets>all</PrivateAssets>

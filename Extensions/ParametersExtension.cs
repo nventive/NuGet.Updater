@@ -14,7 +14,11 @@ namespace Nuget.Updater.Extensions
 
 		internal static PackageSource GetFeedPackageSource(this NuGetUpdater.Parameters parameters) => new PackageSource(parameters.SourceFeed, "Feed")
 		{
+#if UAP
 			Credentials = PackageSourceCredential.FromUserInput("Feed", "user", parameters.SourceFeedPersonalAccessToken, false)
+#else
+			Credentials = PackageSourceCredential.FromUserInput("Feed", "user", parameters.SourceFeedPersonalAccessToken, false, null)
+#endif
 		};
 
 		internal static bool ShouldUpdatePackage(this NuGetUpdater.Parameters parameters, NuGetPackage package) =>
@@ -27,6 +31,8 @@ namespace Nuget.Updater.Extensions
 		internal static IEnumerable<string> GetSummary(this NuGetUpdater.Parameters parameters)
 		{
 			yield return $"## Configuration";
+
+			yield return $"- Update targetting {parameters.SolutionRoot}";
 
 			var packageSources = parameters.IncludeNuGetOrg ? $"NuGet.org and {parameters.SourceFeed}" : parameters.SourceFeed;
 			yield return $"- Using NuGet packages from {packageSources}";
