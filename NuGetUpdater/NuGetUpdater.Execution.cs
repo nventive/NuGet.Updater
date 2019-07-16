@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Nuget.Updater.Entities;
@@ -21,7 +22,7 @@ namespace Nuget.Updater
 			IEnumerable<string> ignorePackages = null,
 			IEnumerable<string> updatePackages = null,
 			UpdateTarget target = UpdateTarget.All,
-			Action<string> logAction = null,
+			TextWriter logWriter = null,
 			string summaryOutputFilePath = null,
 			bool useStableIfMoreRecent = false
 		)
@@ -40,7 +41,7 @@ namespace Nuget.Updater
 				ignorePackages,
 				updatePackages,
 				target,
-				logAction,
+				logWriter,
 				summaryOutputFilePath,
 				useStableIfMoreRecent
 			).Result;
@@ -48,9 +49,9 @@ namespace Nuget.Updater
 
 		public static bool Update(
 			Parameters parameters,
-			Action<string> logAction = null,
+			TextWriter logWriter = null,
 			string summaryOutputFilePath = null
-		) => UpdateAsync(CancellationToken.None, parameters, new Logger(logAction, summaryOutputFilePath)).Result;
+		) => UpdateAsync(CancellationToken.None, parameters, new Logger(logWriter, summaryOutputFilePath)).Result;
 
 		public static async Task<bool> UpdateAsync(
 			CancellationToken ct,
@@ -66,7 +67,7 @@ namespace Nuget.Updater
 			IEnumerable<string> packagesToIgnore = null,
 			IEnumerable<string> packagesToUpdate = null,
 			UpdateTarget updateTarget = UpdateTarget.All,
-			Action<string> logAction = null,
+			TextWriter logWriter = null,
 			string summaryOutputFilePath = null,
 			bool useStableIfMoreRecent = false
 		)
@@ -88,15 +89,15 @@ namespace Nuget.Updater
 				UseStableIfMoreRecent = useStableIfMoreRecent,
 			};
 
-			return await UpdateAsync(ct, parameters, logAction, summaryOutputFilePath);
+			return await UpdateAsync(ct, parameters, logWriter, summaryOutputFilePath);
 		}
 
 		public static Task<bool> UpdateAsync(
 			CancellationToken ct,
 			Parameters parameters,
-			Action<string> logAction = null,
+			TextWriter logWriter = null,
 			string summaryOutputFilePath = null
-		) => UpdateAsync(ct, parameters, new Logger(logAction, summaryOutputFilePath));
+		) => UpdateAsync(ct, parameters, new Logger(logWriter, summaryOutputFilePath));
 
 		public static async Task<bool> UpdateAsync(
 			CancellationToken ct,

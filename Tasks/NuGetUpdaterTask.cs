@@ -1,6 +1,7 @@
 ﻿#if !UAP && !NETSTANDARD
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Nuget.Updater.Entities;
 
 namespace Nuget.Updater
 {
@@ -53,7 +54,7 @@ namespace Nuget.Updater
 
 			return NuGetUpdater.Update(
 				parameters,
-				message => Log.LogMessage(message),
+				new ActionTextWriter(s => Log.LogMessage(s)),
 				UpdateSummaryFile
 			);
 		}

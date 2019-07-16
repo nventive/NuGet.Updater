@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -16,23 +17,23 @@ namespace Nuget.Updater.Entities
 		private const string AzureArtifactsFeedUrlPattern = @"https:\/\/pkgs\.dev.azure.com\/(?'account'[^\/]*).*_packaging\/(?'feed'[^\/]*)";
 
 		private readonly List<UpdateOperation> _updateOperations = new List<UpdateOperation>();
-		private readonly Action<string> _logAction;
+		private readonly TextWriter _writer;
 		private readonly string _summaryFilePath;
 
-		public Logger(Action<string> logAction = null, string summaryFilePath = null)
+		public Logger(TextWriter writer, string summaryFilePath = null)
 		{
-			_logAction = logAction
+			writer = writer
 #if DEBUG
-				?? Console.WriteLine;
+				?? Console.Out;
 #else
-				?? new Action<string>(_ => { });
+				?? TextWriter.Null;
 #endif
 			_summaryFilePath = summaryFilePath;
 		}
 
 		public void Clear() => _updateOperations.Clear();
 
-		public void Write(string message) => _logAction(message);
+		public void Write(string message) => _writer.Write(message);
 
 		public void Write(IEnumerable<UpdateOperation> operations)
 		{
