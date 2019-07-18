@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,14 +6,17 @@ using NuGet.Updater.Entities;
 
 namespace NuGet.Updater
 {
-	partial class NuGetUpdater
+	/// <summary>
+	/// Static execution methods for the NuGetUpdater.
+	/// </summary>
+	public partial class NuGetUpdater
 	{
 		public static bool Update(
 			string solutionRoot,
 			string sourceFeed,
 			string targetVersion,
 			string excludeTag = "",
-			string PAT = "",
+			string feedAccessToken = "",
 			bool includeNuGetOrg = true,
 			string publicPackageOwner = null,
 			bool allowDowngrade = false,
@@ -26,15 +28,13 @@ namespace NuGet.Updater
 			TextWriter logWriter = null,
 			string summaryOutputFilePath = null,
 			bool useStableIfMoreRecent = false
-		)
-		{
-			return UpdateAsync(
+		) => UpdateAsync(
 				CancellationToken.None,
 				solutionRoot,
 				sourceFeed,
 				targetVersion,
 				excludeTag,
-				PAT,
+				feedAccessToken,
 				includeNuGetOrg,
 				publicPackageOwner,
 				allowDowngrade,
@@ -47,10 +47,9 @@ namespace NuGet.Updater
 				summaryOutputFilePath,
 				useStableIfMoreRecent
 			).Result;
-		}
 
 		public static bool Update(
-			Parameters parameters,
+			UpdaterParameters parameters,
 			TextWriter logWriter = null,
 			string summaryOutputFilePath = null
 		) => UpdateAsync(CancellationToken.None, parameters, new Logger(logWriter, summaryOutputFilePath)).Result;
@@ -61,7 +60,7 @@ namespace NuGet.Updater
 			string sourceFeed,
 			string targetVersion,
 			string excludeTag = "",
-			string feedPat = "",
+			string feedAccessToken = "",
 			bool includeNuGetOrg = true,
 			string publicPackageOwner = null,
 			bool isDowngradeAllowed = false,
@@ -75,11 +74,11 @@ namespace NuGet.Updater
 			bool useStableIfMoreRecent = false
 		)
 		{
-			var parameters = new Parameters
+			var parameters = new UpdaterParameters
 			{
 				SolutionRoot = solutionRoot,
 				SourceFeed = sourceFeed,
-				SourceFeedPersonalAccessToken = feedPat,
+				SourceFeedPersonalAccessToken = feedAccessToken,
 				TargetVersion = targetVersion,
 				Strict = strict,
 				TagToExclude = excludeTag,
@@ -98,14 +97,14 @@ namespace NuGet.Updater
 
 		public static Task<bool> UpdateAsync(
 			CancellationToken ct,
-			Parameters parameters,
+			UpdaterParameters parameters,
 			TextWriter logWriter = null,
 			string summaryOutputFilePath = null
 		) => UpdateAsync(ct, parameters, new Logger(logWriter, summaryOutputFilePath));
 
 		public static async Task<bool> UpdateAsync(
 			CancellationToken ct,
-			Parameters parameters,
+			UpdaterParameters parameters,
 			Logger log
 		)
 		{

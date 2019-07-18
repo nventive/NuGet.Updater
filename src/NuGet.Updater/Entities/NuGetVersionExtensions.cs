@@ -72,7 +72,6 @@ namespace NuGet.Updater
 			if (xLabels != null
 				&& yLabels != null)
 			{
-
 				result = CompareReleaseLabels(xLabels, yLabels);
 				if (result != 0)
 				{
@@ -179,6 +178,5 @@ namespace NuGet.Updater
 
 			return result;
 		}
-
 	}
 }

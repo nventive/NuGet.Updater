@@ -16,6 +16,9 @@ using XmlElement = Windows.Data.Xml.Dom.XmlElement;
 
 namespace NuGet.Updater.Extensions
 {
+	/// <summary>
+	/// UAP-specific XmlDocument extension methods.
+	/// </summary>
 	partial class XmlDocumentExtensions
 	{
 		public static UpdateOperation[] UpdateProjectReferenceVersions(

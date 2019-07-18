@@ -9,7 +9,10 @@ using NuGet.Versioning;
 
 namespace NuGet.Updater.Extensions
 {
-	partial class XmlDocumentExtensions
+	/// <summary>
+	/// .Net XmlDocument extension methods.
+	/// </summary>
+	public partial class XmlDocumentExtensions
 	{
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
 
@@ -44,18 +47,18 @@ namespace NuGet.Updater.Extensions
 		{
 			var operations = new List<UpdateOperation>();
 
-            var packageReferences = document.SelectNodes($"//d:PackageReference[@Include='{packageId}' or @Update='{packageId}']", namespaceManager).OfType<XmlNode>();
-            var dotnetCliReferences = document.SelectNodes($"//d:DotNetCliToolReference[@Include='{packageId}' or @Update='{packageId}']", namespaceManager).OfType<XmlNode>();
+			var packageReferences = document.SelectNodes($"//d:PackageReference[@Include='{packageId}' or @Update='{packageId}']", namespaceManager).OfType<XmlNode>();
+			var dotnetCliReferences = document.SelectNodes($"//d:DotNetCliToolReference[@Include='{packageId}' or @Update='{packageId}']", namespaceManager).OfType<XmlNode>();
 
-            foreach (XmlElement packageReference in packageReferences.Concat(dotnetCliReferences))
+			foreach(XmlElement packageReference in packageReferences.Concat(dotnetCliReferences))
 			{
-				if (packageReference.HasAttribute("Version"))
+				if(packageReference.HasAttribute("Version"))
 				{
 					var currentVersion = new NuGetVersion(packageReference.Attributes["Version"].Value);
 
 					var operation = new UpdateOperation(isDowngradeAllowed, packageId, currentVersion, version, path);
 
-					if (operation.ShouldProceed)
+					if(operation.ShouldProceed)
 					{
 						packageReference.SetAttribute("Version", version.Version.ToString());
 					}
@@ -66,13 +69,13 @@ namespace NuGet.Updater.Extensions
 				{
 					var node = packageReference.SelectSingleNode("d:Version", namespaceManager);
 
-					if (node != null)
+					if(node != null)
 					{
 						var currentVersion = new NuGetVersion(node.InnerText);
 
 						var operation = new UpdateOperation(isDowngradeAllowed, packageId, currentVersion, version, path);
 
-						if (operation.ShouldProceed)
+						if(operation.ShouldProceed)
 						{
 							node.InnerText = version.Version.ToString();
 						}
@@ -99,7 +102,7 @@ namespace NuGet.Updater.Extensions
 		{
 			var document = new XmlDocument()
 			{
-				PreserveWhitespace = true
+				PreserveWhitespace = true,
 			};
 
 			document.Load(path);
@@ -107,10 +110,7 @@ namespace NuGet.Updater.Extensions
 			return new KeyValuePair<string, XmlDocument>(path, document);
 		}
 
-		public static async Task Save(this XmlDocument document, CancellationToken ct, string path)
-		{
-			document.Save(path);
-		}
+		public static async Task Save(this XmlDocument document, CancellationToken ct, string path) => document.Save(path);
 	}
 }
 #endif

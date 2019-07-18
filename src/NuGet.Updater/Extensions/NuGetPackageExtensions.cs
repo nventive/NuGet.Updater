@@ -11,7 +11,7 @@ namespace NuGet.Updater.Extensions
 		public static async Task<FeedNuGetVersion> GetLatestVersion(
 			this NuGetPackage package,
 			CancellationToken ct,
-			NuGetUpdater.Parameters parameters
+			UpdaterParameters parameters
 		)
 		{
 			var specialVersion = parameters.TargetVersion;

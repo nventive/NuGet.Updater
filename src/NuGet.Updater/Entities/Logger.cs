@@ -22,7 +22,7 @@ namespace NuGet.Updater.Entities
 
 		public Logger(TextWriter writer, string summaryFilePath = null)
 		{
-			writer = writer
+			_writer = writer
 #if DEBUG
 				?? Console.Out;
 #else
@@ -49,7 +49,7 @@ namespace NuGet.Updater.Entities
 			_updateOperations.Add(operation);
 		}
 
-		public void WriteSummary(NuGetUpdater.Parameters parameters)
+		public void WriteSummary(UpdaterParameters parameters)
 		{
 			foreach (var line in GetSummary(parameters))
 			{
@@ -69,7 +69,7 @@ namespace NuGet.Updater.Entities
 			}
 		}
 
-		private IEnumerable<string> GetSummary(NuGetUpdater.Parameters parameters, bool includeUrl = false)
+		private IEnumerable<string> GetSummary(UpdaterParameters parameters, bool includeUrl = false)
 		{
 			var completedUpdates = _updateOperations.Where(o => o.ShouldProceed).ToArray();
 			var skippedUpdates = _updateOperations.Where(o => !o.ShouldProceed).ToArray();
@@ -122,6 +122,7 @@ namespace NuGet.Updater.Entities
 				}
 			}
 		}
+
 		private static string GetPackageUrl(string packageId, NuGetVersion version, Uri feedUri)
 		{
 			if (feedUri.AbsoluteUri.StartsWith("https://api.nuget.org"))

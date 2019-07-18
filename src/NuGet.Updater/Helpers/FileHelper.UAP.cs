@@ -33,7 +33,7 @@ namespace NuGet.Updater.Helpers
 			{
 				UserSearchFilter = searchFilter,
 				IndexerOption = IndexerOption.UseIndexerWhenAvailable,
-				FolderDepth = FolderDepth.Deep
+				FolderDepth = FolderDepth.Deep,
 			};
 
 			var query = folder.CreateFileQueryWithOptions(queryOptions);

@@ -12,6 +12,9 @@ using XmlDocument = System.Xml.XmlDocument;
 
 namespace NuGet.Updater.Extensions
 {
+	/// <summary>
+	/// Shared XmlDocument extension methods.
+	/// </summary>
 	public static partial class XmlDocumentExtensions
 	{
 		public static UpdateOperation[] UpdateNuSpecVersions(
@@ -46,7 +49,5 @@ namespace NuGet.Updater.Extensions
 
 			return operations.ToArray();
 		}
-
-
 	}
 }

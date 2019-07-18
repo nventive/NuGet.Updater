@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -18,14 +17,17 @@ using XmlDocument = System.Xml.XmlDocument;
 
 namespace NuGet.Updater
 {
+	/// <summary>
+	/// NuGet Updater implementation.
+	/// </summary>
 	public partial class NuGetUpdater
 	{
 		private static readonly PackageSource NuGetOrgSource = new PackageSource("https://api.nuget.org/v3/index.json");
 
-		private readonly Parameters _parameters;
+		private readonly UpdaterParameters _parameters;
 		private readonly Logger _log;
 
-		private NuGetUpdater(Parameters parameters, Logger log)
+		private NuGetUpdater(UpdaterParameters parameters, Logger log)
 		{
 			_parameters = parameters;
 			_log = log;
@@ -42,7 +44,7 @@ namespace NuGet.Updater
 			{
 				var latest = await package.GetLatestVersion(ct, _parameters);
 
-				if (latest == null)
+				if(latest == null)
 				{
 					_log.Write($"Skipping [{package.PackageId}]: no {_parameters.TargetVersion} version found.");
 					continue;
@@ -54,7 +56,7 @@ namespace NuGet.Updater
 				{
 					var updates = new UpdateOperation[0];
 
-					switch (files.Key)
+					switch(files.Key)
 					{
 						case UpdateTarget.Nuspec:
 							updates = await UpdateNuSpecs(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
@@ -62,10 +64,10 @@ namespace NuGet.Updater
 						case UpdateTarget.ProjectJson:
 							updates = await UpdateProjectJson(ct, package.PackageId, latest, files.Value.Select(p => p.Key).ToArray(), _parameters.IsDowngradeAllowed);
 							break;
-                        case UpdateTarget.DirectoryProps:
-                        case UpdateTarget.DirectoryTargets:
-                        case UpdateTarget.PackageReference:
-                            updates = await UpdateProjects(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
+						case UpdateTarget.DirectoryProps:
+						case UpdateTarget.DirectoryTargets:
+						case UpdateTarget.PackageReference:
+							updates = await UpdateProjects(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
 							break;
 						default:
 							break;
@@ -85,7 +87,7 @@ namespace NuGet.Updater
 			//Using search instead of list because the latter forces the v2 api
 			var packages = await _parameters.GetFeedPackageSource().SearchPackages(ct, _log.Write);
 
-			if (_parameters.IncludeNuGetOrg)
+			if(_parameters.IncludeNuGetOrg)
 			{
 				//Using search instead of list because the latter forces the v2 api
 				packages = packages
@@ -102,17 +104,18 @@ namespace NuGet.Updater
 		{
 			var targetFiles = new Dictionary<UpdateTarget, Dictionary<string, XmlDocument>>();
 
-            var updateTarget = new[] {
-                UpdateTarget.Nuspec,
-                UpdateTarget.PackageReference,
-                UpdateTarget.ProjectJson,
-                UpdateTarget.DirectoryProps,
-                UpdateTarget.DirectoryTargets,
-            };
-
-            foreach (var target in updateTarget)
+			var updateTarget = new[]
 			{
-				if (_parameters.HasUpdateTarget(target))
+				UpdateTarget.Nuspec,
+				UpdateTarget.PackageReference,
+				UpdateTarget.ProjectJson,
+				UpdateTarget.DirectoryProps,
+				UpdateTarget.DirectoryTargets,
+			};
+
+			foreach(var target in updateTarget)
+			{
+				if(_parameters.HasUpdateTarget(target))
 				{
 					targetFiles.Add(target, await GetFilesForTarget(ct, target));
 				}
@@ -125,7 +128,7 @@ namespace NuGet.Updater
 		{
 			string extensionFilter = null, nameFilter = null;
 
-			switch (target)
+			switch(target)
 			{
 				case UpdateTarget.Nuspec:
 					extensionFilter = ".nuspec";
@@ -135,23 +138,23 @@ namespace NuGet.Updater
 					nameFilter = "project.json";
 					break;
 
-                case UpdateTarget.PackageReference:
-                    extensionFilter = ".csproj";
-                    break;
+				case UpdateTarget.PackageReference:
+					extensionFilter = ".csproj";
+					break;
 
-                case UpdateTarget.DirectoryTargets:
-                    nameFilter = "Directory.Build.targets";
-                    break;
+				case UpdateTarget.DirectoryTargets:
+					nameFilter = "Directory.Build.targets";
+					break;
 
-                case UpdateTarget.DirectoryProps:
-                    nameFilter = "Directory.Build.props";
-                    break;
+				case UpdateTarget.DirectoryProps:
+					nameFilter = "Directory.Build.props";
+					break;
 
-                default:
+				default:
 					break;
 			}
 
-			if (extensionFilter == null && nameFilter == null)
+			if(extensionFilter == null && nameFilter == null)
 			{
 				return new Dictionary<string, XmlDocument>();
 			}
@@ -181,14 +184,14 @@ namespace NuGet.Updater
 		{
 			var operations = new List<UpdateOperation>();
 
-			foreach (var document in nuspecDocuments)
+			foreach(var document in nuspecDocuments)
 			{
 				var path = document.Key;
 				var xmlDocument = document.Value;
 
 				var updates = xmlDocument.UpdateNuSpecVersions(packageId, version, path, isDowngradeAllowed);
 
-				if (updates.Any(u => u.ShouldProceed))
+				if(updates.Any(u => u.ShouldProceed))
 				{
 					await xmlDocument.Save(ct, path);
 				}
@@ -209,14 +212,14 @@ namespace NuGet.Updater
 		{
 			var operations = new List<UpdateOperation>();
 
-			foreach (var document in projectDocuments)
+			foreach(var document in projectDocuments)
 			{
 				var path = document.Key;
 				var xmlDocument = document.Value;
 
 				var updates = xmlDocument.UpdateProjectReferenceVersions(packageId, version, path, isDowngradeAllowed);
 
-				if (updates.Any(u => u.ShouldProceed))
+				if(updates.Any(u => u.ShouldProceed))
 				{
 					await xmlDocument.Save(ct, path);
 				}
@@ -240,19 +243,19 @@ namespace NuGet.Updater
 			var originalMatch = $@"\""{packageName}\"".*?:.?\""(.*)\""";
 			var replaced = $@"""{packageName}"": ""{latestVersion.Version.ToString()}""";
 
-			for (int i = 0; i < jsonFiles.Length; i++)
+			for(var i = 0; i < jsonFiles.Length; i++)
 			{
 				var file = jsonFiles[i];
 				var fileContent = await FileHelper.ReadFileContent(ct, file);
 
 				var match = Regex.Match(fileContent, originalMatch, RegexOptions.IgnoreCase);
-				if (match?.Success ?? false)
+				if(match?.Success ?? false)
 				{
 					var currentVersion = new NuGetVersion(match.Groups[1].Value);
 
 					var operation = new UpdateOperation(isDowngradeAllowed, packageName, currentVersion, latestVersion, file);
 
-					if (operation.ShouldProceed)
+					if(operation.ShouldProceed)
 					{
 						var newContent = Regex.Replace(
 							fileContent,

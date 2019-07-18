@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
-
-using UpdaterParameters = NuGet.Updater.NuGetUpdater.Parameters;
+using NuGet.Updater.Entities;
 
 namespace NuGet.Updater.Tool
 {
@@ -14,7 +13,7 @@ namespace NuGet.Updater.Tool
 		{
 			var parameters = new UpdaterParameters
 			{
-				UpdateTarget = UpdateTarget.All
+				UpdateTarget = UpdateTarget.All,
 			};
 
 			var isHelp = false;
@@ -41,7 +40,7 @@ namespace NuGet.Updater.Tool
 
 			options.Parse(args);
 
-			if (isHelp)
+			if(isHelp)
 			{
 				Console.WriteLine("NuGet Updater is a tool allowing the automatic update of the NuGet packages found in a solution");
 				options.WriteOptionDescriptions(Console.Out);
@@ -54,7 +53,7 @@ namespace NuGet.Updater.Tool
 
 		private static bool GetBoolean(string value, bool fallbackValue = false)
 		{
-			if (bool.TryParse(value, out var boolean))
+			if(bool.TryParse(value, out var boolean))
 			{
 				return boolean;
 			}
@@ -66,7 +65,7 @@ namespace NuGet.Updater.Tool
 		{
 			var list = new List<string>();
 
-			if (value.Contains(","))
+			if(value.Contains(","))
 			{
 				list.AddRange(value.Split(","));
 			}

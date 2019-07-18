@@ -27,7 +27,7 @@ namespace NuGet.Updater.Extensions
 				var isMatchingSpecialVersion = releaseLabels?.Any(label => Regex.IsMatch(label, specialVersion, RegexOptions.IgnoreCase)) ?? false;
 
 				return strict
-					? releaseLabels?.Count() == 2 && isMatchingSpecialVersion  // Check strictly for packages with versions "dev.XXXX"
+					? releaseLabels?.Count() == 2 && isMatchingSpecialVersion // Check strictly for packages with versions "dev.XXXX"
 					: isMatchingSpecialVersion; // Allow packages with versions "dev.XXXX.XXXX"
 			}
 		}

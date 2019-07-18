@@ -1,34 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using NuGet.Updater.Entities;
 using NuGet.Configuration;
+using NuGet.Updater.Entities;
 
 namespace NuGet.Updater.Extensions
 {
-	internal static class ParametersExtension
+	internal static class UpdaterParametersExtension
 	{
-		internal static bool HasUpdateTarget(this NuGetUpdater.Parameters parameters, UpdateTarget target) => (parameters.UpdateTarget & target) == target;
+		internal static bool HasUpdateTarget(this UpdaterParameters parameters, UpdateTarget target) => (parameters.UpdateTarget & target) == target;
 
-		internal static PackageSource GetFeedPackageSource(this NuGetUpdater.Parameters parameters) => new PackageSource(parameters.SourceFeed, "Feed")
+		internal static PackageSource GetFeedPackageSource(this UpdaterParameters parameters) => new PackageSource(parameters.SourceFeed, "Feed")
 		{
 #if UAP
-			Credentials = PackageSourceCredential.FromUserInput("Feed", "user", parameters.SourceFeedPersonalAccessToken, false)
+			Credentials = PackageSourceCredential.FromUserInput("Feed", "user", parameters.SourceFeedPersonalAccessToken, false),
 #else
-			Credentials = PackageSourceCredential.FromUserInput("Feed", "user", parameters.SourceFeedPersonalAccessToken, false, null)
+			Credentials = PackageSourceCredential.FromUserInput("Feed", "user", parameters.SourceFeedPersonalAccessToken, false, null),
 #endif
 		};
 
-		internal static bool ShouldUpdatePackage(this NuGetUpdater.Parameters parameters, NuGetPackage package) =>
+		internal static bool ShouldUpdatePackage(this UpdaterParameters parameters, NuGetPackage package) =>
 			(parameters.PackagesToIgnore == null || !parameters.PackagesToIgnore.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase))
 			&& (parameters.PackagesToUpdate == null || parameters.PackagesToUpdate.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase));
 
-		internal static bool ShouldKeepPackageAtLatestDev(this NuGetUpdater.Parameters parameters, string packageId) =>
+		internal static bool ShouldKeepPackageAtLatestDev(this UpdaterParameters parameters, string packageId) =>
 			parameters.PackagesToKeepAtLatestDev != null && parameters.PackagesToKeepAtLatestDev.Contains(packageId, StringComparer.OrdinalIgnoreCase);
 
-		internal static IEnumerable<string> GetSummary(this NuGetUpdater.Parameters parameters)
+		internal static IEnumerable<string> GetSummary(this UpdaterParameters parameters)
 		{
 			yield return $"## Configuration";
 
