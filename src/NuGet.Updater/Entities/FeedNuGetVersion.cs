@@ -1,7 +1,7 @@
 ﻿using System;
 using NuGet.Versioning;
 
-namespace Nuget.Updater.Entities
+namespace NuGet.Updater.Entities
 {
 	public class FeedNuGetVersion
 	{

@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Nuget.Updater.Entities;
+using NuGet.Updater.Entities;
 using NuGet.Versioning;
 
-namespace Nuget.Updater.Extensions
+namespace NuGet.Updater.Extensions
 {
 	partial class XmlDocumentExtensions
 	{

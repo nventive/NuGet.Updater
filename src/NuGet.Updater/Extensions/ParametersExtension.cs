@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Nuget.Updater.Entities;
+using NuGet.Updater.Entities;
 using NuGet.Configuration;
 
-namespace Nuget.Updater.Extensions
+namespace NuGet.Updater.Extensions
 {
 	internal static class ParametersExtension
 	{

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Nuget.Updater
+namespace NuGet.Updater
 {
 	/// <summary>
 	/// The type of files to update

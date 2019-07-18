@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Nuget.Updater.Entities;
+using NuGet.Updater.Entities;
 using NuGet.Versioning;
 
 #if UAP
@@ -10,7 +10,7 @@ using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
 using XmlDocument = System.Xml.XmlDocument;
 #endif
 
-namespace Nuget.Updater.Extensions
+namespace NuGet.Updater.Extensions
 {
 	public static partial class XmlDocumentExtensions
 	{

@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using NuGet.Common;
 
-namespace Nuget.Updater.Extensions
+namespace NuGet.Updater.Extensions
 {
 	public static class EnumerableAsyncExtensions
 	{

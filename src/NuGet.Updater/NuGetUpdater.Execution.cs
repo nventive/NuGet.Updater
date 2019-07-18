@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Nuget.Updater.Entities;
+using NuGet.Updater.Entities;
 
-namespace Nuget.Updater
+namespace NuGet.Updater
 {
 	partial class NuGetUpdater
 	{

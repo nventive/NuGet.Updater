@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NuGet.Versioning;
 
-namespace Nuget.Updater.Entities
+namespace NuGet.Updater.Entities
 {
 	public class UpdateOperation
 	{

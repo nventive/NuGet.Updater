@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using NuGet.Versioning;
 
-namespace Nuget.Updater
+namespace NuGet.Updater
 {
 	public class NuGetBranchSwitch
 	{

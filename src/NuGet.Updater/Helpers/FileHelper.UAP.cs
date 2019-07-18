@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
 
-namespace Nuget.Updater.Helpers
+namespace NuGet.Updater.Helpers
 {
 	public static class FileHelper
 	{

@@ -5,11 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Nuget.Updater.Extensions;
-using Nuget.Updater.Helpers;
+using NuGet.Updater.Extensions;
+using NuGet.Updater.Helpers;
 using NuGet.Versioning;
 
-namespace Nuget.Updater.Entities
+namespace NuGet.Updater.Entities
 {
 	public class Logger
 	{

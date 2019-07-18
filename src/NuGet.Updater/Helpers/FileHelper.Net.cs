@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Nuget.Updater.Helpers
+namespace NuGet.Updater.Helpers
 {
 	public static class FileHelper
 	{

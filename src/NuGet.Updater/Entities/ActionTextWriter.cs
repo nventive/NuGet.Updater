@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace Nuget.Updater.Entities
+namespace NuGet.Updater.Entities
 {
 	public class ActionTextWriter : TextWriter
 	{

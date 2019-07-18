@@ -3,7 +3,7 @@ using System;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Nuget.Updater
+namespace NuGet.Updater
 {
 	public class NuGetBranchSwitchTask : Task
 	{

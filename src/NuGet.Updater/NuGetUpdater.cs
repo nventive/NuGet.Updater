@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Nuget.Updater.Entities;
-using Nuget.Updater.Extensions;
-using Nuget.Updater.Helpers;
+using NuGet.Updater.Entities;
+using NuGet.Updater.Extensions;
+using NuGet.Updater.Helpers;
 using NuGet.Configuration;
 using NuGet.Versioning;
 
@@ -16,7 +16,7 @@ using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
 using XmlDocument = System.Xml.XmlDocument;
 #endif
 
-namespace Nuget.Updater
+namespace NuGet.Updater
 {
 	public partial class NuGetUpdater
 	{

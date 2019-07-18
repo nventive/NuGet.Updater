@@ -7,14 +7,14 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Nuget.Updater.Entities;
+using NuGet.Updater.Entities;
 using NuGet.Versioning;
 using Windows.Data.Xml.Dom;
 using Windows.Storage;
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
 using XmlElement = Windows.Data.Xml.Dom.XmlElement;
 
-namespace Nuget.Updater.Extensions
+namespace NuGet.Updater.Extensions
 {
 	partial class XmlDocumentExtensions
 	{

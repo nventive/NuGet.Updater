@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Nuget.Updater.Entities;
+using NuGet.Updater.Entities;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 
-namespace Nuget.Updater.Extensions
+namespace NuGet.Updater.Extensions
 {
 	public static class PackageSourceExtensions
 	{

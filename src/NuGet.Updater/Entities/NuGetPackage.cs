@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NuGet.Protocol.Core.Types;
 
-namespace Nuget.Updater.Entities
+namespace NuGet.Updater.Entities
 {
 	public class NuGetPackage
 	{

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Nuget.Updater.Entities;
+using NuGet.Updater.Entities;
 using NuGet.Configuration;
 
-namespace Nuget.Updater
+namespace NuGet.Updater
 {
 	partial class NuGetUpdater
 	{

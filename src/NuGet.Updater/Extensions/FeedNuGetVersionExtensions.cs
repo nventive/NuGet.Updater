@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Nuget.Updater.Entities;
+using NuGet.Updater.Entities;
 
-namespace Nuget.Updater.Extensions
+namespace NuGet.Updater.Extensions
 {
 	public static class FeedNuGetVersionExtensions
 	{

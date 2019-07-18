@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NuGet.Versioning;
 
-namespace Nuget.Updater
+namespace NuGet.Updater
 {
 	public static class NuGetVersionExtensions
 	{
