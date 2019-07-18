@@ -1,0 +1,37 @@
+pool: 'Hosted Windows 2019 with VS2019'
+
+trigger:
+  batch: 'true'
+  branches:
+    include:
+    - master
+
+variables:
+- name: PackageOutputPath
+  value: '$(Build.ArtifactStagingDirectory)'
+
+steps:
+- task: GitVersion@4
+
+- task: NuGetToolInstaller@1
+  inputs:
+    versionSpec: 5.0.2
+
+- task: NuGetCommand@2
+  inputs:
+    command: restore
+    restoreSolution: src\Nuget.Updater.sln
+    includeNuGetOrg: true
+
+- task: MSBuild@1
+  inputs:
+    solution: src\Nuget.Updater.sln
+    configuration: Release
+    platform: 'Any CPU'
+    msbuildArguments: /p:PackageVersion=$(GitVersion.NuGetVersion)
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    ArtifactName: Packages
+    PathtoPublish: $(PackageOutputPath)
+    publishLocation: Container
