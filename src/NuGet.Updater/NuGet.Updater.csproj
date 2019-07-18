@@ -1,10 +1,14 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 	<PropertyGroup>
 		<TargetFrameworks>netstandard20;net472;uap10.0.17134</TargetFrameworks>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<LangVersion>7.2</LangVersion>
+	</PropertyGroup>
+
+	<!-- NuGet metadata -->
+	<PropertyGroup>
 		<Authors>nventive</Authors>
 		<Description>Nuget Updater allows to automatically update the NuGet packages in a solution at build time</Description>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<LangVersion>7.1</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(TargetFramework)'=='uap10.0.17134'">
@@ -12,10 +16,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="GitVersionTask" Version="4.0.0-beta0012">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='netstandard20'">
@@ -26,27 +27,20 @@
 	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
 		<PackageReference Include="NuGet.Protocol" Version="5.1.0" />
 		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
-		<PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012">
-			<PrivateAssets>all</PrivateAssets>
-		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='uap10.0.17134'">
-		<PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
 		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
 		<PackageReference Include="System.Xml.XPath.XmlDocument" Version="4.3.0" />
-		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.3.0" />
-		<Reference Include="../Packages/Nuget.Protocol/netstandard1.6/*.dll">
+		<!-- Version of NuGet.Protocol compatible with UAP (doesn't try to read/write NuGet.config) -->
+		<Reference Include="../Packages/NuGet.Protocol/uap10.0/*.dll">
 			<Private>true</Private>
 		</Reference>
 	</ItemGroup>
 
 	<Target Name="IncludeDependencies" AfterTargets="Build">
 		<ItemGroup>
-			<Content Include="build\Nuget.Updater.targets">
-				<PackagePath>build</PackagePath>
-			</Content>
-			<Content Include="../Packages/Nuget.Protocol/netstandard1.6/*.dll">
+			<Content Include="../Packages/Nuget.Protocol/uap10.0/*.dll">
 				<Pack>true</Pack>
 				<PackagePath>lib/uap10.0.17134</PackagePath>
 			</Content>
