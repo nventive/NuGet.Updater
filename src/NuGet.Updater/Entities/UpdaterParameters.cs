@@ -22,9 +22,9 @@ namespace NuGet.Updater.Entities
 		public string SourceFeedPersonalAccessToken { get; set; }
 
 		/// <summary>
-		/// The target version for the update (stable, dev, beta, etc.)
+		/// The versions to update to (stable, dev, beta, etc.), in order of priority.
 		/// </summary>
-		public string TargetVersion { get; set; }
+		public IEnumerable<string> TargetVersions { get; set; }
 
 		/// <summary>
 		/// Whether it should exactly match the target version.
@@ -67,13 +67,8 @@ namespace NuGet.Updater.Entities
 		public IEnumerable<string> PackagesToUpdate { get; set; }
 
 		/// <summary>
-		/// Whether to use the stable version if a more recent version is available.
-		/// </summary>
-		public bool UseStableIfMoreRecent { get; set; }
-
-		/// <summary>
 		/// The name of the owner of the public packages to update; specify if <see cref="IncludeNuGetOrg"/> is set to true.
 		/// </summary>
-		public string PublickPackageOwner { get; set; }
+		public string PublicPackageOwner { get; set; }
 	}
 }

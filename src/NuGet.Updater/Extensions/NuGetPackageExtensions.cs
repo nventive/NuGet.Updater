@@ -14,37 +14,27 @@ namespace NuGet.Updater.Extensions
 			UpdaterParameters parameters
 		)
 		{
-			var specialVersion = parameters.TargetVersion;
-
-			if (parameters.ShouldKeepPackageAtLatestDev(package.PackageId))
-			{
-				specialVersion = "dev";
-			}
-
-			if (specialVersion == "stable")
-			{
-				specialVersion = "";
-			}
-
-			var versions = (await package.GetVersions(ct)).OrderByDescending(v => v.Version);
-
-			var version = versions
-				.Where(v => v.IsMatchingSpecialVersion(specialVersion, parameters.Strict) && !v.ContainsTag(parameters.TagToExclude))
+			var versions = (await package.GetVersions(ct))
 				.OrderByDescending(v => v.Version)
-				.FirstOrDefault();
+				.ToArray();
 
-			if(parameters.UseStableIfMoreRecent && specialVersion != "")
-			{
-				var stableVersion = versions
-					.Where(v => v.IsMatchingSpecialVersion("", parameters.Strict) && !v.ContainsTag(parameters.TagToExclude))
-					.OrderByDescending(v => v.Version)
-					.FirstOrDefault();
-
-				if (version == null || (stableVersion?.Version.IsGreaterThan(version.Version) ?? false))
+			var version = parameters
+				.TargetVersions
+				.Select(tv =>
 				{
-					return stableVersion;
+					if(tv == "stable")
+					{
+						tv = "";
+					}
+
+					return versions
+						.Where(v => v.IsMatchingSpecialVersion(tv, parameters.Strict) && !v.ContainsTag(parameters.TagToExclude))
+						.OrderByDescending(v => v.Version)
+						.FirstOrDefault();
 				}
-			}
+				)
+				.Where(v => v != null)
+				.FirstOrDefault();
 
 			return version;
 		}

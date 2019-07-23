@@ -46,11 +46,11 @@ namespace NuGet.Updater
 
 				if(latest == null)
 				{
-					_log.Write($"Skipping [{package.PackageId}]: no {_parameters.TargetVersion} version found.");
+					_log.Write($"Skipping [{package.PackageId}]: no {string.Join(" or ", _parameters.TargetVersions)} version found.");
 					continue;
 				}
 
-				_log.Write($"Latest {_parameters.TargetVersion} version for [{package.PackageId}] is [{latest.Version}]");
+				_log.Write($"Latest matching version for [{package.PackageId}] is [{latest.Version}]");
 
 				foreach(var files in targetFiles)
 				{
@@ -91,7 +91,7 @@ namespace NuGet.Updater
 			{
 				//Using search instead of list because the latter forces the v2 api
 				packages = packages
-					.Concat(await NuGetOrgSource.SearchPackages(ct, _log.Write, searchTerm: $"owner:{_parameters.PublickPackageOwner}"))
+					.Concat(await NuGetOrgSource.SearchPackages(ct, _log.Write, searchTerm: $"owner:{_parameters.PublicPackageOwner}"))
 					.GroupBy(p => p.PackageId)
 					.Select(g => new NuGetPackage(g.Key, g.ToArray()))
 					.ToArray();

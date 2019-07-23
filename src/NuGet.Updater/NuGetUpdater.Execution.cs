@@ -14,7 +14,7 @@ namespace NuGet.Updater
 		public static bool Update(
 			string solutionRoot,
 			string sourceFeed,
-			string targetVersion,
+			IEnumerable<string> targetVersions,
 			string excludeTag = "",
 			string feedAccessToken = "",
 			bool includeNuGetOrg = true,
@@ -26,13 +26,12 @@ namespace NuGet.Updater
 			IEnumerable<string> updatePackages = null,
 			UpdateTarget target = UpdateTarget.All,
 			TextWriter logWriter = null,
-			string summaryOutputFilePath = null,
-			bool useStableIfMoreRecent = false
+			string summaryOutputFilePath = null
 		) => UpdateAsync(
 				CancellationToken.None,
 				solutionRoot,
 				sourceFeed,
-				targetVersion,
+				targetVersions,
 				excludeTag,
 				feedAccessToken,
 				includeNuGetOrg,
@@ -44,8 +43,7 @@ namespace NuGet.Updater
 				updatePackages,
 				target,
 				logWriter,
-				summaryOutputFilePath,
-				useStableIfMoreRecent
+				summaryOutputFilePath
 			).Result;
 
 		public static bool Update(
@@ -58,7 +56,7 @@ namespace NuGet.Updater
 			CancellationToken ct,
 			string solutionRoot,
 			string sourceFeed,
-			string targetVersion,
+			IEnumerable<string> targetVersions,
 			string excludeTag = "",
 			string feedAccessToken = "",
 			bool includeNuGetOrg = true,
@@ -70,8 +68,7 @@ namespace NuGet.Updater
 			IEnumerable<string> packagesToUpdate = null,
 			UpdateTarget updateTarget = UpdateTarget.All,
 			TextWriter logWriter = null,
-			string summaryOutputFilePath = null,
-			bool useStableIfMoreRecent = false
+			string summaryOutputFilePath = null
 		)
 		{
 			var parameters = new UpdaterParameters
@@ -79,7 +76,7 @@ namespace NuGet.Updater
 				SolutionRoot = solutionRoot,
 				SourceFeed = sourceFeed,
 				SourceFeedPersonalAccessToken = feedAccessToken,
-				TargetVersion = targetVersion,
+				TargetVersions = targetVersions,
 				Strict = strict,
 				TagToExclude = excludeTag,
 				UpdateTarget = updateTarget,
@@ -89,7 +86,6 @@ namespace NuGet.Updater
 				PackagesToKeepAtLatestDev = packagesTokeepAtLatestDev,
 				PackagesToIgnore = packagesToIgnore,
 				PackagesToUpdate = packagesToUpdate,
-				UseStableIfMoreRecent = useStableIfMoreRecent,
 			};
 
 			return await UpdateAsync(ct, parameters, logWriter, summaryOutputFilePath);
