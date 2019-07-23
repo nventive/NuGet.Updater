@@ -26,21 +26,21 @@ namespace NuGet.Updater.Tool
 
 			var options = new OptionSet
 			{
-				{ "help", "Displays this help screen", s => isHelp = true },
-				{ "solution=", "The path to the solution to update", s => parameters.SolutionRoot = s },
-				{ "feed=", "The URL of a private NuGet feed to use", s => parameters.SourceFeed = s },
-				{ "pat=", "The PAT used to authenticate to the private NuGet feed", s => parameters.SourceFeedPersonalAccessToken = s },
-				{ "version=", "The target version to use", s => parameters.TargetVersion = s },
+				{ "help|h", "Displays this help screen", s => isHelp = true },
+				{ "solution=|s", "The path to the solution to update", s => parameters.SolutionRoot = s },
+				{ "feed=|f", "The URL of a private NuGet feed to use", s => parameters.SourceFeed = s },
+				{ "pat=|t", "The PAT used to authenticate to the private NuGet feed", s => parameters.SourceFeedPersonalAccessToken = s },
+				{ "version=|v", "The target version to use", s => parameters.TargetVersion = s },
 				{ "strict=", s => parameters.Strict = GetBoolean(s) },
-				{ "excludeTag=", "A tag to exclude from the search", s => parameters.TagToExclude = s },
-				{ "useNuGetorg=", "Whether to pull packages from NuGet.org", s => parameters.IncludeNuGetOrg = GetBoolean(s) },
-				{ "publicPackagesOwner=", "The owner of the public packages to update; must be specified is useNuGetorg is true", s => parameters.PublickPackageOwner = s },
-				{ "allowDowngrade=", "Whether package downgrade is allowed", s => parameters.IsDowngradeAllowed = GetBoolean(s) },
-				{ "keepLatestDev=", "A comma-separated list of packages to keep at latest dev", s => parameters.PackagesToKeepAtLatestDev = GetList(s) },
-				{ "ignore=", "A comma-separated list of packages to ignore", s => parameters.PackagesToIgnore = GetList(s) },
-				{ "update=", "A comma-separated list of packages to update; not specifying this will update all packages found", s => parameters.PackagesToUpdate = GetList(s) },
-				{ "useStableIfMoreRecent=", "Whether to use the latest stable if a more recent version is found", s => parameters.UseStableIfMoreRecent = GetBoolean(s) },
-				{ "outputFile=", "The path to a file where the update summary will be written", s => summaryFile = s },
+				{ "excludeTag=|e", "A tag to exclude from the search", s => parameters.TagToExclude = s },
+				{ "useNuGetorg=|n", "Whether to pull packages from NuGet.org", s => parameters.IncludeNuGetOrg = GetBoolean(s) },
+				{ "publicPackagesOwner=|o", "The owner of the public packages to update; must be specified is useNuGetorg is true", s => parameters.PublickPackageOwner = s },
+				{ "allowDowngrade=|d", "Whether package downgrade is allowed", s => parameters.IsDowngradeAllowed = GetBoolean(s) },
+				{ "keepLatestDev=|k", "A comma-separated list of packages to keep at latest dev", s => parameters.PackagesToKeepAtLatestDev = GetList(s) },
+				{ "ignore=|i", "A comma-separated list of packages to ignore", s => parameters.PackagesToIgnore = GetList(s) },
+				{ "update=|u", "A comma-separated list of packages to update; not specifying this will update all packages found", s => parameters.PackagesToUpdate = GetList(s) },
+				{ "useStableIfMoreRecent=|us", "Whether to use the latest stable if a more recent version is found", s => parameters.UseStableIfMoreRecent = GetBoolean(s) },
+				{ "outputFile=|of", "The path to a file where the update summary will be written", s => summaryFile = s },
 			};
 
 			options.Parse(args);
