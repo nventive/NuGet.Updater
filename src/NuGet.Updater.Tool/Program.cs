@@ -11,6 +11,11 @@ namespace NuGet.Updater.Tool
 	{
 		public static async Task Main(string[] args)
 		{
+			if(args == null || args.Length == 0)
+			{
+				args = new[] { "help" };
+			}
+
 			var parameters = new UpdaterParameters
 			{
 				UpdateTarget = UpdateTarget.All,
