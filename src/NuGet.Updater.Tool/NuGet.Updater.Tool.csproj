@@ -18,9 +18,8 @@
 		<Authors>nventive</Authors>
 		<Owners>nventive</Owners>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<PackageIconUrl>https://nv-assets.azurewebsites.net/logos/nv_small_square_logo.jpg</PackageIconUrl>
-		<!-- TODO Update this once the project is moved to GitHub -->
-		<PackageProjectUrl>https://dev.azure.com/nventive/Open%20Source/_git/NuGet.Updater</PackageProjectUrl>
+		<PackageIconUrl>https://nventive-email-assets.s3.amazonaws.com/packages/nv-package-logo%400%2C25x.png</PackageIconUrl>
+		<PackageProjectUrl>https://github.com/nventive/NuGet.Updater</PackageProjectUrl>
 	</PropertyGroup>
 
 	<!-- NuGet metadata -->
