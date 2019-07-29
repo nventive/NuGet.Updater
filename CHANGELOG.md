@@ -8,11 +8,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Added aliases for .Net Core application
+- Added support for multiple target versions
+
 ### Changed
 
 ### Deprecated
 
 ### Removed
+- Removed superfluous arguments
 
 ### Fixed
 

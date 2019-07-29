@@ -8,7 +8,7 @@
 		/// <summary>
 		/// No files will be updated.
 		/// </summary>
-		Unespecified = 0,
+		Unspecified = 0,
 
 		/// <summary>
 		/// .nuspec files.

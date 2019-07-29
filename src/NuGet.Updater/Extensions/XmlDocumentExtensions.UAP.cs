@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using NuGet.Updater.Entities;
+using NuGet.Updater.Log;
 using NuGet.Versioning;
 using Windows.Data.Xml.Dom;
 using Windows.Storage;
@@ -24,7 +25,7 @@ namespace NuGet.Updater.Extensions
 		public static UpdateOperation[] UpdateProjectReferenceVersions(
 			this XmlDocument document,
 			string packageId,
-			FeedNuGetVersion version,
+			UpdaterVersion version,
 			string path,
 			bool isDowngradeAllowed
 		)
@@ -47,7 +48,7 @@ namespace NuGet.Updater.Extensions
 
 					var operation = new UpdateOperation(isDowngradeAllowed, packageId, currentVersion, version, path);
 
-					if (operation.ShouldProceed)
+					if (operation.IsUpdate)
 					{
 						packageReference.SetAttribute("Version", version.Version.ToString());
 					}
@@ -64,7 +65,7 @@ namespace NuGet.Updater.Extensions
 
 						var operation = new UpdateOperation(isDowngradeAllowed, packageId, currentVersion, version, path);
 
-						if (operation.ShouldProceed)
+						if (operation.IsUpdate)
 						{
 							node.InnerText = version.Version.ToString();
 						}

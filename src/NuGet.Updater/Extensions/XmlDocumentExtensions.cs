@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using NuGet.Updater.Entities;
+using NuGet.Updater.Log;
 using NuGet.Versioning;
 
 #if UAP
@@ -20,7 +19,7 @@ namespace NuGet.Updater.Extensions
 		public static UpdateOperation[] UpdateNuSpecVersions(
 			this XmlDocument document,
 			string packageId,
-			FeedNuGetVersion version,
+			UpdaterVersion version,
 			string path,
 			bool isDowngradeAllowed
 		)
@@ -38,7 +37,7 @@ namespace NuGet.Updater.Extensions
 
 					var operation = new UpdateOperation(isDowngradeAllowed, packageId, currentVersion, version, path);
 
-					if (operation.ShouldProceed)
+					if (operation.IsUpdate)
 					{
 						node.SetAttribute("version", version.Version.ToString());
 					}

@@ -3,54 +3,62 @@ using System.Collections.Generic;
 using System.Linq;
 using NuGet.Configuration;
 using NuGet.Updater.Entities;
+using Uno.Extensions;
 
 namespace NuGet.Updater.Extensions
 {
 	internal static class UpdaterParametersExtension
 	{
-		internal static bool HasUpdateTarget(this UpdaterParameters parameters, UpdateTarget target) => (parameters.UpdateTarget & target) == target;
-
-		internal static PackageSource GetFeedPackageSource(this UpdaterParameters parameters) => new PackageSource(parameters.SourceFeed, "Feed")
+		internal static IUpdaterSource[] GetSources(this UpdaterParameters parameters)
 		{
-#if UAP
-			Credentials = PackageSourceCredential.FromUserInput("Feed", "user", parameters.SourceFeedPersonalAccessToken, false),
-#else
-			Credentials = PackageSourceCredential.FromUserInput("Feed", "user", parameters.SourceFeedPersonalAccessToken, false, null),
-#endif
-		};
+			var packageSources = new List<IUpdaterSource>();
 
-		internal static bool ShouldUpdatePackage(this UpdaterParameters parameters, NuGetPackage package) =>
-			(parameters.PackagesToIgnore == null || !parameters.PackagesToIgnore.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase))
-			&& (parameters.PackagesToUpdate == null || parameters.PackagesToUpdate.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase));
+			if(parameters.PrivateFeeds?.Any() ?? false)
+			{
+				packageSources.AddRange(parameters.PrivateFeeds.Select(g => new PrivateUpdaterSource(g.Key, g.Value)));
+			}
 
-		internal static bool ShouldKeepPackageAtLatestDev(this UpdaterParameters parameters, string packageId) =>
-			parameters.PackagesToKeepAtLatestDev != null && parameters.PackagesToKeepAtLatestDev.Contains(packageId, StringComparer.OrdinalIgnoreCase);
+			if(parameters.IncludeNuGetOrg)
+			{
+				packageSources.Add(new PublicUpdaterSource("https://api.nuget.org/v3/index.json", parameters.PackagesOwner));
+			}
+
+			return packageSources.ToArray();
+		}
+
+		internal static bool ShouldUpdatePackage(this UpdaterParameters parameters, NuGetPackage package)
+		{
+			var isPackageToIgnore = parameters.PackagesToIgnore?.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase) ?? false;
+			var isPackageToUpdate = parameters.PackagesToUpdate?.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase) ?? true;
+
+			return isPackageToUpdate && !isPackageToIgnore;
+		}
 
 		internal static IEnumerable<string> GetSummary(this UpdaterParameters parameters)
 		{
 			yield return $"## Configuration";
 
-			yield return $"- Update targetting {parameters.SolutionRoot}";
+			yield return $"- Update targetting files under {parameters.SolutionRoot}";
 
-			var packageSources = parameters.IncludeNuGetOrg ? $"NuGet.org and {parameters.SourceFeed}" : parameters.SourceFeed;
-			yield return $"- Using NuGet packages from {packageSources}";
+			var packageSources = new List<string>();
 
-			var targetVersion = parameters.UseStableIfMoreRecent ? $"{parameters.TargetVersion} with fallback to stable if a more recent version is available" : parameters.TargetVersion;
-			yield return $"- Targeting version {targetVersion}";
+			if(parameters.IncludeNuGetOrg)
+			{
+				packageSources.Add("NuGet.org");
+			}
+
+			if(parameters.PrivateFeeds?.Any() ?? false)
+			{
+				packageSources.AddRange(parameters.PrivateFeeds.Keys);
+			}
+
+			yield return $"- Using NuGet packages from {string.Join(", ", packageSources)}";
+
+			yield return $"- Using target version {string.Join(", then ", parameters.TargetVersions)}";
 
 			if (parameters.IsDowngradeAllowed)
 			{
 				yield return $"- Allowing package downgrade if a lower version is found";
-			}
-
-			if(parameters.TagToExclude != null && parameters.TagToExclude != "")
-			{
-				yield return $"- Excluding versions with the {parameters.TagToExclude} tag";
-			}
-
-			if(parameters.PackagesToKeepAtLatestDev?.Any() ?? false)
-			{
-				yield return $"- Keeping {string.Join(",", parameters.PackagesToKeepAtLatestDev)} at latest dev";
 			}
 
 			if (parameters.PackagesToIgnore?.Any() ?? false)
