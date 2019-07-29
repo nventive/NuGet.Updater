@@ -9,11 +9,8 @@ namespace NuGet.Updater.Tool
 {
 	public class Program
 	{
-		private static readonly UpdaterParameters _parameters = new UpdaterParameters
-		{
-			UpdateTarget = UpdateTarget.All,
-			PrivateFeeds = new Dictionary<string, string>(),
-		};
+		private static bool _isParameterSet = default;
+		private static UpdaterParameters _parameters = default;
 
 		public static async Task Main(string[] args)
 		{
@@ -24,24 +21,28 @@ namespace NuGet.Updater.Tool
 			var options = new OptionSet
 			{
 				{ "help|h", "Displays this help screen", s => isHelp = true },
-				{ "solution=|s=", "The path to the solution to update", s => _parameters.SolutionRoot = s },
-				{ "feed=|f=", "A private feed to use for the update; the format is {url}|{accessToken}; can be specified multiple times", s => ParsePrivateFeed(s, '|') },
-				{ "version=|versions=|v=", "The target versions to use", s => _parameters.TargetVersions = GetList(s)},
-				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => _parameters.IncludeNuGetOrg = true },
-				{ "packagesOwner=|o=", "The owner of the packages to update; must be specified if useNuGetorg is true", s => _parameters.PackagesOwner = s },
-				{ "allowDowngrade=|d=", "Whether package downgrade is allowed", s => _parameters.IsDowngradeAllowed = GetBoolean(s) },
-				{ "ignore=|i=", "A comma-separated list of packages to ignore", s => _parameters.PackagesToIgnore = GetList(s) },
-				{ "update=|u=", "A comma-separated list of packages to update; not specifying this will update all packages found", s => _parameters.PackagesToUpdate = GetList(s) },
+				{ "solution=|s=", "The path to the solution to update", s => Set(p => p.SolutionRoot = s) },
+				{ "feed=|f=", "A private feed to use for the update; the format is {url}|{accessToken}; can be specified multiple times", s => AddPrivateFeed(s) },
+				{ "version=|versions=|v=", "The target versions to use", s => Set(p => p.TargetVersions = GetList(s))},
+				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => Set(p => p.IncludeNuGetOrg = true )},
+				{ "packagesOwner=|o=", "The owner of the packages to update; must be specified if useNuGetorg is true", s => Set(p => p.PackagesOwner = s)},
+				{ "allowDowngrade=|d=", "Whether package downgrade is allowed", s => Set(p => p.IsDowngradeAllowed = GetBoolean(s))},
+				{ "ignore=|i=", "A comma-separated list of packages to ignore", s => Set(p => p.PackagesToIgnore = GetList(s)) },
+				{ "update=|u=", "A comma-separated list of packages to update; not specifying this will update all packages found", s => Set(p => p.PackagesToUpdate = GetList(s)) },
 				{ "outputFile=|of=", "The path to a file where the update summary will be written", s => summaryFile = s },
 				{ "silent", "Suppress all output from NuGet Updater", _ => isSilent = true },
 			};
 
-			if(options.Parse(args).Count == 0)
+			_isParameterSet = false;
+			_parameters = new UpdaterParameters
 			{
-				isHelp = true;
-			}
+				UpdateTarget = UpdateTarget.All,
+				PrivateFeeds = new Dictionary<string, string>(),
+			};
 
-			if(isHelp)
+			options.Parse(args);
+
+			if(isHelp || !_isParameterSet)
 			{
 				Console.WriteLine("NuGet Updater is a tool allowing the automatic update of the NuGet packages found in a solution");
 				options.WriteOptionDescriptions(Console.Out);
@@ -50,6 +51,28 @@ namespace NuGet.Updater.Tool
 			{
 				await NuGetUpdater.UpdateAsync(CancellationToken.None, _parameters, isSilent ? null : Console.Out, summaryFile);
 			}
+		}
+
+		private static void Set(Action<UpdaterParameters> set)
+		{
+			set(_parameters);
+			_isParameterSet = true;
+		}
+
+		private static void AddPrivateFeed(string value)
+		{
+			const char separator = '|';
+			if(value.Contains(separator))
+			{
+				var parts = value.Split(separator);
+				_parameters.PrivateFeeds.Add(parts[0], parts[1]);
+			}
+			else
+			{
+				_parameters.PrivateFeeds.Add(value, null);
+			}
+
+			_isParameterSet = true;
 		}
 
 		private static bool GetBoolean(string value, bool fallbackValue = false)
@@ -76,19 +99,6 @@ namespace NuGet.Updater.Tool
 			}
 
 			return list;
-		}
-
-		private static void ParsePrivateFeed(string value, char separator)
-		{
-			if(value.Contains(separator))
-			{
-				var parts = value.Split(separator);
-				_parameters.PrivateFeeds.Add(parts[0], parts[1]);
-			}
-			else
-			{
-				_parameters.PrivateFeeds.Add(value, null);
-			}
 		}
 	}
 }
