@@ -38,13 +38,22 @@ namespace NuGet.Updater.Extensions
 		{
 			yield return $"## Configuration";
 
-			yield return $"- Update targetting files under {parameters.SolutionRoot}";
+			var files = parameters.UpdateTarget == UpdateTarget.All
+				? string.Join(", ", Enum
+					.GetValues(typeof(UpdateTarget))
+					.Cast<UpdateTarget>()
+					.Select(t => t.GetDescription())
+					.Trim()
+				)
+				: parameters.UpdateTarget.GetDescription();
+
+			yield return $"- Update targeting {files} files under {parameters.SolutionRoot}";
 
 			var packageSources = new List<string>();
 
 			if(parameters.IncludeNuGetOrg)
 			{
-				packageSources.Add("NuGet.org");
+				packageSources.Add(parameters.PackagesOwner.SelectOrDefault(o => $"NuGet.org (limited to packages owned by {o})", "NuGet.org"));
 			}
 
 			if(parameters.PrivateFeeds?.Any() ?? false)
@@ -54,7 +63,7 @@ namespace NuGet.Updater.Extensions
 
 			yield return $"- Using NuGet packages from {string.Join(", ", packageSources)}";
 
-			yield return $"- Using target version {string.Join(", then ", parameters.TargetVersions)}";
+			yield return $"- Using {(parameters.Strict ? "exact " : "")}target version {string.Join(", then ", parameters.TargetVersions)}";
 
 			if (parameters.IsDowngradeAllowed)
 			{
