@@ -49,23 +49,14 @@ namespace NuGet.Updater.Helpers
 			switch(target)
 			{
 				case UpdateTarget.Nuspec:
-					extensionFilter = ".nuspec";
+				case UpdateTarget.PackageReference:
+					extensionFilter = target.GetDescription();
 					break;
 
 				case UpdateTarget.ProjectJson:
-					nameFilter = "project.json";
-					break;
-
-				case UpdateTarget.PackageReference:
-					extensionFilter = ".csproj";
-					break;
-
 				case UpdateTarget.DirectoryTargets:
-					nameFilter = "Directory.Build.targets";
-					break;
-
 				case UpdateTarget.DirectoryProps:
-					nameFilter = "Directory.Build.props";
+					nameFilter = target.GetDescription();
 					break;
 
 				default:
