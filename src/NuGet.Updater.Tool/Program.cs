@@ -9,39 +9,37 @@ namespace NuGet.Updater.Tool
 {
 	public class Program
 	{
+		private static readonly UpdaterParameters _parameters = new UpdaterParameters
+		{
+			UpdateTarget = UpdateTarget.All,
+			PrivateFeeds = new Dictionary<string, string>(),
+		};
+
 		public static async Task Main(string[] args)
 		{
-			if(args == null || args.Length == 0)
-			{
-				args = new[] { "help" };
-			}
-
-			var parameters = new UpdaterParameters
-			{
-				UpdateTarget = UpdateTarget.All,
-			};
-
 			var isHelp = false;
+			var isSilent = false;
 			string summaryFile = default;
 
 			var options = new OptionSet
 			{
 				{ "help|h", "Displays this help screen", s => isHelp = true },
-				{ "solution=|s=", "The path to the solution to update", s => parameters.SolutionRoot = s },
-				{ "feed=|f=", "A private feed to use for the update; the format is {url}|{accessToken}; can be specified multiple times", s => parameters.SourceFeed = s },
-				{ "version=|versions=|v=", "The target versions to use", s => parameters.TargetVersions = GetList(s)},
-				{ "strict", s => parameters.Strict = GetBoolean(s) },
-				{ "excludeTag=|e=", "A tag to exclude from the search", s => parameters.TagToExclude = s },
-				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => parameters.IncludeNuGetOrg = true },
-				{ "packagesOwner=|o=", "The owner of the packages to update; must be specified if useNuGetorg is true", s => parameters.PublicPackageOwner = s },
-				{ "allowDowngrade=|d=", "Whether package downgrade is allowed", s => parameters.IsDowngradeAllowed = GetBoolean(s) },
-				{ "keepLatestDev=|k=", "A comma-separated list of packages to keep at latest dev", s => parameters.PackagesToKeepAtLatestDev = GetList(s) },
-				{ "ignore=|i=", "A comma-separated list of packages to ignore", s => parameters.PackagesToIgnore = GetList(s) },
-				{ "update=|u=", "A comma-separated list of packages to update; not specifying this will update all packages found", s => parameters.PackagesToUpdate = GetList(s) },
+				{ "solution=|s=", "The path to the solution to update", s => _parameters.SolutionRoot = s },
+				{ "feed=|f=", "A private feed to use for the update; the format is {url}|{accessToken}; can be specified multiple times", s => ParsePrivateFeed(s, '|') },
+				{ "version=|versions=|v=", "The target versions to use", s => _parameters.TargetVersions = GetList(s)},
+				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => _parameters.IncludeNuGetOrg = true },
+				{ "packagesOwner=|o=", "The owner of the packages to update; must be specified if useNuGetorg is true", s => _parameters.PackagesOwner = s },
+				{ "allowDowngrade=|d=", "Whether package downgrade is allowed", s => _parameters.IsDowngradeAllowed = GetBoolean(s) },
+				{ "ignore=|i=", "A comma-separated list of packages to ignore", s => _parameters.PackagesToIgnore = GetList(s) },
+				{ "update=|u=", "A comma-separated list of packages to update; not specifying this will update all packages found", s => _parameters.PackagesToUpdate = GetList(s) },
 				{ "outputFile=|of=", "The path to a file where the update summary will be written", s => summaryFile = s },
+				{ "silent", "Suppress all output from NuGet Updater", _ => isSilent = true },
 			};
 
-			options.Parse(args);
+			if(options.Parse(args).Count == 0)
+			{
+				isHelp = true;
+			}
 
 			if(isHelp)
 			{
@@ -50,7 +48,7 @@ namespace NuGet.Updater.Tool
 			}
 			else
 			{
-				await NuGetUpdater.UpdateAsync(CancellationToken.None, parameters, Console.Out, summaryFile);
+				await NuGetUpdater.UpdateAsync(CancellationToken.None, _parameters, isSilent ? null : Console.Out, summaryFile);
 			}
 		}
 
@@ -78,6 +76,19 @@ namespace NuGet.Updater.Tool
 			}
 
 			return list;
+		}
+
+		private static void ParsePrivateFeed(string value, char separator)
+		{
+			if(value.Contains(separator))
+			{
+				var parts = value.Split(separator);
+				_parameters.PrivateFeeds.Add(parts[0], parts[1]);
+			}
+			else
+			{
+				_parameters.PrivateFeeds.Add(value, null);
+			}
 		}
 	}
 }

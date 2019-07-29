@@ -1,74 +1,57 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace NuGet.Updater.Entities
 {
 	public class UpdaterParameters
 	{
 		/// <summary>
-		/// The location of the solution to update.
+		/// Gets or sets the location of the solution to update.
 		/// </summary>
 		public string SolutionRoot { get; set; }
 
 		/// <summary>
-		/// The URL of the private feed to use.
+		/// Gets or sets a list of private feed URLs and access tokens to get packages from.
 		/// </summary>
-		public string SourceFeed { get; set; }
+		public Dictionary<string, string> PrivateFeeds { get; set; }
 
 		/// <summary>
-		/// The Personal Access Token to use to access the private feed.
-		/// </summary>
-		public string SourceFeedPersonalAccessToken { get; set; }
-
-		/// <summary>
-		/// The versions to update to (stable, dev, beta, etc.), in order of priority.
+		/// Gets or sets the versions to update to (stable, dev, beta, etc.), in order of priority.
 		/// </summary>
 		public IEnumerable<string> TargetVersions { get; set; }
 
 		/// <summary>
-		/// Whether it should exactly match the target version.
+		/// Gets or sets a value indicating whether the version should exactly match the target version.
 		/// </summary>
 		public bool Strict { get; set; }
 
 		/// <summary>
-		/// A specific tag to exclude when looking for versions.
-		/// </summary>
-		public string TagToExclude { get; set; }
-
-		/// <summary>
-		/// Whether to include packages from NuGet.org.
+		/// Gets or sets a value indicating whether whether to include packages from NuGet.org.
 		/// </summary>
 		public bool IncludeNuGetOrg { get; set; }
 
 		/// <summary>
-		/// Whether the packages can be downgraded if the version found is lower.
+		/// Gets or sets a value indicating whether whether the packages can be downgraded if the version found is lower than the current one.
 		/// </summary>
 		public bool IsDowngradeAllowed { get; set; }
 
 		/// <summary>
-		/// The type of files with NuGet references to update.
+		/// Gets or sets the type of files to update.
 		/// </summary>
 		public UpdateTarget UpdateTarget { get; set; }
 
 		/// <summary>
-		/// A list of packages to keep at latest dev.
-		/// </summary>
-		public IEnumerable<string> PackagesToKeepAtLatestDev { get; set; }
-
-		/// <summary>
-		/// A list of packages to ignore.
+		/// Gets or sets a list of packages to ignore.
 		/// </summary>
 		public IEnumerable<string> PackagesToIgnore { get; set; }
 
 		/// <summary>
-		/// A list of packages to update. Will update all packages found if nothing is specified.
+		/// Gets or sets a list of packages to update; all packages found will be updated if nothing is specified.
 		/// </summary>
 		public IEnumerable<string> PackagesToUpdate { get; set; }
 
 		/// <summary>
-		/// The name of the owner of the public packages to update; specify if <see cref="IncludeNuGetOrg"/> is set to true.
+		/// Gets or sets the name of the owner of the packages to update; used with NuGet.org.
 		/// </summary>
-		public string PublicPackageOwner { get; set; }
+		public string PackagesOwner { get; set; }
 	}
 }

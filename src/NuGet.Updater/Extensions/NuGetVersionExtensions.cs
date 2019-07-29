@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using NuGet.Versioning;
 
 namespace NuGet.Updater
@@ -17,38 +13,38 @@ namespace NuGet.Updater
 
 		public static bool IsGreaterThan(this NuGetVersion x, NuGetVersion y)
 		{
-			if (ReferenceEquals(x, y))
+			if(ReferenceEquals(x, y))
 			{
 				return false;
 			}
 
-			if (ReferenceEquals(y, null))
+			if(ReferenceEquals(y, null))
 			{
 				return false;
 			}
 
-			if (ReferenceEquals(x, null))
+			if(ReferenceEquals(x, null))
 			{
 				return true;
 			}
 
 			// compare version
 			var result = x.Major.CompareTo(y.Major);
-			if (result != 0)
+			if(result != 0)
 			{
 				// If Major is higher then x is greater.
 				return result == 1;
 			}
 
 			result = x.Minor.CompareTo(y.Minor);
-			if (result != 0)
+			if(result != 0)
 			{
 				// If Minor is higher then x is greater.
 				return result == 1;
 			}
 
 			result = x.Patch.CompareTo(y.Patch);
-			if (result != 0)
+			if(result != 0)
 			{
 				return result == 1;
 			}
@@ -57,23 +53,23 @@ namespace NuGet.Updater
 			var xLabels = GetReleaseLabelsOrNull(x);
 			var yLabels = GetReleaseLabelsOrNull(y);
 
-			if (xLabels != null
+			if(xLabels != null
 				&& yLabels == null)
 			{
 				return false;
 			}
 
-			if (xLabels == null
+			if(xLabels == null
 				&& yLabels != null)
 			{
 				return true;
 			}
 
-			if (xLabels != null
+			if(xLabels != null
 				&& yLabels != null)
 			{
 				result = CompareReleaseLabels(xLabels, yLabels);
-				if (result != 0)
+				if(result != 0)
 				{
 					return result == 1;
 				}
@@ -90,13 +86,13 @@ namespace NuGet.Updater
 			string[] labels = null;
 
 			// Check if labels exist
-			if (version.IsPrerelease)
+			if(version.IsPrerelease)
 			{
 				// Try to use string[] which is how labels are normally stored.
 				var enumerable = version.ReleaseLabels;
 				labels = enumerable as string[];
 
-				if (labels != null && enumerable != null)
+				if(labels != null && enumerable != null)
 				{
 					// This is not the expected type, enumerate and convert to an array.
 					labels = enumerable.ToArray();
@@ -115,17 +111,17 @@ namespace NuGet.Updater
 
 			var count = Math.Max(xLabels.Length, yLabels.Length);
 
-			for (var i = 0; i < count; i++)
+			for(var i = 0; i < count; i++)
 			{
 				var aExists = i < xLabels.Length;
 				var bExists = i < yLabels.Length;
 
-				if (!aExists && bExists)
+				if(!aExists && bExists)
 				{
 					return -1;
 				}
 
-				if (aExists && !bExists)
+				if(aExists && !bExists)
 				{
 					return 1;
 				}
@@ -133,7 +129,7 @@ namespace NuGet.Updater
 				// compare the labels
 				result = CompareRelease(xLabels[i], yLabels[i]);
 
-				if (result != 0)
+				if(result != 0)
 				{
 					return result;
 				}
@@ -155,14 +151,14 @@ namespace NuGet.Updater
 			var v2IsNumeric = int.TryParse(version2, out var version2Num);
 
 			// if both are numeric compare them as numbers
-			if (v1IsNumeric && v2IsNumeric)
+			if(v1IsNumeric && v2IsNumeric)
 			{
 				result = version1Num.CompareTo(version2Num);
 			}
-			else if (v1IsNumeric || v2IsNumeric)
+			else if(v1IsNumeric || v2IsNumeric)
 			{
 				// numeric labels come before alpha labels
-				if (v1IsNumeric)
+				if(v1IsNumeric)
 				{
 					result = -1;
 				}

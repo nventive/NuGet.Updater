@@ -10,7 +10,7 @@ using Windows.Storage.Search;
 
 namespace NuGet.Updater.Helpers
 {
-	public static class FileHelper
+	partial class FileHelper
 	{
 		public static void LogToFile(string outputFilePath, IEnumerable<string> log)
 		{

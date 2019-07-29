@@ -3,50 +3,39 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Updater.Entities;
+using Uno.Extensions;
 
 namespace NuGet.Updater.Extensions
 {
 	public static class NuGetPackageExtensions
 	{
-		public static async Task<FeedNuGetVersion> GetLatestVersion(
+		public static async Task<UpdaterVersion> GetLatestVersion(
 			this NuGetPackage package,
 			CancellationToken ct,
 			UpdaterParameters parameters
 		)
 		{
-			var versions = (await package.GetVersions(ct))
+			var versions = await package.GetVersions(ct);
+
+			var versionsPerTarget = versions
 				.OrderByDescending(v => v.Version)
-				.ToArray();
+				.GroupBy(version => parameters.TargetVersions.FirstOrDefault(t => version.IsMatchingVersion(t, parameters.Strict)))
+				.Where(g => g.Key.HasValue());
 
-			var version = parameters
-				.TargetVersions
-				.Select(tv =>
-				{
-					if(tv == "stable")
-					{
-						tv = "";
-					}
-
-					return versions
-						.Where(v => v.IsMatchingSpecialVersion(tv, parameters.Strict) && !v.ContainsTag(parameters.TagToExclude))
-						.OrderByDescending(v => v.Version)
-						.FirstOrDefault();
-				}
-				)
-				.Where(v => v != null)
+			return versionsPerTarget
+				.Select(g => g.FirstOrDefault())
+				.OrderByDescending(v => v.Version)
 				.FirstOrDefault();
-
-			return version;
 		}
 
-		private static async Task<IEnumerable<FeedNuGetVersion>> GetVersions(this NuGetPackage package, CancellationToken ct)
+		private static async Task<IEnumerable<UpdaterVersion>> GetVersions(this NuGetPackage package, CancellationToken ct)
 		{
-			var versions = new List<FeedNuGetVersion>();
+			var versions = new List<UpdaterVersion>();
 			foreach(var p in package.Packages)
 			{
 				foreach(var v in await p.Value.GetVersionsAsync())
 				{
-					versions.Add(new FeedNuGetVersion(p.Key, v.Version));
+					versions.Add(new UpdaterVersion(p.Key, v.Version));
 				}
 			}
 

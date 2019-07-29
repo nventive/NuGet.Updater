@@ -2,13 +2,13 @@
 using System.IO;
 using System.Text;
 
-namespace NuGet.Updater.Entities
+namespace NuGet.Updater.Log
 {
-	public class ActionTextWriter : TextWriter
+	public class SimpleTextWriter : TextWriter
 	{
 		private readonly Action<string> _writeAction;
 
-		public ActionTextWriter(Action<string> writeAction)
+		public SimpleTextWriter(Action<string> writeAction)
 		{
 			_writeAction = writeAction ?? new Action<string>(_ => { });
 		}

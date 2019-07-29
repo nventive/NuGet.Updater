@@ -3,9 +3,9 @@ using NuGet.Versioning;
 
 namespace NuGet.Updater.Entities
 {
-	public class FeedNuGetVersion
-	{
-		public FeedNuGetVersion(Uri feedUri, NuGetVersion version)
+	public class UpdaterVersion
+	{ 
+		public UpdaterVersion(Uri feedUri, NuGetVersion version)
 		{
 			FeedUri = feedUri;
 			Version = version;
