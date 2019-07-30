@@ -15,6 +15,8 @@ namespace NuGet.Updater.Log
 
 		public override void Write(string value) => _writeAction(value);
 
+		public override void WriteLine(string value) => _writeAction(value);
+
 		public override Encoding Encoding => Encoding.Default;
 	}
 }
