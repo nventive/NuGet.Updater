@@ -88,7 +88,7 @@ namespace NuGet.Updater
 
 		private async Task<NuGetPackage[]> GetPackages(CancellationToken ct)
 		{
-			var packagesPerSource = await Task.WhenAll(_packageSources.Select(s => s.GetPackages(ct)));
+			var packagesPerSource = await Task.WhenAll(_packageSources.Select(s => s.GetPackages(ct, _log)));
 
 			return packagesPerSource
 				.SelectMany(x => x)
