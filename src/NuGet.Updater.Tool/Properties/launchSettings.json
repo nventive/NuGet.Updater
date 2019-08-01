@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "NuGet.Updater.Tool": {
+      "commandName": "Project"
+    }
+  }
+}

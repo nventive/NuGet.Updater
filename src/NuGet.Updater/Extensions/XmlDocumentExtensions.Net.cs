@@ -17,6 +17,37 @@ namespace NuGet.Updater.Extensions
 	{
 		private const string MsBuildNamespace = "http://schemas.microsoft.com/developer/msbuild/2003";
 
+		public static Dictionary<string, string> GetPackageReferences(this XmlDocument document)
+		{
+			var references = new Dictionary<string, string>();
+
+			var namespaceManager = new XmlNamespaceManager(document.NameTable);
+			namespaceManager.AddNamespace("d", MsBuildNamespace);
+
+			var packageReferences = document.SelectNodes($"//d:PackageReference", namespaceManager).OfType<XmlNode>();
+			var dotnetCliReferences = document.SelectNodes($"//d:DotNetCliToolReference", namespaceManager).OfType<XmlNode>();
+
+			foreach(XmlElement packageReference in packageReferences.Concat(dotnetCliReferences))
+			{
+				var packageId = packageReference.Attributes["Include"].Value;
+
+				if(packageReference.HasAttribute("Version"))
+				{
+					references.Add(packageId, packageReference.Attributes["Version"].Value);
+				}
+				else
+				{
+					var node = packageReference.SelectSingleNode("d:Version", namespaceManager);
+					if(node != null)
+					{
+						references.Add(packageId, node.InnerText);
+					}
+				}
+			}
+
+			return references;
+		}
+
 		public static UpdateOperation[] UpdateProjectReferenceVersions(
 			this XmlDocument document,
 			string packageId,

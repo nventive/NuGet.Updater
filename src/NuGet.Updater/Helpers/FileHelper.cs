@@ -46,39 +46,17 @@ namespace NuGet.Updater.Helpers
 		{
 			string extensionFilter = null, nameFilter = null;
 
-			switch(target)
-			{
-				case UpdateTarget.Nuspec:
-				case UpdateTarget.PackageReference:
-					extensionFilter = target.GetDescription();
-					break;
-
-				case UpdateTarget.ProjectJson:
-				case UpdateTarget.DirectoryTargets:
-				case UpdateTarget.DirectoryProps:
-					nameFilter = target.GetDescription();
-					break;
-
-				default:
-					break;
-			}
-
-			if(extensionFilter == null && nameFilter == null)
-			{
-				return new Dictionary<string, XmlDocument>();
-			}
-
-			log.Write($"Retrieving {nameFilter ?? extensionFilter} files");
-
-			var files = await FileHelper.GetFiles(ct, solutionRoot, extensionFilter, nameFilter);
+			var files = await SolutionHelper.GetTargetFilePaths(ct, solutionRoot, target);
 
 			log.Write($"Found {files.Length} {nameFilter ?? extensionFilter} file(s)");
 
+			//All the other supported files are XML files
 			if(target == UpdateTarget.ProjectJson)
 			{
 				return files.ToDictionary(f => f, f => default(XmlDocument));
 			}
 
+			//Get the xml document for all the files
 			return (await Task.WhenAll(files.Select(f => f.GetDocument(ct))))
 				.ToDictionary(p => p.Key, p => p.Value);
 		}
