@@ -19,10 +19,24 @@ namespace NuGet.Updater.Extensions
 
 		public static Dictionary<string, string> GetPackageReferences(this XmlDocument document)
 		{
-			var references = new Dictionary<string, string>();
-
 			var namespaceManager = new XmlNamespaceManager(document.NameTable);
 			namespaceManager.AddNamespace("d", MsBuildNamespace);
+
+			var references = document.GetPackageReferences(namespaceManager);
+
+			namespaceManager = new XmlNamespaceManager(document.NameTable);
+			namespaceManager.AddNamespace("d", "");
+
+			var otherReferences = document.GetPackageReferences(namespaceManager);
+
+			return references
+				.Concat(otherReferences)
+				.ToDictionary(g => g.Key, g => g.Value);
+		}
+
+		private static Dictionary<string, string> GetPackageReferences(this XmlDocument document, XmlNamespaceManager namespaceManager)
+		{
+			var references = new Dictionary<string, string>();
 
 			var packageReferences = document.SelectNodes($"//d:PackageReference", namespaceManager).OfType<XmlNode>();
 			var dotnetCliReferences = document.SelectNodes($"//d:DotNetCliToolReference", namespaceManager).OfType<XmlNode>();
@@ -130,7 +144,7 @@ namespace NuGet.Updater.Extensions
 				.OfType<XmlElement>();
 		}
 
-		public static async Task<KeyValuePair<string, XmlDocument>> GetDocument(this string path, CancellationToken ct)
+		public static async Task<XmlDocument> GetDocument(this string path, CancellationToken ct)
 		{
 			var document = new XmlDocument()
 			{
@@ -139,7 +153,7 @@ namespace NuGet.Updater.Extensions
 
 			document.Load(path);
 
-			return new KeyValuePair<string, XmlDocument>(path, document);
+			return document;
 		}
 
 		public static async Task Save(this XmlDocument document, CancellationToken ct, string path) => document.Save(path);

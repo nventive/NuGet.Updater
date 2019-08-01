@@ -12,13 +12,15 @@ namespace NuGet.Updater.Tests.Entities
 		public TestPackageSource(Uri uri, params TestPackage[] packages)
 		{
 			Uri = uri;
-			Packages = packages?.Select(p => new NuGetPackage(p, Uri)).ToArray();
+			//Packages = packages?.Select(p => new NuGetPackage(p, Uri)).ToArray();
 		}
 
 		public Uri Uri { get; }
 
-		public NuGetPackage[] Packages { get; }
+		public UpdaterPackage[] Packages { get; }
 
-		public async Task<NuGetPackage[]> GetPackages(CancellationToken ct, Logger log = null) => Packages;
+		public async Task<UpdaterPackage> GetPackage(CancellationToken ct, PackageReference reference, Logger log = null) => Packages.FirstOrDefault(p => p.PackageId == reference.Id);
+
+		public async Task<UpdaterPackage[]> GetPackages(CancellationToken ct, Logger log = null) => Packages;
 	}
 }

@@ -13,7 +13,7 @@ namespace NuGet.Updater.Extensions
 {
 	public static class PackageSourceExtensions
 	{
-		public static async Task<NuGetPackage[]> SearchPackages(this PackageSource source, CancellationToken ct, string searchTerm = "", Logger log = null)
+		public static async Task<UpdaterPackage[]> SearchPackages(this PackageSource source, CancellationToken ct, string searchTerm = "", Logger log = null)
 		{
 			var settings = Settings.LoadDefaultSettings(null);
 			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
@@ -31,9 +31,32 @@ namespace NuGet.Updater.Extensions
 			return source.ToNuGetPackages(packages);
 		}
 
-		private static NuGetPackage[] ToNuGetPackages(this PackageSource source, IPackageSearchMetadata[] packages) =>
+		public static async Task<UpdaterPackage> GetPackage(this PackageSource source, CancellationToken ct, PackageReference reference, Logger log = null)
+		{
+			var settings = Settings.LoadDefaultSettings(null);
+			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
+
+			var repository = repositoryProvider.CreateRepository(source, FeedType.HttpV3);
+
+			var packageId = reference.Id;
+
+			log?.Write($"Getting package {packageId} from {source.SourceUri}");
+
+			var resource = repository.GetResource<PackageMetadataResource>();
+
+			var metadata = await resource.GetMetadataAsync(packageId, true, false, new SourceCacheContext(), new NullLogger(), ct);
+
+			var versions = metadata
+				.Cast<PackageSearchMetadataRegistration>()
+				.Select(m => new UpdaterVersion(source.SourceUri, m.Version))
+				.ToArray();
+
+			return new UpdaterPackage(packageId, versions, source.SourceUri, reference);
+		}
+
+		private static UpdaterPackage[] ToNuGetPackages(this PackageSource source, IPackageSearchMetadata[] packages) =>
 			packages
-			.Select(p => new NuGetPackage(p, source.SourceUri))
+			.Select(p => new UpdaterPackage(p, source.SourceUri))
 			.ToArray();
 	}
 }

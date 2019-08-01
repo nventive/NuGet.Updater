@@ -15,18 +15,18 @@ namespace NuGet.Updater.Extensions
 
 			if(parameters.PrivateFeeds?.Any() ?? false)
 			{
-				packageSources.AddRange(parameters.PrivateFeeds.Select(g => new PrivateUpdaterSource(g.Key, g.Value)));
+				packageSources.AddRange(parameters.PrivateFeeds.Select(g => new UpdaterSource(g.Key, g.Value, parameters.PackagesOwner)));
 			}
 
 			if(parameters.IncludeNuGetOrg)
 			{
-				packageSources.Add(new PublicUpdaterSource("https://api.nuget.org/v3/index.json", parameters.PackagesOwner));
+				packageSources.Add(new UpdaterSource("https://api.nuget.org/v3/index.json", parameters.PackagesOwner));
 			}
 
 			return packageSources.ToArray();
 		}
 
-		internal static bool ShouldUpdatePackage(this UpdaterParameters parameters, NuGetPackage package)
+		internal static bool ShouldUpdatePackage(this UpdaterParameters parameters, UpdaterPackage package)
 		{
 			var isPackageToIgnore = parameters.PackagesToIgnore?.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase) ?? false;
 			var isPackageToUpdate = parameters.PackagesToUpdate?.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase) ?? true;

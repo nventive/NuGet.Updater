@@ -25,7 +25,7 @@ namespace NuGet.Updater.Tests
 		{
 			var solution = @"C:\Git\MyMD\MyMD\MyMD.sln";
 
-			var references = await SolutionHelper.GetPackageReferences(CancellationToken.None, solution);
+			var references = await SolutionHelper.GetPackageReferences(CancellationToken.None, solution, UpdateTarget.Csproj);
 
 			Assert.IsTrue(references.Any());
 		}

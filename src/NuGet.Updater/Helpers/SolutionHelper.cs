@@ -16,7 +16,7 @@ namespace NuGet.Updater.Helpers
 		{
 			switch(updateTarget)
 			{
-				case UpdateTarget.PackageReference:
+				case UpdateTarget.Csproj:
 					return await GetProjectFiles(ct, solutionPath);
 				case UpdateTarget.DirectoryProps:
 				case UpdateTarget.DirectoryTargets:
@@ -32,33 +32,35 @@ namespace NuGet.Updater.Helpers
 			}
 		}
 
-		internal static async Task<PackageReference[]> GetPackageReferences(CancellationToken ct, string solutionPath)
+		internal static async Task<PackageReference[]> GetPackageReferences(CancellationToken ct, string solutionPath, UpdateTarget updateTarget)
 		{
-			var packages = new List<(string path, string package, string version)>();
+			var packages = new List<PackageReference>();
 
-			var files = await GetTargetFilePaths(ct, solutionPath, UpdateTarget.PackageReference);
-
-			foreach(var f in files)
+			if(updateTarget.Matches(UpdateTarget.Csproj))
 			{
-				var document = (await f.GetDocument(ct)).Value;
+				foreach(var f in await GetProjectFiles(ct, solutionPath))
+				{
+					packages.AddRange(await GetFileReferences(ct, f, UpdateTarget.Csproj));
+				}
+			}
 
-				var references = document.GetPackageReferences();
+			if(updateTarget.Matches(UpdateTarget.DirectoryProps))
+			{
+				packages.AddRange(await GetFileReferences(ct, GetDirectoryFile(solutionPath, UpdateTarget.DirectoryProps), UpdateTarget.DirectoryProps));
+			}
 
-				packages.AddRange(references.Select(g => (path: f, package: g.Key, version: g.Value)));
+			if(updateTarget.Matches(UpdateTarget.DirectoryTargets))
+			{
+				packages.AddRange(await GetFileReferences(ct, GetDirectoryFile(solutionPath, UpdateTarget.DirectoryTargets), UpdateTarget.DirectoryTargets));
 			}
 
 			return packages
-				.GroupBy(x => x.package)
-				.Select(g => g
-					.GroupBy(x => x.version)
-					.Select(v => new PackageReference
-					{
-						Id = g.Key,
-						Version = v.Key,
-						Files = v.Select(x => x.path).ToArray(),
-					})
-				)
-				.SelectMany(x => x)
+				.GroupBy(p => p.Id)
+				.Select(g => new PackageReference(
+					g.Key,
+					g.Select(p => p.Version).OrderBy(v => v).FirstOrDefault(),
+					g.SelectMany(p => p.Files).GroupBy(f => f.Key).ToDictionary(f => f.Key, f => f.SelectMany(x => x.Value).Distinct().ToArray())
+				))
 				.ToArray();
 		}
 
@@ -71,7 +73,7 @@ namespace NuGet.Updater.Helpers
 
 			return matches
 				.Cast<Match>()
-				.Select(m => Path.GetDirectoryName(solutionPath))
+				.Select(m => Path.Combine(solutionFolder, m.Value))
 				.ToArray();
 		}
 
@@ -86,6 +88,22 @@ namespace NuGet.Updater.Helpers
 			}
 
 			return null;
+		}
+
+		private static async Task<PackageReference[]> GetFileReferences(CancellationToken ct, string file, UpdateTarget target)
+		{
+			if(file.IsNullOrEmpty())
+			{
+				return new PackageReference[0];
+			}
+
+			var document = await file.GetDocument(ct);
+
+			var references = document.GetPackageReferences();
+
+			return references
+				.Select(g => new PackageReference(g.Key, g.Value, file, target))
+				.ToArray();
 		}
 	}
 }

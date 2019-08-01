@@ -9,6 +9,7 @@ using NuGet.Updater.Helpers;
 using NuGet.Versioning;
 using Uno.Extensions;
 using NuGet.Updater.Log;
+using System;
 
 #if UAP
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
@@ -42,11 +43,11 @@ namespace NuGet.Updater
 			_log.Clear();
 
 			var packages = await GetPackages(ct);
-			var targetFiles = await FileHelper.GetTargetFiles(ct, _parameters.UpdateTarget, _parameters.SolutionRoot, _log);
+			var documents = await OpenFiles(ct, packages);
 
 			foreach(var package in packages.Where(p => _parameters.ShouldUpdatePackage(p)))
 			{
-				var latest = await package.GetLatestVersion(ct, _parameters);
+				var latest = package.GetLatestVersion(_parameters);
 
 				if(latest == null)
 				{
@@ -54,31 +55,31 @@ namespace NuGet.Updater
 					continue;
 				}
 
-				_log.Write($"Latest matching version for [{package.PackageId}] is [{latest.Version}]");
+				_log.Write($"Latest matching version for [{package.PackageId}] is [{latest.Version}] on {package.SourceUri}");
 
-				foreach(var files in targetFiles)
+				var updates = new UpdateOperation[0];
+
+				foreach(var files in package.Reference.Files)
 				{
-					var updates = new UpdateOperation[0];
-
 					switch(files.Key)
 					{
-						case UpdateTarget.Nuspec:
-							updates = await UpdateNuSpecs(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
+						case var t when t.Matches(UpdateTarget.Nuspec):
+							updates = await UpdateNuSpecs(ct, package.PackageId, latest, documents.GetItems(files.Value), _parameters.IsDowngradeAllowed);
 							break;
-						case UpdateTarget.ProjectJson:
-							updates = await UpdateProjectJson(ct, package.PackageId, latest, files.Value.Select(p => p.Key).ToArray(), _parameters.IsDowngradeAllowed);
+						case var t when t.Matches(UpdateTarget.ProjectJson):
+							updates = await UpdateProjectJson(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
 							break;
-						case UpdateTarget.DirectoryProps:
-						case UpdateTarget.DirectoryTargets:
-						case UpdateTarget.PackageReference:
-							updates = await UpdateProjects(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
+						case var t when t.Matches(UpdateTarget.DirectoryProps, UpdateTarget.DirectoryTargets, UpdateTarget.Csproj):
+							updates = await UpdateProjects(ct, package.PackageId, latest, documents.GetItems(files.Value), _parameters.IsDowngradeAllowed);
 							break;
 						default:
 							break;
 					}
-
-					_log.Write(updates);
 				}
+
+				_log.Write(updates);
+
+				_log.Write("");
 			}
 
 			_log.WriteSummary(_parameters);
@@ -86,15 +87,41 @@ namespace NuGet.Updater
 			return true;
 		}
 
-		private async Task<NuGetPackage[]> GetPackages(CancellationToken ct)
+		internal async Task<UpdaterPackage[]> GetPackages(CancellationToken ct)
 		{
-			var packagesPerSource = await Task.WhenAll(_packageSources.Select(s => s.GetPackages(ct, _log)));
+			var packages = new List<UpdaterPackage>();
+			var references = await SolutionHelper.GetPackageReferences(ct, _parameters.SolutionRoot, _parameters.UpdateTarget);
 
-			return packagesPerSource
-				.SelectMany(x => x)
-				.GroupBy(p => p.PackageId)
-				.Select(g => new NuGetPackage(g.Key, g.ToArray()))
+			_log.Write($"Found {references.Length} references");
+
+			foreach(var reference in references.OrderBy(r => r.Id))
+			{
+				foreach(var source in _packageSources)
+				{
+					packages.Add(await source.GetPackage(ct, reference, _log));
+				}
+			}
+
+			return packages
+				.Where(p => p.AvailableVersions?.Any() ?? false)
 				.ToArray();
+		}
+
+		private async Task<Dictionary<string, XmlDocument>> OpenFiles(CancellationToken ct, UpdaterPackage[] packages)
+		{
+			var files = packages
+				.SelectMany(p => p.Reference.Files)
+				.SelectMany(g => g.Value)
+				.Distinct();
+
+			var documents = new Dictionary<string, XmlDocument>();
+
+			foreach(var file in files)
+			{
+				documents.Add(file, await file.GetDocument(ct));
+			}
+
+			return documents;
 		}
 
 		private static async Task<UpdateOperation[]> UpdateNuSpecs(

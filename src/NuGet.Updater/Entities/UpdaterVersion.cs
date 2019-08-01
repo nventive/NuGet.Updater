@@ -3,7 +3,7 @@ using NuGet.Versioning;
 
 namespace NuGet.Updater.Entities
 {
-	public class UpdaterVersion
+	public class UpdaterVersion : IComparable<UpdaterVersion>
 	{ 
 		public UpdaterVersion(Uri feedUri, NuGetVersion version)
 		{
@@ -14,5 +14,7 @@ namespace NuGet.Updater.Entities
 		public Uri FeedUri { get; }
 
 		public NuGetVersion Version { get; }
+
+		public int CompareTo(UpdaterVersion other) => Version.CompareTo(other.Version);
 	}
 }

@@ -23,7 +23,7 @@
 		/// <summary>
 		/// PackageReferences from csproj.
 		/// </summary>
-		PackageReference = 8,
+		Csproj = 8,
 
 		/// <summary>
 		/// Directory.Build.props files.
@@ -38,6 +38,6 @@
 		/// <summary>
 		/// All the supported file types.
 		/// </summary>
-		All = Nuspec | ProjectJson | PackageReference | DirectoryProps | DirectoryTargets,
+		All = Nuspec | ProjectJson | Csproj | DirectoryProps | DirectoryTargets,
 	}
 }

@@ -6,11 +6,28 @@ namespace NuGet.Updater.Entities
 {
 	public class PackageReference
 	{
-		public string Id { get; set; }
+		public PackageReference(string id, string version, string file, UpdateTarget target)
+		{
+			Id = id;
+			Version = version;
+			Files = new Dictionary<UpdateTarget, string[]>
+			{
+				{ target, new[] { file } },
+			};
+		}
 
-		public string Version { get; set; }
+		public PackageReference(string id, string version, Dictionary<UpdateTarget, string[]> files)
+		{
+			Id = id;
+			Version = version;
+			Files = files;
+		}
+
+		public string Id { get; }
+
+		public string Version { get; }
 		
-		public string[] Files { get; set; }
+		public Dictionary<UpdateTarget, string[]> Files { get; }
 
 		public override string ToString() => $"{Id} {Version}";
 	}

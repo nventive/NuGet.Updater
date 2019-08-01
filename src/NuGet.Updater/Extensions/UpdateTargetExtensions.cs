@@ -1,4 +1,5 @@
-﻿using NuGet.Updater.Entities;
+﻿using System.Linq;
+using NuGet.Updater.Entities;
 
 namespace NuGet.Updater.Extensions
 {
@@ -12,7 +13,7 @@ namespace NuGet.Updater.Extensions
 					return ".nuspec";
 				case UpdateTarget.ProjectJson:
 					return "project.json";
-				case UpdateTarget.PackageReference:
+				case UpdateTarget.Csproj:
 					return ".csproj";
 				case UpdateTarget.DirectoryProps:
 					return "Directory.Build.targets";
@@ -21,6 +22,11 @@ namespace NuGet.Updater.Extensions
 				default:
 					return default;
 			}
+		}
+
+		public static bool Matches(this UpdateTarget target, params UpdateTarget[] others)
+		{
+			return others.Any(t => (target & t) == t);
 		}
 	}
 }
