@@ -55,7 +55,7 @@ namespace NuGet.Updater.Log
 			}
 			else
 			{ 
-				return $"Higher verson of [{PackageName}] ([{UpdatedVersion}]) found in [{FilePath}]. Skipping.";
+				return $"Version [{PreviousVersion}] of [{PackageName}] found in [{FilePath}]. Higher than [{UpdatedVersion}]. Skipping.";
 			}
 		}
 	}

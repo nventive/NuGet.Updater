@@ -1,39 +1,57 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet.Updater.Entities;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
+using NuGet.Updater.Entities;
 using NuGet.Updater.Log;
+using Uno.Extensions;
 
 namespace NuGet.Updater.Extensions
 {
 	public static class PackageSourceExtensions
 	{
-		public static async Task<NuGetPackage[]> SearchPackages(this PackageSource source, CancellationToken ct, string searchTerm = "", Logger log = null)
+		public static async Task<UpdaterPackage> GetPackage(
+			this PackageSource source,
+			CancellationToken ct,
+			PackageReference reference,
+			string author = null,
+			Logger log = null
+		)
 		{
-			var settings = Settings.LoadDefaultSettings(null);
-			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
+			var repositoryProvider = new SourceRepositoryProvider(
+				Settings.LoadDefaultSettings(null),
+				Repository.Provider.GetCoreV3()
+			);
 
 			var repository = repositoryProvider.CreateRepository(source, FeedType.HttpV3);
 
-			log?.Write($"Pulling packages from {source.SourceUri}");
+			var packageId = reference.Id;
 
-			var searchResource = repository.GetResource<PackageSearchResource>();
+			log?.Write($"Retrieving package {packageId} from {source.SourceUri}");
 
-			var packages = (await searchResource.SearchAsync(searchTerm, new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), skip: 0, take: 1000, log: new NullLogger(), cancellationToken: ct)).ToArray();
+			var metadata = (await repository
+				.GetResource<PackageMetadataResource>()
+				.GetMetadataAsync(packageId, true, false, new SourceCacheContext { NoCache = true }, new NullLogger(), ct))
+				.ToArray();
 
-			log?.Write($"Found {packages.Length} packages");
+			log?.Write(metadata.Length > 0 ? $"Found {metadata.Length} versions" : "No versions found");
 
-			return source.ToNuGetPackages(packages);
+			if(author.HasValue() && metadata.Any())
+			{
+				metadata = metadata.Where(m => m.HasAuthor(author)).ToArray();
+
+				log?.Write(metadata.Length > 0 ? $"Found {metadata.Length} version from {author}" : $"No versions from {author} found");
+			}
+
+			var versions = metadata
+				.Cast<PackageSearchMetadataRegistration>()
+				.Select(m => new UpdaterVersion(m.Version, source.SourceUri))
+				.ToArray();
+
+			return new UpdaterPackage(reference, versions);
 		}
-
-		private static NuGetPackage[] ToNuGetPackages(this PackageSource source, IPackageSearchMetadata[] packages) =>
-			packages
-			.Select(p => new NuGetPackage(p, source.SourceUri))
-			.ToArray();
 	}
 }

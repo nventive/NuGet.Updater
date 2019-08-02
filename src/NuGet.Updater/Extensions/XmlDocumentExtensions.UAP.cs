@@ -10,6 +10,7 @@ using System.Xml;
 using NuGet.Updater.Entities;
 using NuGet.Updater.Log;
 using NuGet.Versioning;
+using Uno.Extensions;
 using Windows.Data.Xml.Dom;
 using Windows.Storage;
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
@@ -22,6 +23,33 @@ namespace NuGet.Updater.Extensions
 	/// </summary>
 	partial class XmlDocumentExtensions
 	{
+		public static Dictionary<string, string> GetPackageReferences(this XmlDocument document)
+		{
+			var references = new Dictionary<string, string>();
+
+			foreach(var packageReference in document.GetElementsByTagName("PackageReference").Cast<XmlElement>())
+			{
+				var packageId = packageReference.GetAttribute("Include");
+
+				var version = packageReference.GetAttribute("Version");
+				if(version.HasValue())
+				{
+					references.Add(packageId, version);
+				}
+				else
+				{
+					var node = packageReference.GetElementsByTagName("Version").SingleOrDefault();
+
+					if(node != null)
+					{
+						references.Add(packageId, node.InnerText);
+					}
+				}
+			}
+
+			return references;
+		}
+
 		public static UpdateOperation[] UpdateProjectReferenceVersions(
 			this XmlDocument document,
 			string packageId,
@@ -82,11 +110,11 @@ namespace NuGet.Updater.Extensions
 			.SelectNodes(xpath)
 			.OfType<XmlElement>();
 
-		public static async Task<KeyValuePair<string, XmlDocument>> GetDocument(this string path, CancellationToken ct)
+		public static async Task<XmlDocument> GetDocument(this string path, CancellationToken ct)
 		{
 			var document = await XmlDocument.LoadFromFileAsync(await StorageFile.GetFileFromPathAsync(path), new XmlLoadSettings { ElementContentWhiteSpace = true });
 
-			return new KeyValuePair<string, XmlDocument>(path, document);
+			return document;
 		}
 
 		public static async Task Save(this XmlDocument document, CancellationToken ct, string path)

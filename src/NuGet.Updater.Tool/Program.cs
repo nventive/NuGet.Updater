@@ -25,7 +25,7 @@ namespace NuGet.Updater.Tool
 				{ "feed=|f=", "A private feed to use for the update; the format is {url}|{accessToken}; can be specified multiple times", s => AddPrivateFeed(s) },
 				{ "version=|versions=|v=", "The target versions to use", s => Set(p => p.TargetVersions = GetList(s))},
 				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => Set(p => p.IncludeNuGetOrg = true )},
-				{ "packagesOwner=|o=", "The owner of the packages to update; must be specified if useNuGetorg is true", s => Set(p => p.PackagesOwner = s)},
+				{ "packageAuthor=|a=", "The owner of the packages to update; must be specified if useNuGetorg is true", s => Set(p => p.PackageAuthor = s)},
 				{ "allowDowngrade=|d=", "Whether package downgrade is allowed", s => Set(p => p.IsDowngradeAllowed = GetBoolean(s))},
 				{ "ignore=|i=", "A comma-separated list of packages to ignore", s => Set(p => p.PackagesToIgnore = GetList(s)) },
 				{ "update=|u=", "A comma-separated list of packages to update; not specifying this will update all packages found", s => Set(p => p.PackagesToUpdate = GetList(s)) },
@@ -49,7 +49,9 @@ namespace NuGet.Updater.Tool
 			}
 			else
 			{
-				await NuGetUpdater.UpdateAsync(CancellationToken.None, _parameters, isSilent ? null : Console.Out, summaryFile);
+				var updater = new NuGetUpdater(_parameters, isSilent ? null : Console.Out, summaryFile);
+
+				await updater.UpdatePackages(CancellationToken.None);
 			}
 		}
 
