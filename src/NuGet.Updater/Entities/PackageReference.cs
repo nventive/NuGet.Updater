@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace NuGet.Updater.Entities
 {
 	public class PackageReference
 	{
 		public PackageReference(string id, string version, string file, UpdateTarget target)
+			: this(id, version, new Dictionary<UpdateTarget, string[]>() { { target, new[] { file } } })
 		{
-			Id = id;
-			Version = version;
-			Files = new Dictionary<UpdateTarget, string[]>
-			{
-				{ target, new[] { file } },
-			};
 		}
 
 		public PackageReference(string id, string version, Dictionary<UpdateTarget, string[]> files)

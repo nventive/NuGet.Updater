@@ -16,33 +16,6 @@ namespace NuGet.Updater.Helpers
 		{
 		}
 
-		public static async Task<string[]> GetFiles(
-			CancellationToken ct,
-			string path,
-			string extensionFilter = null, 
-			string nameFilter = null
-		)
-		{
-			var folder = await StorageFolder.GetFolderFromPathAsync(path);
-
-			var searchFilter = extensionFilter == null
-				? $"filename:\"{nameFilter}\""
-				: $"extension:{extensionFilter}";
-
-			var queryOptions = new QueryOptions
-			{
-				UserSearchFilter = searchFilter,
-				IndexerOption = IndexerOption.UseIndexerWhenAvailable,
-				FolderDepth = FolderDepth.Deep,
-			};
-
-			var query = folder.CreateFileQueryWithOptions(queryOptions);
-
-			var files = await query.GetFilesAsync();
-
-			return files.Select(f => f.Path).ToArray();
-		}
-
 		public static async Task<string> ReadFileContent(CancellationToken ct, string path)
 		{
 			var file = await StorageFile.GetFileFromPathAsync(path);

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Configuration;
 using NuGet.Updater.Extensions;
@@ -12,23 +9,26 @@ namespace NuGet.Updater.Entities
 	public class UpdaterSource : IUpdaterSource
 	{
 		private readonly PackageSource _packageSource;
-		private readonly string _packageOwner;
+		private readonly string _packageAuthor;
 
 		public UpdaterSource(string url, string packageOwner)
 		{
-			_packageOwner = packageOwner;
+			_packageAuthor = packageOwner;
 			_packageSource = new PackageSource(url);
 		}
 
-		public UpdaterSource(string url, string accessToken, string packageOwner)
+		public UpdaterSource(string url, string accessToken, string packageAuthor)
 		{
-			_packageOwner = packageOwner;
+			//Not filtering packages from private feeds
+			_packageAuthor = null;
 			_packageSource = GetPackageSource(url, accessToken);
 		}
 
-		public Task<UpdaterPackage> GetPackage(CancellationToken ct, PackageReference reference, Logger log = null) => _packageSource.GetPackage(ct, reference, log);
-
-		public Task<UpdaterPackage[]> GetPackages(CancellationToken ct, Logger log = null) => _packageSource.SearchPackages(ct, log: log);
+		public Task<UpdaterPackage> GetPackage(
+			CancellationToken ct,
+			PackageReference reference,
+			Logger log = null
+		) => _packageSource.GetPackage(ct, reference, _packageAuthor, log);
 
 		private static PackageSource GetPackageSource(string url, string accessToken)
 		{

@@ -1,62 +1,57 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet.Updater.Entities;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
+using NuGet.Updater.Entities;
 using NuGet.Updater.Log;
+using Uno.Extensions;
 
 namespace NuGet.Updater.Extensions
 {
 	public static class PackageSourceExtensions
 	{
-		public static async Task<UpdaterPackage[]> SearchPackages(this PackageSource source, CancellationToken ct, string searchTerm = "", Logger log = null)
+		public static async Task<UpdaterPackage> GetPackage(
+			this PackageSource source,
+			CancellationToken ct,
+			PackageReference reference,
+			string author = null,
+			Logger log = null
+		)
 		{
-			var settings = Settings.LoadDefaultSettings(null);
-			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
-
-			var repository = repositoryProvider.CreateRepository(source, FeedType.HttpV3);
-
-			log?.Write($"Pulling packages from {source.SourceUri}");
-
-			var searchResource = repository.GetResource<PackageSearchResource>();
-
-			var packages = (await searchResource.SearchAsync(searchTerm, new SearchFilter(true, SearchFilterType.IsAbsoluteLatestVersion), skip: 0, take: 1000, log: new NullLogger(), cancellationToken: ct)).ToArray();
-
-			log?.Write($"Found {packages.Length} packages");
-
-			return source.ToNuGetPackages(packages);
-		}
-
-		public static async Task<UpdaterPackage> GetPackage(this PackageSource source, CancellationToken ct, PackageReference reference, Logger log = null)
-		{
-			var settings = Settings.LoadDefaultSettings(null);
-			var repositoryProvider = new SourceRepositoryProvider(settings, Repository.Provider.GetCoreV3());
+			var repositoryProvider = new SourceRepositoryProvider(
+				Settings.LoadDefaultSettings(null),
+				Repository.Provider.GetCoreV3()
+			);
 
 			var repository = repositoryProvider.CreateRepository(source, FeedType.HttpV3);
 
 			var packageId = reference.Id;
 
-			log?.Write($"Getting package {packageId} from {source.SourceUri}");
+			log?.Write($"Retrieving package {packageId} from {source.SourceUri}");
 
-			var resource = repository.GetResource<PackageMetadataResource>();
+			var metadata = (await repository
+				.GetResource<PackageMetadataResource>()
+				.GetMetadataAsync(packageId, true, false, new SourceCacheContext { NoCache = true }, new NullLogger(), ct))
+				.ToArray();
 
-			var metadata = await resource.GetMetadataAsync(packageId, true, false, new SourceCacheContext(), new NullLogger(), ct);
+			log?.Write(metadata.Length > 0 ? $"Found {metadata.Length} versions" : "No versions found");
+
+			if(author.HasValue() && metadata.Any())
+			{
+				metadata = metadata.Where(m => m.HasAuthor(author)).ToArray();
+
+				log?.Write(metadata.Length > 0 ? $"Found {metadata.Length} version from {author}" : $"No versions from {author} found");
+			}
 
 			var versions = metadata
 				.Cast<PackageSearchMetadataRegistration>()
-				.Select(m => new UpdaterVersion(source.SourceUri, m.Version))
+				.Select(m => new UpdaterVersion(m.Version, source.SourceUri))
 				.ToArray();
 
-			return new UpdaterPackage(packageId, versions, source.SourceUri, reference);
+			return new UpdaterPackage(reference, versions);
 		}
-
-		private static UpdaterPackage[] ToNuGetPackages(this PackageSource source, IPackageSearchMetadata[] packages) =>
-			packages
-			.Select(p => new UpdaterPackage(p, source.SourceUri))
-			.ToArray();
 	}
 }

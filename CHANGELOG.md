@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added support for multiple target versions
 
 ### Changed
+- Replaced package owner with package author
+- Reworked internal logic of the updater: package list is now fetched from the files before being looked up online.
 
 ### Deprecated
 

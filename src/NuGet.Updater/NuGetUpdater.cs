@@ -7,9 +7,8 @@ using NuGet.Updater.Entities;
 using NuGet.Updater.Extensions;
 using NuGet.Updater.Helpers;
 using NuGet.Versioning;
-using Uno.Extensions;
 using NuGet.Updater.Log;
-using System;
+using System.IO;
 
 #if UAP
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
@@ -21,14 +20,21 @@ using XmlDocument = System.Xml.XmlDocument;
 
 namespace NuGet.Updater
 {
-	/// <summary>
-	/// NuGet Updater implementation.
-	/// </summary>
-	public partial class NuGetUpdater
+	public class NuGetUpdater
 	{
 		private readonly UpdaterParameters _parameters;
 		private readonly Logger _log;
 		private readonly IUpdaterSource[] _packageSources;
+
+		public NuGetUpdater(UpdaterParameters parameters, TextWriter logWriter, string summaryOutputFilePath)
+			: this(parameters, parameters.GetSources(), new Logger(logWriter, summaryOutputFilePath))
+		{
+		}
+
+		public NuGetUpdater(UpdaterParameters parameters, Logger log)
+			: this(parameters, parameters.GetSources(), log)
+		{
+		}
 
 		internal NuGetUpdater(UpdaterParameters parameters, IUpdaterSource[] packageSources, Logger log)
 		{
@@ -38,7 +44,7 @@ namespace NuGet.Updater
 			_packageSources = packageSources;
 		}
 
-		internal async Task<bool> UpdatePackages(CancellationToken ct)
+		public async Task<bool> UpdatePackages(CancellationToken ct)
 		{
 			_log.Clear();
 
@@ -55,7 +61,7 @@ namespace NuGet.Updater
 					continue;
 				}
 
-				_log.Write($"Latest matching version for [{package.PackageId}] is [{latest.Version}] on {package.SourceUri}");
+				_log.Write($"Latest matching version for [{package.PackageId}] is [{latest.Version}] on {latest.FeedUri}");
 
 				var updates = new UpdateOperation[0];
 
@@ -90,16 +96,29 @@ namespace NuGet.Updater
 		internal async Task<UpdaterPackage[]> GetPackages(CancellationToken ct)
 		{
 			var packages = new List<UpdaterPackage>();
-			var references = await SolutionHelper.GetPackageReferences(ct, _parameters.SolutionRoot, _parameters.UpdateTarget);
+			var references = await SolutionHelper.GetPackageReferences(ct, _parameters.SolutionRoot, _parameters.UpdateTarget, _log);
 
 			_log.Write($"Found {references.Length} references");
+			_log.Write("");
+			_log.Write($"Retrieving packages from {_packageSources.Length} sources");
 
 			foreach(var reference in references.OrderBy(r => r.Id))
 			{
+				var matchingPackages = new List<UpdaterPackage>();
 				foreach(var source in _packageSources)
 				{
-					packages.Add(await source.GetPackage(ct, reference, _log));
+					matchingPackages.Add(await source.GetPackage(ct, reference, _log));
 				}
+
+				_log.Write("");
+
+				//If the reference has been found on multiple sources, we merge the packages found together
+				var package = matchingPackages
+					.GroupBy(p => p.Reference)
+					.Select(g => new UpdaterPackage(g.Key, g.SelectMany(p => p.AvailableVersions).ToArray()))
+					.SingleOrDefault();
+
+				packages.Add(package);
 			}
 
 			return packages

@@ -11,16 +11,6 @@ namespace NuGet.Updater.Tests
 	public class SolutionHelperTests
 	{
 		[TestMethod]
-		public async Task GivenSolution_TargetFilesAreFound()
-		{
-			var solution = @"C:\Git\MyMD\MyMD\MyMD.sln";
-
-			var files = await SolutionHelper.GetTargetFilePaths(CancellationToken.None, solution, UpdateTarget.All);
-
-			Assert.IsTrue(files.Any());
-		}
-
-		[TestMethod]
 		public async Task GivenSolution_PackageReferencesAreFound()
 		{
 			var solution = @"C:\Git\MyMD\MyMD\MyMD.sln";

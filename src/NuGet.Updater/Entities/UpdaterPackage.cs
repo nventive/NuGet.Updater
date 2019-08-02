@@ -1,40 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using NuGet.Protocol.Core.Types;
+using System.Linq;
 
 namespace NuGet.Updater.Entities
 {
 	public class UpdaterPackage
 	{
-		public UpdaterPackage(IPackageSearchMetadata version, Uri sourceUri)
+		public UpdaterPackage(PackageReference reference, params UpdaterVersion[] versions)
+			: this(reference.Id, versions)
 		{
-			PackageId = version.Identity.Id;
-			//Versions = new[] { version };
-			SourceUri = sourceUri;
-
-			Packages = new Dictionary<Uri, IPackageSearchMetadata>
-			{
-				{ sourceUri, version },
-			};
-		}
-
-		public UpdaterPackage(string id, UpdaterVersion[] versions, Uri sourceUri, PackageReference reference)
-		{
-			PackageId = id;
-			AvailableVersions = versions;
-			SourceUri = sourceUri;
 			Reference = reference;
 		}
 
-		public Uri SourceUri { get; set; }
+		internal UpdaterPackage(string id, Uri sourceUri, params string[] versions)
+			: this(id, versions?.Select(v => new UpdaterVersion(v, sourceUri)).ToArray())
+		{
+		}
+
+		private UpdaterPackage(string id, params UpdaterVersion[] versions)
+		{
+			PackageId = id;
+			AvailableVersions = versions;
+		}
 
 		public string PackageId { get; }
 
 		public PackageReference Reference { get; set; }
 
 		public UpdaterVersion[] AvailableVersions { get; }
-
-		//TO Remove
-		public Dictionary<Uri, IPackageSearchMetadata> Packages { get; }
 	}
 }

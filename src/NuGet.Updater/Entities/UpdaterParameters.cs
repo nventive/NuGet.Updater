@@ -50,8 +50,8 @@ namespace NuGet.Updater.Entities
 		public IEnumerable<string> PackagesToUpdate { get; set; }
 
 		/// <summary>
-		/// Gets or sets the name of the owner of the packages to update; used with NuGet.org.
+		/// Gets or sets the name of the author of the packages to update; used with NuGet.org; packages from private feeds are assumed to be required.
 		/// </summary>
-		public string PackagesOwner { get; set; }
+		public string PackageAuthor { get; set; }
 	}
 }

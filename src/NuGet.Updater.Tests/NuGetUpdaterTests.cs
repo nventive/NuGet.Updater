@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,12 +15,14 @@ namespace NuGet.Updater.Tests
 	[TestClass]
 	public class NuGetUpdaterTests
 	{
-		private static readonly TestPackageSource TestSource = new TestPackageSource(
-			new Uri("http://localhost"),
-			new TestPackage("Uno.UI", "1.0", "1.1-dev.1"),
-			new TestPackage("Uno.Core", "1.0", "1.0-beta.1"),
-			new TestPackage("nventive.NuGet.Updater", "1.0-beta.1")
-		);
+		private static readonly Dictionary<string, string[]> TestPackages = new Dictionary<string, string[]>
+		{
+			{"Uno.UI", new[] { "1.0", "1.1-dev.1" } },
+			{"Uno.Core", new[] { "1.0", "1.0-beta.1" } },
+			{"nventive.NuGet.Updater", new[] { "1.0-beta.1" } },
+		};
+
+		private static readonly TestPackageSource TestSource = new TestPackageSource(new Uri("http://localhost"), TestPackages);
 
 		[TestMethod]
 		public async Task GivenUnspecifiedTarget_NoUpdateIsMade()
@@ -38,30 +41,6 @@ namespace NuGet.Updater.Tests
 			await updater.UpdatePackages(CancellationToken.None);
 
 			Assert.IsTrue(logger.GetUpdates().None());
-		}
-
-		[TestMethod]
-		public async Task GivenParameters_PackagesAreFound()
-		{
-			var parameters = new UpdaterParameters
-			{
-				SolutionRoot = "MySolution.sln",
-				UpdateTarget = UpdateTarget.DirectoryProps | UpdateTarget.DirectoryTargets,
-				IncludeNuGetOrg = true,
-				TargetVersions = new[] { "stable" },
-			};
-
-			var logger = new Logger(Console.Out);
-
-			var updater = new NuGetUpdater(parameters, parameters.GetSources(), logger);
-
-			var packages = await updater.GetPackages(CancellationToken.None);
-
-			//foreach(var p in packages.Where(p => p.Versions.Any()))
-			//{
-			//}
-
-			Assert.IsTrue(packages.Any());
 		}
 	}
 }
