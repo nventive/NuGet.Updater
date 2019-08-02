@@ -26,7 +26,7 @@ namespace NuGet.Updater.Tool
 				{ "version=|versions=|v=", "The target versions to use", s => Set(p => p.TargetVersions = GetList(s))},
 				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => Set(p => p.IncludeNuGetOrg = true )},
 				{ "packageAuthor=|a=", "The owner of the packages to update; must be specified if useNuGetorg is true", s => Set(p => p.PackageAuthor = s)},
-				{ "allowDowngrade=|d=", "Whether package downgrade is allowed", s => Set(p => p.IsDowngradeAllowed = GetBoolean(s))},
+				{ "allowDowngrade|d", "Whether package downgrade is allowed", s => Set(p => p.IsDowngradeAllowed = true)},
 				{ "ignore=|i=", "A comma-separated list of packages to ignore", s => Set(p => p.PackagesToIgnore = GetList(s)) },
 				{ "update=|u=", "A comma-separated list of packages to update; not specifying this will update all packages found", s => Set(p => p.PackagesToUpdate = GetList(s)) },
 				{ "outputFile=|of=", "The path to a file where the update summary will be written", s => summaryFile = s },
@@ -75,16 +75,6 @@ namespace NuGet.Updater.Tool
 			}
 
 			_isParameterSet = true;
-		}
-
-		private static bool GetBoolean(string value, bool fallbackValue = false)
-		{
-			if(bool.TryParse(value, out var boolean))
-			{
-				return boolean;
-			}
-
-			return fallbackValue;
 		}
 
 		private static List<string> GetList(string value)
