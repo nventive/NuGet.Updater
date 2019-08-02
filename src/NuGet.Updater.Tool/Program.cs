@@ -21,16 +21,16 @@ namespace NuGet.Updater.Tool
 			var options = new OptionSet
 			{
 				{ "help|h", "Displays this help screen", s => isHelp = true },
-				{ "solution=|s=", "The path to the solution to update", s => Set(p => p.SolutionRoot = s) },
-				{ "feed=|f=", "A private feed to use for the update; the format is {url}|{accessToken}; can be specified multiple times", s => AddPrivateFeed(s) },
-				{ "version=|versions=|v=", "The target versions to use", s => Set(p => p.TargetVersions = GetList(s))},
-				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => Set(p => p.IncludeNuGetOrg = true )},
-				{ "packageAuthor=|a=", "The owner of the packages to update; must be specified if useNuGetorg is true", s => Set(p => p.PackageAuthor = s)},
-				{ "allowDowngrade|d", "Whether package downgrade is allowed", s => Set(p => p.IsDowngradeAllowed = true)},
-				{ "ignore=|i=", "A comma-separated list of packages to ignore", s => Set(p => p.PackagesToIgnore = GetList(s)) },
-				{ "update=|u=", "A comma-separated list of packages to update; not specifying this will update all packages found", s => Set(p => p.PackagesToUpdate = GetList(s)) },
-				{ "outputFile=|of=", "The path to a file where the update summary will be written", s => summaryFile = s },
+				{ "solution=|s=", "The {path} to the solution to update", s => Set(p => p.SolutionRoot = s) },
+				{ "feed=|f=", "A private feed to use for the update; the format is {url|accessToken}; can be specified multiple times", s => AddPrivateFeed(s) },
+				{ "version=|versions=|v=", "The target {versions} to use", s => Set(p => p.TargetVersions = GetList(s))},
 				{ "silent", "Suppress all output from NuGet Updater", _ => isSilent = true },
+				{ "allowDowngrade|d", "Whether package downgrade is allowed", s => Set(p => p.IsDowngradeAllowed = true)},
+				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => Set(p => p.IncludeNuGetOrg = true )},
+				{ "packageAuthor=|a=", "The {author} of the packages to update; used for NuGet.org", s => Set(p => p.PackageAuthor = s)},
+				{ "ignore=|i=", "A comma-separated list of {packages} to ignore", s => Set(p => p.PackagesToIgnore = GetList(s)) },
+				{ "update=|u=", "A comma-separated list of {packages} to update; not specifying this will update all packages found", s => Set(p => p.PackagesToUpdate = GetList(s)) },
+				{ "outputFile=|of=", "The {path} to a file where the update summary will be written", s => summaryFile = s },
 			};
 
 			_isParameterSet = false;

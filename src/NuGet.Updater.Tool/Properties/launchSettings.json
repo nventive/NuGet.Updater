@@ -2,7 +2,7 @@
   "profiles": {
     "NuGet.Updater.Tool": {
       "commandName": "Project",
-      "commandLineArgs": "--solution=\"C:\\Git\\MyMD\\MyMD\\MyMD.sln\" --feed=https://nventive.pkgs.visualstudio.com/_packaging/nventive/nuget/v3/index.json|3cganbkmlloatqlwwkmcbl2j3mlrcsxwc5vgi5uuqttjkcpzxyeq -n --versions=dev,stable --packagesOwner=nventive"
+      "commandLineArgs": ""
     }
   }
 }
