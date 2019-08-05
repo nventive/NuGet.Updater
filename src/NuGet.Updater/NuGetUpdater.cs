@@ -70,9 +70,9 @@ namespace NuGet.Updater
 					_log.Write($"Latest matching version for [{package.PackageId}] is [{latestVersion.Version}] on {latestVersion.FeedUri}");
 
 					_log.Write(await UpdateFiles(ct, package.PackageId, latestVersion, package.Reference.Files, documents));
-
-					_log.Write("");
 				}
+
+				_log.Write("");
 			}
 
 			_log.WriteSummary(_parameters);

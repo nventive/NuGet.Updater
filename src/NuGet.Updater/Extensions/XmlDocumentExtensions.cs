@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Updater.Entities;
@@ -10,13 +9,16 @@ using NuGet.Versioning;
 using Uno.Extensions;
 
 #if UAP
+using System.Text.RegularExpressions;
 using Windows.Data.Xml.Dom;
 using Windows.Storage;
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
 using XmlElement = Windows.Data.Xml.Dom.XmlElement;
+using XmlNode = Windows.Data.Xml.Dom.IXmlNode;
 #else
 using XmlDocument = System.Xml.XmlDocument;
 using XmlElement = System.Xml.XmlElement;
+using XmlNode = System.Xml.XmlNode;
 #endif
 
 namespace NuGet.Updater.Extensions
@@ -34,8 +36,8 @@ namespace NuGet.Updater.Extensions
 		{
 			var references = new Dictionary<string, string>();
 
-			var packageReferences = document.SelectElements("//PackageReference");
-			var dotnetCliReferences = document.SelectElements("//DotNetCliToolReference");
+			var packageReferences = document.SelectElements("PackageReference");
+			var dotnetCliReferences = document.SelectElements("DotNetCliToolReference");
 
 			foreach(var packageReference in packageReferences.Concat(dotnetCliReferences))
 			{
@@ -48,7 +50,7 @@ namespace NuGet.Updater.Extensions
 				}
 				else
 				{
-					var node = packageReference.SelectSingleNode("Version");
+					var node = packageReference.SelectNode("Version");
 					if(node != null)
 					{
 						references.TryAdd(packageId, node.InnerText);
@@ -77,8 +79,8 @@ namespace NuGet.Updater.Extensions
 		{
 			var operations = new List<UpdateOperation>();
 
-			var packageReferences = document.SelectElements($"//PackageReference[@Include='{packageId}' or @Update='{packageId}']");
-			var dotnetCliReferences = document.SelectElements($"//DotNetCliToolReference[@Include='{packageId}' or @Update='{packageId}']");
+			var packageReferences = document.SelectElements("PackageReference", $"[@Include='{packageId}' or @Update='{packageId}']");
+			var dotnetCliReferences = document.SelectElements("DotNetCliToolReference", $"[@Include='{packageId}' or @Update='{packageId}']");
 
 			foreach(var packageReference in packageReferences.Concat(dotnetCliReferences))
 			{
@@ -99,7 +101,7 @@ namespace NuGet.Updater.Extensions
 				}
 				else
 				{
-					var node = packageReference.SelectSingleNode("Version");
+					var node = packageReference.SelectNode("Version");
 
 					if(node != null)
 					{
@@ -119,9 +121,9 @@ namespace NuGet.Updater.Extensions
 
 			return operations.ToArray();
 		}
-		#endregion
+#endregion
 
-		#region Nuspec dependencies
+#region Nuspec dependencies
 
 		/// <summary>
 		/// Retrieves the dependency elements from the given XmlDocument. If a package is present multiple time, only the first version will be returned.
@@ -130,7 +132,7 @@ namespace NuGet.Updater.Extensions
 		/// <returns>A Dictionary where the key is the id of a package and the value its version.</returns>
 		public static Dictionary<string, string> GetDependencies(this XmlDocument document)
 			=> document
-				.SelectElements("//dependency")
+				.SelectElements("dependency")
 				.ToDictionary(dependency => dependency.GetAttribute("id"), dependency => dependency.GetAttribute("version"));
 
 		/// <summary>
@@ -152,7 +154,7 @@ namespace NuGet.Updater.Extensions
 		{
 			var operations = new List<UpdateOperation>();
 
-			foreach (var node in document.SelectElements($"//dependency[@id='{packageId}']"))
+			foreach (var node in document.SelectElements("dependency", $"[@id='{packageId}']"))
 			{
 				var versionNodeValue = node.GetAttribute("version");
 
@@ -174,9 +176,9 @@ namespace NuGet.Updater.Extensions
 
 			return operations.ToArray();
 		}
-		#endregion
+#endregion
 
-		#region Utilities
+#region Utilities
 
 		/// <summary>
 		/// Loads an XmlDocument from the given path.
@@ -232,14 +234,26 @@ namespace NuGet.Updater.Extensions
 		}
 
 		/// <summary>
-		/// Select the XmlElements matching the given xpath in the XmlDocument.
+		/// Select the XmlElements matching the given element name in the XmlDocument.
 		/// </summary>
 		/// <param name="document"></param>
-		/// <param name="xpath"></param>
+		/// <param name="elementName">Name of the XML tags to look for.</param>
+		/// <param name="filter">Addtional xpath filter to apply.</param>
 		/// <returns></returns>
-		private static IEnumerable<XmlElement> SelectElements(this XmlDocument document, string xpath) => document
-			.SelectNodes(xpath)
+		private static IEnumerable<XmlElement> SelectElements(this XmlDocument document, string elementName, string filter = null) => document
+			.SelectNodes($"//*[local-name() = '{elementName}']{filter}") //Using local-name to avoid having to deal with namespaces
 			.OfType<XmlElement>();
-		#endregion
+
+		/// <summary>
+		/// Select the first child node with the given of an element.
+		/// </summary>
+		/// <param name="element"></param>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		private static XmlNode SelectNode(this XmlElement element, string name) => element
+			.ChildNodes
+			.OfType<XmlElement>()
+			.FirstOrDefault(e => e.LocalName == name);
+#endregion
 	}
 }
