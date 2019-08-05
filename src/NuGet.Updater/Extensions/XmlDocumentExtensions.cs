@@ -253,7 +253,7 @@ namespace NuGet.Updater.Extensions
 		private static XmlNode SelectNode(this XmlElement element, string name) => element
 			.ChildNodes
 			.OfType<XmlElement>()
-			.FirstOrDefault(e => e.LocalName == name);
+			.FirstOrDefault(e => e.LocalName.ToString().Equals(name, StringComparison.OrdinalIgnoreCase));
 #endregion
 	}
 }
