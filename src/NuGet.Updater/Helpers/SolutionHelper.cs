@@ -53,7 +53,10 @@ namespace NuGet.Updater.Helpers
 
 			if(updateTarget.HasFlag(UpdateTarget.Nuspec))
 			{
-				var files = await GetNuspecFiles(ct, solutionPath, log);
+				foreach(var f in await GetNuspecFiles(ct, solutionPath, log))
+				{
+					packages.AddRange(await GetFileReferences(ct, f, UpdateTarget.Nuspec));
+				}
 			}
 
 			return packages
@@ -133,6 +136,9 @@ namespace NuGet.Updater.Helpers
 
 			var files = await FileHelper.GetFiles(ct, solutionFolder, extensionFilter: ".nuspec");
 
+			//Nuspec files are generated in obj when using the new csproj format
+			files = files.Where(f => !f.Contains("\\obj\\")).ToArray();
+
 			log?.Write($"Found {files.Length} nuspec files");
 
 			return files;
@@ -145,9 +151,17 @@ namespace NuGet.Updater.Helpers
 				return new PackageReference[0];
 			}
 
-			var document = await file.GetDocument(ct);
+			var document = await file.LoadDocument(ct);
+			var references = new Dictionary<string, string>();
 
-			var references = document.GetPackageReferences();
+			if(target.HasAnyFlag(UpdateTarget.Csproj, UpdateTarget.DirectoryProps, UpdateTarget.DirectoryTargets))
+			{
+				references = document.GetPackageReferences();
+			}
+			else if(target.HasFlag(UpdateTarget.Nuspec))
+			{
+				references = document.GetDependencies();
+			}
 
 			return references
 				.Select(g => new PackageReference(g.Key, g.Value, file, target))
