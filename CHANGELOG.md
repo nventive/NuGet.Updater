@@ -9,15 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Added aliases for .Net Core application
 - Added support for multiple target versions
+- Added support for solution folders alongside sln files
 
 ### Changed
 - Replaced package owner with package author
-- Reworked internal logic of the updater: package list is now fetched from the files before being looked up online.
+- Reworked internal logic of the updater: package list is now fetched from the files before being looked up online
 
 ### Deprecated
 
 ### Removed
 - Removed superfluous arguments
+- Removed code used to update project.json files
 
 ### Fixed
 

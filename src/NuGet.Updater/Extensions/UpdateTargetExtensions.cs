@@ -11,8 +11,6 @@ namespace NuGet.Updater.Extensions
 			{
 				case UpdateTarget.Nuspec:
 					return ".nuspec";
-				case UpdateTarget.ProjectJson:
-					return "project.json";
 				case UpdateTarget.Csproj:
 					return ".csproj";
 				case UpdateTarget.DirectoryProps:
@@ -24,9 +22,9 @@ namespace NuGet.Updater.Extensions
 			}
 		}
 
-		public static bool Matches(this UpdateTarget target, params UpdateTarget[] others)
+		public static bool HasAnyFlag(this UpdateTarget target, params UpdateTarget[] others)
 		{
-			return others.Any(t => (target & t) == t);
+			return others.Any(t => t.HasFlag(target));
 		}
 	}
 }

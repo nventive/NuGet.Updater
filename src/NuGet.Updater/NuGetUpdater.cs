@@ -1,12 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Updater.Entities;
 using NuGet.Updater.Extensions;
 using NuGet.Updater.Helpers;
-using NuGet.Versioning;
 using NuGet.Updater.Log;
 using System.IO;
 
@@ -25,6 +23,18 @@ namespace NuGet.Updater
 		private readonly UpdaterParameters _parameters;
 		private readonly Logger _log;
 		private readonly IUpdaterSource[] _packageSources;
+
+		public static async Task<bool> UpdateAsync(
+			CancellationToken ct,
+			UpdaterParameters parameters,
+			TextWriter logWriter = null,
+			string summaryOutputFilePath = null
+		)
+		{
+			var updater = new NuGetUpdater(parameters, logWriter, summaryOutputFilePath);
+
+			return await updater.UpdatePackages(ct);
+		}
 
 		public NuGetUpdater(UpdaterParameters parameters, TextWriter logWriter, string summaryOutputFilePath)
 			: this(parameters, parameters.GetSources(), new Logger(logWriter, summaryOutputFilePath))
@@ -69,13 +79,10 @@ namespace NuGet.Updater
 				{
 					switch(files.Key)
 					{
-						case var t when t.Matches(UpdateTarget.Nuspec):
+						case var t when t.HasFlag(UpdateTarget.Nuspec):
 							updates = await UpdateNuSpecs(ct, package.PackageId, latest, documents.GetItems(files.Value), _parameters.IsDowngradeAllowed);
 							break;
-						case var t when t.Matches(UpdateTarget.ProjectJson):
-							updates = await UpdateProjectJson(ct, package.PackageId, latest, files.Value, _parameters.IsDowngradeAllowed);
-							break;
-						case var t when t.Matches(UpdateTarget.DirectoryProps, UpdateTarget.DirectoryTargets, UpdateTarget.Csproj):
+						case var t when t.HasAnyFlag(UpdateTarget.DirectoryProps, UpdateTarget.DirectoryTargets, UpdateTarget.Csproj):
 							updates = await UpdateProjects(ct, package.PackageId, latest, documents.GetItems(files.Value), _parameters.IsDowngradeAllowed);
 							break;
 						default:
@@ -194,50 +201,6 @@ namespace NuGet.Updater
 				}
 
 				operations.AddRange(updates);
-			}
-
-			return operations.ToArray();
-		}
-
-		private static async Task<UpdateOperation[]> UpdateProjectJson(
-			CancellationToken ct,
-			string packageName,
-			UpdaterVersion latestVersion,
-			string[] jsonFiles,
-			bool isDowngradeAllowed
-		)
-		{
-			var operations = new List<UpdateOperation>();
-
-			var originalMatch = $@"\""{packageName}\"".*?:.?\""(.*)\""";
-			var replaced = $@"""{packageName}"": ""{latestVersion.Version.ToString()}""";
-
-			for(var i = 0; i < jsonFiles.Length; i++)
-			{
-				var file = jsonFiles[i];
-				var fileContent = await FileHelper.ReadFileContent(ct, file);
-
-				var match = Regex.Match(fileContent, originalMatch, RegexOptions.IgnoreCase);
-				if(match?.Success ?? false)
-				{
-					var currentVersion = new NuGetVersion(match.Groups[1].Value);
-
-					var operation = new UpdateOperation(isDowngradeAllowed, packageName, currentVersion, latestVersion, file);
-
-					if(operation.IsUpdate)
-					{
-						var newContent = Regex.Replace(
-							fileContent,
-							originalMatch,
-							replaced,
-							RegexOptions.IgnoreCase
-						);
-
-						await FileHelper.SetFileContent(ct, file, newContent);
-					}
-
-					operations.Add(operation);
-				}
 			}
 
 			return operations.ToArray();

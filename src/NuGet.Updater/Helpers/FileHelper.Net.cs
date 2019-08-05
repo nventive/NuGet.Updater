@@ -26,6 +26,20 @@ namespace NuGet.Updater.Helpers
 			}
 		}
 
+		public static async Task<string[]> GetFiles(CancellationToken ct, string path, string extensionFilter = null, string nameFilter = null)
+		{
+			var filter = extensionFilter != null
+				? "*" + extensionFilter
+				: null;
+
+			if (nameFilter != null && filter == null)
+			{
+				filter = nameFilter;
+			}
+
+			return Directory.GetFiles(path, filter, SearchOption.AllDirectories);
+		}
+
 		public static async Task<string> ReadFileContent(CancellationToken ct, string path)
 		{
 			return File.ReadAllText(path);
@@ -34,6 +48,11 @@ namespace NuGet.Updater.Helpers
 		public static async Task SetFileContent(CancellationToken ct, string path, string content)
 		{
 			File.WriteAllText(path, content, Encoding.UTF8);
+		}
+
+		public static async Task<bool> IsDirectory(CancellationToken ct, string path)
+		{
+			return (File.GetAttributes(path) & FileAttributes.Directory) == FileAttributes.Directory;
 		}
 	}
 }

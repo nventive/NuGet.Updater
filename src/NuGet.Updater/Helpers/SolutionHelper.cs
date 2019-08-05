@@ -11,7 +11,10 @@ using Uno.Extensions;
 
 namespace NuGet.Updater.Helpers
 {
-	public static class SolutionHelper
+	/// <summary>
+	/// Shared solution helper methods.
+	/// </summary>
+	public static partial class SolutionHelper
 	{
 		internal static async Task<PackageReference[]> GetPackageReferences(
 			CancellationToken ct,
@@ -24,7 +27,7 @@ namespace NuGet.Updater.Helpers
 
 			var packages = new List<PackageReference>();
 
-			if(updateTarget.Matches(UpdateTarget.Csproj))
+			if(updateTarget.HasFlag(UpdateTarget.Csproj))
 			{
 				foreach(var f in await GetProjectFiles(ct, solutionPath, log))
 				{
@@ -32,14 +35,25 @@ namespace NuGet.Updater.Helpers
 				}
 			}
 
-			if(updateTarget.Matches(UpdateTarget.DirectoryProps))
+			if(updateTarget.HasFlag(UpdateTarget.DirectoryProps))
 			{
-				packages.AddRange(await GetFileReferences(ct, GetDirectoryFile(solutionPath, UpdateTarget.DirectoryProps, log), UpdateTarget.DirectoryProps));
+				const UpdateTarget currentTarget = UpdateTarget.DirectoryProps;
+
+				var file = await GetDirectoryFile(ct, solutionPath, currentTarget, log);
+				packages.AddRange(await GetFileReferences(ct, file, currentTarget));
 			}
 
-			if(updateTarget.Matches(UpdateTarget.DirectoryTargets))
+			if(updateTarget.HasFlag(UpdateTarget.DirectoryTargets))
 			{
-				packages.AddRange(await GetFileReferences(ct, GetDirectoryFile(solutionPath, UpdateTarget.DirectoryTargets, log), UpdateTarget.DirectoryTargets));
+				const UpdateTarget currentTarget = UpdateTarget.DirectoryTargets;
+
+				var file = await GetDirectoryFile(ct, solutionPath, currentTarget, log);
+				packages.AddRange(await GetFileReferences(ct, file, currentTarget));
+			}
+
+			if(updateTarget.HasFlag(UpdateTarget.Nuspec))
+			{
+				var files = await GetNuspecFiles(ct, solutionPath, log);
 			}
 
 			return packages
@@ -54,33 +68,74 @@ namespace NuGet.Updater.Helpers
 
 		private static async Task<string[]> GetProjectFiles(CancellationToken ct, string solutionPath, Logger log = null)
 		{
-			var solutionContent = await FileHelper.ReadFileContent(ct, solutionPath);
-			var solutionFolder = Path.GetDirectoryName(solutionPath);
+			var files = new string[0];
 
-			var matches = Regex.Matches(solutionContent, "[^\\s\"]*\\.csproj");
+			if(await FileHelper.IsDirectory(ct, solutionPath))
+			{
+				files = await FileHelper.GetFiles(ct, solutionPath, extensionFilter: ".csproj");
+			}
+			else
+			{
+				var solutionContent = await FileHelper.ReadFileContent(ct, solutionPath);
+				var solutionFolder = Path.GetDirectoryName(solutionPath);
 
-			var files = matches
-				.Cast<Match>()
-				.Select(m => Path.Combine(solutionFolder, m.Value))
-				.ToArray();
+				files = Regex
+					.Matches(solutionContent, "[^\\s\"]*\\.csproj")
+					.Cast<Match>()
+					.Select(m => Path.Combine(solutionFolder, m.Value))
+					.ToArray();
+			}
 
 			log?.Write($"Found {files.Length} csproj files");
 
 			return files;
 		}
 
-		private static string GetDirectoryFile(string solutionPath, UpdateTarget target, Logger log = null)
+		//To improve: https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019#search-scope
+		//The file should be looked for at all levels
+		private static async Task<string> GetDirectoryFile(CancellationToken ct, string solutionPath, UpdateTarget target, Logger log = null)
 		{
-			var solutionFolder = Path.GetDirectoryName(solutionPath);
-			var file = Path.Combine(solutionFolder, target.GetDescription());
+			string file;
 
-			if(File.Exists(file))
+			if(await FileHelper.IsDirectory(ct, solutionPath))
+			{
+				var matchingFiles = await FileHelper.GetFiles(ct, solutionPath, nameFilter: target.GetDescription());
+
+				file = matchingFiles.SingleOrDefault();
+			}
+			else
+			{
+				var solutionFolder = Path.GetDirectoryName(solutionPath);
+				file = Path.Combine(solutionFolder, target.GetDescription());
+			}
+
+			if(file != null && File.Exists(file))
 			{
 				log?.Write($"Found {target.GetDescription()}");
 				return file;
 			}
 
 			return null;
+		}
+
+		private static async Task<string[]> GetNuspecFiles(CancellationToken ct, string solutionPath, Logger log = null)
+		{
+			string solutionFolder;
+
+			if(await FileHelper.IsDirectory(ct, solutionPath))
+			{
+				solutionFolder = solutionPath;
+			}
+			else
+			{
+				solutionFolder = Path.GetDirectoryName(solutionPath);
+			}
+
+			var files = await FileHelper.GetFiles(ct, solutionFolder, extensionFilter: ".nuspec");
+
+			log?.Write($"Found {files.Length} nuspec files");
+
+			return files;
 		}
 
 		private static async Task<PackageReference[]> GetFileReferences(CancellationToken ct, string file, UpdateTarget target)

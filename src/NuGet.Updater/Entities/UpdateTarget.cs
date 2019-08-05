@@ -1,8 +1,11 @@
-﻿namespace NuGet.Updater.Entities
+﻿using System;
+
+namespace NuGet.Updater.Entities
 {
 	/// <summary>
 	/// The type of files to update.
 	/// </summary>
+	[Flags]
 	public enum UpdateTarget
 	{
 		/// <summary>
@@ -16,28 +19,23 @@
 		Nuspec = 2,
 
 		/// <summary>
-		/// project.json files.
-		/// </summary>
-		ProjectJson = 4,
-
-		/// <summary>
 		/// PackageReferences from csproj.
 		/// </summary>
-		Csproj = 8,
+		Csproj = 4,
 
 		/// <summary>
 		/// Directory.Build.props files.
 		/// </summary>
-		DirectoryProps = 16,
+		DirectoryProps = 8,
 
 		/// <summary>
 		/// Directory.Build.targets files.
 		/// </summary>
-		DirectoryTargets = 32,
+		DirectoryTargets = 16,
 
 		/// <summary>
 		/// All the supported file types.
 		/// </summary>
-		All = Nuspec | ProjectJson | Csproj | DirectoryProps | DirectoryTargets,
+		All = Nuspec | Csproj | DirectoryProps | DirectoryTargets,
 	}
 }
