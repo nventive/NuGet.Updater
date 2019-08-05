@@ -12,5 +12,19 @@ namespace NuGet.Updater.Extensions
 		) => dictionary
 			.Where(g => keys.Contains(g.Key))
 			.ToDictionary(g => g.Key, g => g.Value);
+
+#if !UAP
+		public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
+		{
+			if(dictionary.ContainsKey(key))
+			{
+				return false;
+			}
+
+			dictionary.Add(key, value);
+
+			return true;
+		}
+#endif
 	}
 }
