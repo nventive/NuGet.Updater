@@ -28,8 +28,8 @@ namespace NuGet.Updater.Tool
 				{ "allowDowngrade|d", "Whether package downgrade is allowed", s => Set(p => p.IsDowngradeAllowed = true)},
 				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => Set(p => p.IncludeNuGetOrg = true )},
 				{ "packageAuthor=|a=", "The {author} of the packages to update; used for NuGet.org", s => Set(p => p.PackageAuthor = s)},
-				{ "ignore=|i=", "A comma-separated list of {packages} to ignore", s => Set(p => p.PackagesToIgnore = GetList(s)) },
-				{ "update=|u=", "A comma-separated list of {packages} to update; not specifying this will update all packages found", s => Set(p => p.PackagesToUpdate = GetList(s)) },
+				{ "ignorePackages=|ignore=|i=", "A comma-separated list of {packages} to ignore", s => Set(p => p.PackagesToIgnore = GetList(s)) },
+				{ "updatePackages=|update=|u=", "A comma-separated list of {packages} to update; not specifying this will update all packages found", s => Set(p => p.PackagesToUpdate = GetList(s)) },
 				{ "outputFile=|of=", "The {path} to a file where the update summary will be written", s => summaryFile = s },
 			};
 
