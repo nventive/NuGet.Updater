@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -78,6 +78,6 @@ namespace NuGet.Updater.Tool
 			_isParameterSet = true;
 		}
 
-		private static string[] GetList(string value) => value.Split(",;".ToArray(), StringSplitOptions.RemoveEmptyEntries);
+		private static string[] GetList(string value) => !string.IsNullOrEmpty(value) ? value.Split(",;".ToArray(), StringSplitOptions.RemoveEmptyEntries) : null;
 	}
 }
