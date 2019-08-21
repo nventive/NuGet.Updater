@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
@@ -77,20 +78,6 @@ namespace NuGet.Updater.Tool
 			_isParameterSet = true;
 		}
 
-		private static List<string> GetList(string value)
-		{
-			var list = new List<string>();
-
-			if(value.Contains(","))
-			{
-				list.AddRange(value.Split(","));
-			}
-			else
-			{
-				list.Add(value);
-			}
-
-			return list;
-		}
+		private static string[] GetList(string value) => value.Split(",;".ToArray(), StringSplitOptions.RemoveEmptyEntries);
 	}
 }
