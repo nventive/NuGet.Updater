@@ -24,7 +24,7 @@ namespace NuGet.Updater.Tool
 				{ "help|h", "Displays this help screen", s => isHelp = true },
 				{ "solution=|s=", "The {path} to the solution to update", s => Set(p => p.SolutionRoot = s) },
 				{ "feed=|f=", "A private feed to use for the update; the format is {url|accessToken}; can be specified multiple times", s => AddPrivateFeed(s) },
-				{ "version=|versions=|v=", "The target {versions} to use", s => Set(p => p.TargetVersions = GetList(s))},
+				{ "version=|versions=|v=", "The target {versions} to use", s => Set(p => p.TargetVersions = GetList(s) ?? p.TargetVersions)},
 				{ "silent", "Suppress all output from NuGet Updater", _ => isSilent = true },
 				{ "allowDowngrade|d", "Whether package downgrade is allowed", s => Set(p => p.IsDowngradeAllowed = true)},
 				{ "useNuGetorg|n", "Whether to pull packages from NuGet.org", _ => Set(p => p.IncludeNuGetOrg = true )},
