@@ -41,7 +41,9 @@ namespace NuGet.Updater.Extensions
 
 			foreach(var packageReference in packageReferences.Concat(dotnetCliReferences))
 			{
-				var packageId = packageReference.GetAttribute("Include");
+				var packageId = new[] { "Include", "Update", "Remove" }
+					.Select(packageReference.GetAttribute)
+					.FirstOrDefault(x => !string.IsNullOrEmpty(x));
 				var packageVersion = packageReference.GetAttribute("Version");
 
 				if(packageVersion.HasValue())
