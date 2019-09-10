@@ -17,7 +17,7 @@ namespace NuGet.Updater.Entities
 		/// <summary>
 		/// Gets or sets the versions to update to (stable, dev, beta, etc.), in order of priority.
 		/// </summary>
-		public IEnumerable<string> TargetVersions { get; set; }
+		public IEnumerable<string> TargetVersions { get; set; } = new[] { "stable" };
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the version should exactly match the target version.
