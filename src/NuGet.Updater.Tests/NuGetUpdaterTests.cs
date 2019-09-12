@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NuGet.Updater.Entities;
-using NuGet.Updater.Extensions;
 using NuGet.Updater.Log;
 using NuGet.Updater.Tests.Entities;
 using Uno.Extensions;
@@ -32,11 +30,12 @@ namespace NuGet.Updater.Tests
 				SolutionRoot = "MySolution.sln",
 				UpdateTarget = UpdateTarget.Unspecified,
 				TargetVersions = new[] { "stable" },
+				Sources = new List<IUpdaterSource> { TestSource },
 			};
 
 			var logger = new Logger(Console.Out);
 
-			var updater = new NuGetUpdater(parameters, new[] { TestSource }, logger);
+			var updater = new NuGetUpdater(parameters, logger);
 
 			await updater.UpdatePackages(CancellationToken.None);
 

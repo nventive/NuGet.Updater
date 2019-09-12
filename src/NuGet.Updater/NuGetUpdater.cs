@@ -22,7 +22,6 @@ namespace NuGet.Updater
 	{
 		private readonly UpdaterParameters _parameters;
 		private readonly Logger _log;
-		private readonly IUpdaterSource[] _packageSources;
 
 		public static async Task<bool> UpdateAsync(
 			CancellationToken ct,
@@ -37,16 +36,14 @@ namespace NuGet.Updater
 		}
 
 		public NuGetUpdater(UpdaterParameters parameters, TextWriter logWriter, string summaryOutputFilePath)
-			: this(parameters, parameters.GetSources(), new Logger(logWriter, summaryOutputFilePath))
+			: this(parameters, new Logger(logWriter, summaryOutputFilePath))
 		{
 		}
 
-		internal NuGetUpdater(UpdaterParameters parameters, IUpdaterSource[] packageSources, Logger log)
+		internal NuGetUpdater(UpdaterParameters parameters, Logger log)
 		{
-			//TODO validate parameters
-			_parameters = parameters;
+			_parameters = parameters.Validate();
 			_log = log;
-			_packageSources = packageSources;
 		}
 
 		public async Task<bool> UpdatePackages(CancellationToken ct)
@@ -92,14 +89,14 @@ namespace NuGet.Updater
 
 			_log.Write($"Found {references.Length} references");
 			_log.Write("");
-			_log.Write($"Retrieving packages from {_packageSources.Length} sources");
+			_log.Write($"Retrieving packages from {_parameters.Sources.Count} sources");
 
 			foreach(var reference in references.OrderBy(r => r.Id))
 			{
 				var matchingPackages = new List<UpdaterPackage>();
-				foreach(var source in _packageSources)
+				foreach(var source in _parameters.Sources)
 				{
-					matchingPackages.Add(await source.GetPackage(ct, reference, _log));
+					matchingPackages.Add(await source.GetPackage(ct, reference, _parameters.PackageAuthor, _log));
 				}
 
 				_log.Write("");
