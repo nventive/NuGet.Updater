@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Configuration;
 using NuGet.Updater.Extensions;
@@ -8,27 +9,30 @@ namespace NuGet.Updater.Entities
 {
 	public class UpdaterSource : IUpdaterSource
 	{
-		private readonly PackageSource _packageSource;
-		private readonly string _packageAuthor;
+		public static readonly UpdaterSource NuGetOrg = new UpdaterSource("https://api.nuget.org/v3/index.json");
 
-		public UpdaterSource(string url, string packageOwner)
+		private readonly PackageSource _packageSource;
+		private readonly bool _isPrivate = false;
+
+		public UpdaterSource(string url)
 		{
-			_packageAuthor = packageOwner;
 			_packageSource = new PackageSource(url);
 		}
 
-		public UpdaterSource(string url, string accessToken, string packageAuthor)
+		public UpdaterSource(string url, string accessToken)
 		{
-			//Not filtering packages from private feeds
-			_packageAuthor = null;
 			_packageSource = GetPackageSource(url, accessToken);
+			_isPrivate = true;
 		}
+
+		public Uri Url => _packageSource.SourceUri;
 
 		public Task<UpdaterPackage> GetPackage(
 			CancellationToken ct,
 			PackageReference reference,
+			string author,
 			Logger log = null
-		) => _packageSource.GetPackage(ct, reference, _packageAuthor, log);
+		) => _packageSource.GetPackage(ct, reference, author: _isPrivate ? null : author, log); //Not filtering packages from private sources
 
 		private static PackageSource GetPackageSource(string url, string accessToken)
 		{

@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added aliases for .Net Core application
 - Added support for multiple target versions
 - Added support for solution folders alongside sln files
+- Added better error handling
 
 ### Changed
 - Replaced package owner with package author
 - Reworked internal logic of the updater: package list is now fetched from the files before being looked up online
+- Updated sources handling to add support for any number of public or private package sources (it was previously limited to NuGet.org and any number of private package sources)
 
 ### Deprecated
 

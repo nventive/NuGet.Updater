@@ -9,23 +9,6 @@ namespace NuGet.Updater.Extensions
 {
 	internal static class UpdaterParametersExtension
 	{
-		internal static IUpdaterSource[] GetSources(this UpdaterParameters parameters)
-		{
-			var packageSources = new List<IUpdaterSource>();
-
-			if(parameters.PrivateFeeds?.Any() ?? false)
-			{
-				packageSources.AddRange(parameters.PrivateFeeds.Select(g => new UpdaterSource(g.Key, g.Value, parameters.PackageAuthor)));
-			}
-
-			if(parameters.IncludeNuGetOrg)
-			{
-				packageSources.Add(new UpdaterSource("https://api.nuget.org/v3/index.json", parameters.PackageAuthor));
-			}
-
-			return packageSources.ToArray();
-		}
-
 		internal static bool ShouldUpdatePackage(this UpdaterParameters parameters, UpdaterPackage package)
 		{
 			var isPackageToIgnore = parameters.PackagesToIgnore?.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase) ?? false;
@@ -49,19 +32,15 @@ namespace NuGet.Updater.Extensions
 
 			yield return $"- Update targeting {files} files under {parameters.SolutionRoot}";
 
-			var packageSources = new List<string>();
-
-			if(parameters.IncludeNuGetOrg)
+			if(parameters.Sources?.Any() ?? false)
 			{
-				packageSources.Add(parameters.PackageAuthor.SelectOrDefault(o => $"NuGet.org (limited to packages by {o})", "NuGet.org"));
+				yield return $"- Using NuGet packages from {string.Join(", ", parameters.Sources.Select(s => s.Url))}";
 			}
 
-			if(parameters.PrivateFeeds?.Any() ?? false)
+			if(parameters.PackageAuthor.HasValue())
 			{
-				packageSources.AddRange(parameters.PrivateFeeds.Keys);
+				yield return $"- Using only public packages authored by {parameters.PackageAuthor}";
 			}
-
-			yield return $"- Using NuGet packages from {string.Join(", ", packageSources)}";
 
 			yield return $"- Using {(parameters.Strict ? "exact " : "")}target version {string.Join(", then ", parameters.TargetVersions)}";
 
@@ -79,6 +58,21 @@ namespace NuGet.Updater.Extensions
 			{
 				yield return $"- Updating only {string.Join(",", parameters.PackagesToUpdate)}";
 			}
+		}
+
+		public static UpdaterParameters Validate(this UpdaterParameters parameters)
+		{
+			if(parameters.SolutionRoot.IsNullOrEmpty())
+			{
+				throw new InvalidOperationException("The solution root must be specified");
+			}
+
+			if(parameters.Sources.None())
+			{
+				throw new InvalidOperationException("At least one NuGet source should be specified");
+			}
+
+			return parameters;
 		}
 	}
 }

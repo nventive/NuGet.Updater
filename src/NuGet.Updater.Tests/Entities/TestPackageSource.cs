@@ -12,21 +12,21 @@ namespace NuGet.Updater.Tests.Entities
 	{
 		private readonly Dictionary<string, string[]> _packages;
 
-		public TestPackageSource(Uri uri, Dictionary<string, string[]> packages)
+		public TestPackageSource(Uri url, Dictionary<string, string[]> packages)
 		{
-			Uri = uri;
+			Url = url;
 			_packages = packages;
 		}
 
-		public Uri Uri { get; }
+		public Uri Url { get; }
 
-		public async Task<UpdaterPackage> GetPackage(CancellationToken ct, PackageReference reference, Logger log = null)
+		public async Task<UpdaterPackage> GetPackage(CancellationToken ct, PackageReference reference, string author, Logger log = null)
 		{
 			var packageId = reference.Id;
 
 			var versions = _packages
 				.GetValueOrDefault(reference.Id)
-				?.Select(v => new UpdaterVersion(v, Uri))
+				?.Select(v => new UpdaterVersion(v, Url))
 				.ToArray() ?? new UpdaterVersion[0];
 
 			return new UpdaterPackage(reference, versions);

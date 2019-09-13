@@ -8,7 +8,8 @@ NuGet Updater allows batch updates of NuGet packages in a solution.
 
 ## Getting Started
 
-The NuGet Updater can be installed as a standalone .Net Core tool using the following command: `dotnet tool install -g nuget.updater.tool`
+The NuGet Updater can be installed as a standalone .Net Core tool using the following command: `dotnet tool install -g nventive.NuGet.Updater.Tool`
+Help can be found with : `nugetupdater --help`
 
 The NuGet updater library can also be installed as a NuGet package in a UWP or WPF application.
 
