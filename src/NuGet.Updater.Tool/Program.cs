@@ -24,7 +24,7 @@ namespace NuGet.Updater.Tool
 				var options = new OptionSet
 			{
 				{ "help|h", "Displays this help screen", s => isHelp = true },
-				{ "solution=|s=", "The {path} to the solution or folder to update", s => Set(p => p.SolutionRoot = s) },
+				{ "solution=|s=", "The {path} to the solution or folder to update; defaults to the current folder", s => Set(p => p.SolutionRoot = s) },
 				{ "feed=|f=", "A NuGet feed to use for the update; a private feed can be specified with the format {url|accessToken}; can be specified multiple times", s => AddSource(s) },
 				{ "version=|versions=|v=", "The target {version} to use; latest stable is always considered; can be specified multiple times", s => Set(p => p.TargetVersions.Add(s))},
 				{ "ignorePackages=|ignore=|i=", "A specific {package} to ignore; can be specified multiple times", s => Set(p => p.PackagesToIgnore.Add(s)) },
@@ -39,6 +39,7 @@ namespace NuGet.Updater.Tool
 				_isParameterSet = false;
 				_parameters = new UpdaterParameters
 				{
+					SolutionRoot = Environment.CurrentDirectory,
 					UpdateTarget = UpdateTarget.All,
 					Sources = new List<IUpdaterSource>(),
 					PackagesToIgnore = new List<string>(),
