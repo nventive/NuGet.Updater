@@ -54,7 +54,7 @@ namespace NuGet.Updater
 			//Open all the files at once so we don't have to do it all the time
 			var documents = await OpenFiles(ct, packages);
 
-			foreach(var package in packages.Where(p => _parameters.ShouldUpdatePackage(p)))
+			foreach(var package in packages)
 			{
 				var latestVersion = package.LatestVersion;
 
@@ -93,11 +93,17 @@ namespace NuGet.Updater
 
 			foreach(var reference in references.OrderBy(r => r.Id))
 			{
-				var matchingPackages = new List<UpdaterPackage>();
-				foreach(var source in _parameters.Sources)
+				if(_parameters.PackagesToIgnore.Contains(reference.Id) ||
+					(_parameters.PackagesToUpdate.Any() && !_parameters.PackagesToUpdate.Contains(reference.Id))
+				)
 				{
-					matchingPackages.Add(await source.GetPackage(ct, reference, _parameters.PackageAuthor, _log));
+					continue;
 				}
+
+				var matchingPackages = await Task.WhenAll(_parameters
+					.Sources
+					.Select(source => source.GetPackage(ct, reference, _parameters.PackageAuthor, _log))
+				);
 
 				_log.Write("");
 
