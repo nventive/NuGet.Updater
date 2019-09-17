@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NuGet.Configuration;
 using NuGet.Updater.Entities;
 using Uno.Extensions;
 
@@ -9,14 +8,6 @@ namespace NuGet.Updater.Extensions
 {
 	internal static class UpdaterParametersExtension
 	{
-		internal static bool ShouldUpdatePackage(this UpdaterParameters parameters, UpdaterPackage package)
-		{
-			var isPackageToIgnore = parameters.PackagesToIgnore?.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase) ?? false;
-			var isPackageToUpdate = parameters.PackagesToUpdate?.Contains(package.PackageId, StringComparer.OrdinalIgnoreCase) ?? true;
-
-			return isPackageToUpdate && !isPackageToIgnore;
-		}
-
 		internal static IEnumerable<string> GetSummary(this UpdaterParameters parameters)
 		{
 			yield return $"## Configuration";

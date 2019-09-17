@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
@@ -21,6 +22,8 @@ namespace NuGet.Updater.Extensions
 			Logger log = null
 		)
 		{
+			var logMessage = new StringBuilder();
+
 			var repositoryProvider = new SourceRepositoryProvider(
 				Settings.LoadDefaultSettings(null),
 				Repository.Provider.GetCoreV3()
@@ -30,26 +33,28 @@ namespace NuGet.Updater.Extensions
 
 			var packageId = reference.Id;
 
-			log?.Write($"Retrieving package {packageId} from {source.SourceUri}");
+			logMessage.AppendLine($"Retrieving package {packageId} from {source.SourceUri}");
 
-			var metadata = (await repository
+			var packageMetadata = (await repository
 				.GetResource<PackageMetadataResource>()
 				.GetMetadataAsync(packageId, true, false, new SourceCacheContext { NoCache = true }, new NullLogger(), ct))
 				.ToArray();
 
-			log?.Write(metadata.Length > 0 ? $"Found {metadata.Length} versions" : "No versions found");
+			logMessage.AppendLine(packageMetadata.Length > 0 ? $"Found {packageMetadata.Length} versions" : "No versions found");
 
-			if(author.HasValue() && metadata.Any())
+			if(author.HasValue() && packageMetadata.Any())
 			{
-				metadata = metadata.Where(m => m.HasAuthor(author)).ToArray();
+				packageMetadata = packageMetadata.Where(m => m.HasAuthor(author)).ToArray();
 
-				log?.Write(metadata.Length > 0 ? $"Found {metadata.Length} version from {author}" : $"No versions from {author} found");
+				logMessage.AppendLine(packageMetadata.Length > 0 ? $"Found {packageMetadata.Length} versions from {author}" : $"No versions from {author} found");
 			}
 
-			var versions = metadata
+			var versions = packageMetadata
 				.Cast<PackageSearchMetadataRegistration>()
 				.Select(m => new UpdaterVersion(m.Version, source.SourceUri))
 				.ToArray();
+
+			log?.Write(logMessage.ToString());
 
 			return new UpdaterPackage(reference, versions);
 		}
