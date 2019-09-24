@@ -17,7 +17,7 @@ namespace NuGet.Updater.Entities
 		/// <summary>
 		/// Gets or sets the versions to update to (stable, dev, beta, etc.), in order of priority.
 		/// </summary>
-		public ICollection<string> TargetVersions { get; set; } = new List<string> { "stable" };
+		public ICollection<string> TargetVersions { get; set; } = new[] { "stable" };
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the version should exactly match the target version.
@@ -42,12 +42,12 @@ namespace NuGet.Updater.Entities
 		/// <summary>
 		/// Gets or sets a list of packages to ignore.
 		/// </summary>
-		public ICollection<string> PackagesToIgnore { get; set; }
+		public ICollection<string> PackagesToIgnore { get; set; } = new string[0];
 
 		/// <summary>
 		/// Gets or sets a list of packages to update; all packages found will be updated if nothing is specified.
 		/// </summary>
-		public ICollection<string> PackagesToUpdate { get; set; }
+		public ICollection<string> PackagesToUpdate { get; set; } = new string[0];
 
 		/// <summary>
 		/// Gets or sets the name of the author of the packages to update; used with NuGet.org; packages from private feeds are assumed to be required.
