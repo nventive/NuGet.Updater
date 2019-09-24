@@ -34,6 +34,7 @@ namespace NuGet.Updater.Tool
 				{ "allowDowngrade|d", "Whether package downgrade is allowed", s => Set(p => p.IsDowngradeAllowed = true)},
 				{ "useNuGetorg|n", "Whether to use packages from NuGet.org", _ => Set(p => p.Sources.Add(UpdaterSource.NuGetOrg)) },
 				{ "silent", "Suppress all output from NuGet Updater", _ => isSilent = true },
+				{ "strict", "Whether to use versions with only the specified version tag (ie. dev, but not dev.test)", _ => Set(p => p.Strict = true) },
 			};
 
 				_isParameterSet = false;

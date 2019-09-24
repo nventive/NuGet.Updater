@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added support for multiple target versions
 - Added support for solution folders alongside sln files
 - Added better error handling
+- Added support for the "strict" parameter in the .Net Core app
 
 ### Changed
 - Replaced package owner with package author
