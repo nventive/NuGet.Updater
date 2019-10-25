@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using NuGet.Updater.Entities;
+using NuGet.Shared.Entities;
 using Uno.Extensions;
 
-namespace NuGet.Updater.Extensions
+namespace NuGet.Shared.Extensions
 {
-	public static class UpdaterVersionExtensions
+	public static class FeedVersionExtensions
 	{
 		public static bool IsMatchingVersion(
-			this UpdaterVersion version,
+			this FeedVersion version,
 			string tag,
 			bool isStrict
 		)

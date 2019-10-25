@@ -1,12 +1,13 @@
 ﻿using System;
-using NuGet.Updater.Entities;
+using NuGet.Shared.Entities;
+using NuGet.Shared.Extensions;
 using NuGet.Versioning;
 
 namespace NuGet.Updater.Log
 {
 	public class UpdateOperation
 	{
-		public UpdateOperation(bool isDowngradeAllowed, string packageName, NuGetVersion previousVersion, UpdaterVersion updatedVersion, string filePath)
+		public UpdateOperation(bool isDowngradeAllowed, string packageName, NuGetVersion previousVersion, FeedVersion updatedVersion, string filePath)
 		{
 			Date = DateTimeOffset.Now;
 

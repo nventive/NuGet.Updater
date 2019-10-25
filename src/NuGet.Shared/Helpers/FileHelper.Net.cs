@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NuGet.Updater.Helpers
+namespace NuGet.Shared.Helpers
 {
-	partial class FileHelper
+	internal class FileHelper
 	{
 		public static void LogToFile(string outputFilePath, IEnumerable<string> log)
 		{

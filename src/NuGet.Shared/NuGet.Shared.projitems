@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>3890cca3-b7cf-450b-a6cd-4a4106b0008c</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>NuGet.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\PackageSourceExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Log\ConsoleLogger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Entities\FeedVersion.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Entities\IPackageFeed.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Entities\PackageReference.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Entities\FileType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Entities\PackageFeed.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\DictionaryExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\FeedVersionExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\NuGetVersionExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\PackageSearchMetadataExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\FileTypeExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\XmlDocumentExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\FileHelper.Net.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\FileHelper.UAP.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\PackageHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\SolutionHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Log\SimpleTextWriter.cs" />
+  </ItemGroup>
+</Project>

@@ -1,12 +1,12 @@
 ﻿using System;
 
-namespace NuGet.Updater.Entities
+namespace NuGet.Shared.Entities
 {
 	/// <summary>
-	/// The type of files to update.
+	/// The type of file containing a reference.
 	/// </summary>
 	[Flags]
-	public enum UpdateTarget
+	public enum FileType
 	{
 		/// <summary>
 		/// No files will be updated.

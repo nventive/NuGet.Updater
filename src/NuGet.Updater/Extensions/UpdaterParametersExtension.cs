@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NuGet.Shared.Entities;
+using NuGet.Shared.Extensions;
 using NuGet.Updater.Entities;
 using Uno.Extensions;
 
@@ -12,10 +14,10 @@ namespace NuGet.Updater.Extensions
 		{
 			yield return $"## Configuration";
 
-			var files = parameters.UpdateTarget == UpdateTarget.All
+			var files = parameters.UpdateTarget == FileType.All
 				? string.Join(", ", Enum
-					.GetValues(typeof(UpdateTarget))
-					.Cast<UpdateTarget>()
+					.GetValues(typeof(FileType))
+					.Cast<FileType>()
 					.Select(t => t.GetDescription())
 					.Trim()
 				)
@@ -23,9 +25,9 @@ namespace NuGet.Updater.Extensions
 
 			yield return $"- Update targeting {files} files under {parameters.SolutionRoot}";
 
-			if(parameters.Sources?.Any() ?? false)
+			if(parameters.Feeds?.Any() ?? false)
 			{
-				yield return $"- Using NuGet packages from {string.Join(", ", parameters.Sources.Select(s => s.Url))}";
+				yield return $"- Using NuGet packages from {string.Join(", ", parameters.Feeds.Select(s => s.Url))}";
 			}
 
 			if(parameters.PackageAuthor.HasValue())
@@ -58,9 +60,9 @@ namespace NuGet.Updater.Extensions
 				throw new InvalidOperationException("The solution root must be specified");
 			}
 
-			if(parameters.Sources.None())
+			if(parameters.Feeds.None())
 			{
-				throw new InvalidOperationException("At least one NuGet source should be specified");
+				throw new InvalidOperationException("At least one NuGet feed should be specified");
 			}
 
 			return parameters;

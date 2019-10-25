@@ -52,4 +52,6 @@
 			</Content>
 		</ItemGroup>
 	</Target>
+
+	<Import Project="..\NuGet.Shared\NuGet.Shared.projitems" Label="Shared" />
 </Project>
