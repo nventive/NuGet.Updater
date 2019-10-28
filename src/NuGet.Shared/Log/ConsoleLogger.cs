@@ -6,7 +6,7 @@ namespace NuGet.Shared.Entities
 {
 	public class ConsoleLogger : ILogger
 	{
-		public static readonly ConsoleLogger Default = new ConsoleLogger();
+		public static readonly ConsoleLogger Instance = new ConsoleLogger();
 
 		private ConsoleLogger()
 		{

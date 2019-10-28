@@ -22,10 +22,10 @@ namespace NuGet.Shared.Helpers
 			CancellationToken ct,
 			string solutionPath,
 			FileType fileType,
-			ILogger log = null
+			ILogger log
 		)
 		{
-			log?.LogInformation($"Retrieving references from files in {solutionPath}");
+			log.LogInformation($"Retrieving references from files in {solutionPath}");
 
 			var packages = new List<PackageReference>();
 
@@ -70,7 +70,7 @@ namespace NuGet.Shared.Helpers
 				.ToArray();
 		}
 
-		private static async Task<string[]> GetProjectFiles(CancellationToken ct, string solutionPath, ILogger log = null)
+		private static async Task<string[]> GetProjectFiles(CancellationToken ct, string solutionPath, ILogger log)
 		{
 			var files = new string[0];
 
@@ -90,14 +90,14 @@ namespace NuGet.Shared.Helpers
 					.ToArray();
 			}
 
-			log?.LogInformation($"Found {files.Length} csproj files");
+			log.LogInformation($"Found {files.Length} csproj files");
 
 			return files;
 		}
 
 		//To improve: https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019#search-scope
 		//The file should be looked for at all levels
-		private static async Task<string> GetDirectoryFile(CancellationToken ct, string solutionPath, FileType target, ILogger log = null)
+		private static async Task<string> GetDirectoryFile(CancellationToken ct, string solutionPath, FileType target, ILogger log)
 		{
 			string file;
 
@@ -115,14 +115,14 @@ namespace NuGet.Shared.Helpers
 
 			if(file != null && File.Exists(file))
 			{
-				log?.LogInformation($"Found {target.GetDescription()}");
+				log.LogInformation($"Found {target.GetDescription()}");
 				return file;
 			}
 
 			return null;
 		}
 
-		private static async Task<string[]> GetNuspecFiles(CancellationToken ct, string solutionPath, ILogger log = null)
+		private static async Task<string[]> GetNuspecFiles(CancellationToken ct, string solutionPath, ILogger log)
 		{
 			string solutionFolder;
 
@@ -140,7 +140,7 @@ namespace NuGet.Shared.Helpers
 			//Nuspec files are generated in obj when using the new csproj format
 			files = files.Where(f => !f.Contains("\\obj\\")).ToArray();
 
-			log?.LogInformation($"Found {files.Length} nuspec files");
+			log.LogInformation($"Found {files.Length} nuspec files");
 
 			return files;
 		}

@@ -47,13 +47,12 @@ namespace NuGet.Updater.Extensions
 		public static async Task<FeedVersion> GetLatestVersion(
 			this PackageReference reference,
 			CancellationToken ct,
-			UpdaterParameters parameters,
-			ILogger log = null
+			UpdaterParameters parameters
 		)
 		{
 			var availableVersions = await Task.WhenAll(parameters
 				.Feeds
-				.Select(f => f.GetPackageVersions(ct, reference, parameters.PackageAuthor, log))
+				.Select(f => f.GetPackageVersions(ct, reference, parameters.PackageAuthor))
 			);
 
 			var versionsPerTarget = availableVersions

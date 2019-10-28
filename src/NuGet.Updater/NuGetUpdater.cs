@@ -46,6 +46,8 @@ namespace NuGet.Updater
 		{
 			_parameters = parameters.Validate();
 			_log = log;
+
+			PackageFeed.Logger = _log;
 		}
 
 		public async Task<bool> UpdatePackages(CancellationToken ct)
@@ -104,7 +106,7 @@ namespace NuGet.Updater
 					continue;
 				}
 
-				packages.Add(new UpdaterPackage(reference, await reference.GetLatestVersion(ct, _parameters, _log)));
+				packages.Add(new UpdaterPackage(reference, await reference.GetLatestVersion(ct, _parameters)));
 
 				_log.Write("");
 			}

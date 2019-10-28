@@ -28,6 +28,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Downloader", "NuGet.D
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "NuGet.Shared", "NuGet.Shared\NuGet.Shared.shproj", "{3890CCA3-B7CF-450B-A6CD-4A4106B0008C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet.Updater", "NuGet.Updater", "{54F00313-D565-4D02-9A4B-D2FFF0190934}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet.Downloader", "NuGet.Downloader", "{58AE6856-BDF1-4676-8FF3-39B95B7762C1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Downloader.Tool", "NuGet.Downloader.Tool\NuGet.Downloader.Tool.csproj", "{17979C76-865A-4983-977B-E242BCE1B038}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Downloader.Tests", "NuGet.Downloader.Tests\NuGet.Downloader.Tests.csproj", "{4CCA4711-1333-4D4F-91A4-B6E4263D7244}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		NuGet.Shared\NuGet.Shared.projitems*{3890cca3-b7cf-450b-a6cd-4a4106b0008c}*SharedItemsImports = 13
@@ -53,9 +61,25 @@ Global
 		{912018BD-D988-4C90-B4EC-BA1C171207C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{912018BD-D988-4C90-B4EC-BA1C171207C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{912018BD-D988-4C90-B4EC-BA1C171207C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17979C76-865A-4983-977B-E242BCE1B038}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17979C76-865A-4983-977B-E242BCE1B038}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17979C76-865A-4983-977B-E242BCE1B038}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17979C76-865A-4983-977B-E242BCE1B038}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CCA4711-1333-4D4F-91A4-B6E4263D7244}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CCA4711-1333-4D4F-91A4-B6E4263D7244}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CCA4711-1333-4D4F-91A4-B6E4263D7244}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CCA4711-1333-4D4F-91A4-B6E4263D7244}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{29277270-8EFE-41A3-8CD8-D54EBF514C41} = {54F00313-D565-4D02-9A4B-D2FFF0190934}
+		{3DAA81DB-00A6-4A84-8180-19A588398F52} = {54F00313-D565-4D02-9A4B-D2FFF0190934}
+		{D240ABFD-6A48-4E4B-A946-9EBF9840FADA} = {54F00313-D565-4D02-9A4B-D2FFF0190934}
+		{912018BD-D988-4C90-B4EC-BA1C171207C3} = {58AE6856-BDF1-4676-8FF3-39B95B7762C1}
+		{17979C76-865A-4983-977B-E242BCE1B038} = {58AE6856-BDF1-4676-8FF3-39B95B7762C1}
+		{4CCA4711-1333-4D4F-91A4-B6E4263D7244} = {58AE6856-BDF1-4676-8FF3-39B95B7762C1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1C528FB3-4BD1-4D56-ABEE-A20F6367040F}
