@@ -2,8 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NuGet.Updater.Entities;
-using NuGet.Updater.Helpers;
+using NuGet.Shared.Entities;
+using NuGet.Shared.Helpers;
 
 namespace NuGet.Updater.Tests
 {
@@ -15,7 +15,7 @@ namespace NuGet.Updater.Tests
 		{
 			var solution = @"C:\Git\MyMD\MyMD\MyMD.sln";
 
-			var references = await SolutionHelper.GetPackageReferences(CancellationToken.None, solution, UpdateTarget.Csproj);
+			var references = await SolutionHelper.GetPackageReferences(CancellationToken.None, solution, FileType.Csproj, ConsoleLogger.Instance);
 
 			Assert.IsTrue(references.Any());
 		}

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NuGet.Updater.Extensions
+namespace NuGet.Shared.Extensions
 {
 	public static class DictionaryExtensions
 	{

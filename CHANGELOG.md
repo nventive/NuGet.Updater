@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Added NuGet.Downloader
+
+### Changed
+- Re-organized code to improve reusability
+
 ## Version 1.0
 
 ### Added

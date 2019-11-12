@@ -11,14 +11,14 @@ namespace NuGet.Updater.Helpers
 
 		public static string GetUrl(string packageId, NuGetVersion version, Uri feedUri)
 		{
-			if(feedUri.AbsoluteUri.StartsWith("https://api.nuget.org"))
+			if(feedUri.AbsoluteUri.StartsWith("https://api.nuget.org", StringComparison.OrdinalIgnoreCase))
 			{
 				return $"https://www.nuget.org/packages/{packageId}/{version.ToFullString()}";
 			}
 
 			var pattern = LegacyAzureArtifactsFeedUrlPattern;
 
-			if(feedUri.AbsoluteUri.StartsWith("https://pkgs.dev.azure.com"))
+			if(feedUri.AbsoluteUri.StartsWith("https://pkgs.dev.azure.com", StringComparison.OrdinalIgnoreCase))
 			{
 				pattern = AzureArtifactsFeedUrlPattern;
 			}

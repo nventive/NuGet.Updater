@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace NuGet.Updater.Log
+namespace NuGet.Shared.Log
 {
 	public class SimpleTextWriter : TextWriter
 	{

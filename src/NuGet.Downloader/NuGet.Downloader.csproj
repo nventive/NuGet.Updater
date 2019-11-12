@@ -1,0 +1,28 @@
+<Project Sdk="MSBuild.Sdk.Extras">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard20;net472</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Uno.Core" Version="1.28.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="4.5.0" />
+		<PackageReference Include="Uno.Core" Version="1.28.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='netstandard20'">
+		<PackageReference Include="NuGet.Protocol" Version="5.1.0" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)'=='net472'">
+		<PackageReference Include="NuGet.Protocol" Version="5.1.0" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+	</ItemGroup>
+
+	<Import Project="..\NuGet.Shared\NuGet.Shared.projitems" Label="Shared" />
+
+</Project>

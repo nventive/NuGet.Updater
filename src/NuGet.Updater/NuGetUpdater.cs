@@ -3,9 +3,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NuGet.Shared.Entities;
+using NuGet.Shared.Extensions;
+using NuGet.Shared.Helpers;
 using NuGet.Updater.Entities;
 using NuGet.Updater.Extensions;
-using NuGet.Updater.Helpers;
 using NuGet.Updater.Log;
 
 #if UAP
@@ -21,7 +23,7 @@ namespace NuGet.Updater
 	public class NuGetUpdater
 	{
 		private readonly UpdaterParameters _parameters;
-		private readonly Logger _log;
+		private readonly UpdaterLogger _log;
 
 		public static async Task<bool> UpdateAsync(
 			CancellationToken ct,
@@ -36,14 +38,16 @@ namespace NuGet.Updater
 		}
 
 		public NuGetUpdater(UpdaterParameters parameters, TextWriter logWriter, string summaryOutputFilePath)
-			: this(parameters, new Logger(logWriter, summaryOutputFilePath))
+			: this(parameters, new UpdaterLogger(logWriter, summaryOutputFilePath))
 		{
 		}
 
-		internal NuGetUpdater(UpdaterParameters parameters, Logger log)
+		internal NuGetUpdater(UpdaterParameters parameters, UpdaterLogger log)
 		{
 			_parameters = parameters.Validate();
 			_log = log;
+
+			PackageFeed.Logger = _log;
 		}
 
 		public async Task<bool> UpdatePackages(CancellationToken ct)
@@ -52,11 +56,13 @@ namespace NuGet.Updater
 
 			var packages = await GetPackages(ct);
 			//Open all the files at once so we don't have to do it all the time
-			var documents = await OpenFiles(ct, packages);
+			var documents = await packages
+				.Select(p => p.Reference)
+				.OpenFiles(ct);
 
 			foreach(var package in packages)
 			{
-				var latestVersion = package.LatestVersion;
+				var latestVersion = package.Version;
 
 				if(latestVersion == null)
 				{
@@ -89,58 +95,23 @@ namespace NuGet.Updater
 
 			_log.Write($"Found {references.Length} references");
 			_log.Write("");
-			_log.Write($"Retrieving packages from {_parameters.Sources.Count} sources");
+			_log.Write($"Retrieving packages from {_parameters.Feeds.Count} feeds");
 
-			foreach(var reference in references.OrderBy(r => r.Id))
+			foreach(var reference in references.OrderBy(r => r.Identity))
 			{
-				if(_parameters.PackagesToIgnore.Contains(reference.Id) ||
-					(_parameters.PackagesToUpdate.Any() && !_parameters.PackagesToUpdate.Contains(reference.Id))
+				if(_parameters.PackagesToIgnore.Contains(reference.Identity.Id) ||
+					(_parameters.PackagesToUpdate.Any() && !_parameters.PackagesToUpdate.Contains(reference.Identity.Id))
 				)
 				{
 					continue;
 				}
 
-				var matchingPackages = await Task.WhenAll(_parameters
-					.Sources
-					.Select(source => source.GetPackage(ct, reference, _parameters.PackageAuthor, _log))
-				);
+				packages.Add(new UpdaterPackage(reference, await reference.GetLatestVersion(ct, _parameters)));
 
 				_log.Write("");
-
-				//If the reference has been found on multiple sources, we merge the packages found together
-				var mergedPackage = matchingPackages
-					.GroupBy(p => p.Reference)
-					.Select(g => new UpdaterPackage(g.Key, g.SelectMany(p => p.AvailableVersions)))
-					.SingleOrDefault();
-
-				//Retrieve the latest version here so it is only done once per package
-				packages.Add(new UpdaterPackage(reference, mergedPackage.GetLatestVersion(_parameters)));
 			}
 
 			return packages.ToArray();
-		}
-
-		/// <summary>
-		/// Opens the XML files where packages were found.
-		/// </summary>
-		/// <param name="ct"></param>
-		/// <param name="packages"></param>
-		/// <returns></returns>
-		private async Task<Dictionary<string, XmlDocument>> OpenFiles(CancellationToken ct, UpdaterPackage[] packages)
-		{
-			var files = packages
-				.SelectMany(p => p.Reference.Files)
-				.SelectMany(g => g.Value)
-				.Distinct();
-
-			var documents = new Dictionary<string, XmlDocument>();
-
-			foreach(var file in files)
-			{
-				documents.Add(file, await file.LoadDocument(ct));
-			}
-
-			return documents;
 		}
 
 		/// <summary>
@@ -154,8 +125,8 @@ namespace NuGet.Updater
 		private async Task<UpdateOperation[]> UpdateFiles(
 		   CancellationToken ct,
 		   string packageId,
-		   UpdaterVersion version,
-		   Dictionary<UpdateTarget, string[]> targetFiles,
+		   FeedVersion version,
+		   Dictionary<FileType, string[]> targetFiles,
 		   Dictionary<string, XmlDocument> documents
 	   )
 		{
@@ -163,18 +134,18 @@ namespace NuGet.Updater
 
 			foreach(var files in targetFiles)
 			{
-				var updateTarget = files.Key;
+				var fileType = files.Key;
 
 				foreach(var path in files.Value)
 				{
 					var document = documents[path];
 					var updates = new UpdateOperation[0];
 
-					if(updateTarget.HasFlag(UpdateTarget.Nuspec))
+					if(fileType.HasFlag(FileType.Nuspec))
 					{
 						updates = document.UpdateDependencies(packageId, version, path, _parameters.IsDowngradeAllowed);
 					}
-					else if(updateTarget.HasAnyFlag(UpdateTarget.DirectoryProps, UpdateTarget.DirectoryTargets, UpdateTarget.Csproj))
+					else if(fileType.HasAnyFlag(FileType.DirectoryProps, FileType.DirectoryTargets, FileType.Csproj))
 					{
 						updates = document.UpdatePackageReferences(packageId, version, path, _parameters.IsDowngradeAllowed);
 					}

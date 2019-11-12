@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
 
-namespace NuGet.Updater.Helpers
+namespace NuGet.Shared.Helpers
 {
 	/// <summary>
 	/// UAP-Specific methods.
 	/// </summary>
-	partial class FileHelper
+	internal class FileHelper
 	{
 		public static void LogToFile(string outputFilePath, IEnumerable<string> log)
 		{

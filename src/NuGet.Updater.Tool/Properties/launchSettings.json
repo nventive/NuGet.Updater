@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "NuGet.Updater.Tool": {
-      "commandName": "Project",
-      "commandLineArgs": "-v=a -v=b -v=c -u=toto -u=tata -i=zaza -i=zozo -f=nuget.org -f=dev.azure.com"
-    }
-  }
-}
