@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using NuGet.Shared.Entities;
+using NuGet.Versioning;
 
 namespace NuGet.Updater.Entities
 {
@@ -11,14 +12,14 @@ namespace NuGet.Updater.Entities
 		public string SolutionRoot { get; set; }
 
 		/// <summary>
-		/// Gets or sets a list of feeds to get packages from.
+		/// Gets a list of feeds to get packages from.
 		/// </summary>
-		public ICollection<IPackageFeed> Feeds { get; set; }
+		public ICollection<IPackageFeed> Feeds { get; } = new List<IPackageFeed>();
 
 		/// <summary>
-		/// Gets or sets the versions to update to (stable, dev, beta, etc.), in order of priority.
+		/// Gets the versions to update to (stable, dev, beta, etc.), in order of priority.
 		/// </summary>
-		public ICollection<string> TargetVersions { get; set; } = new List<string> { "stable" };
+		public ICollection<string> TargetVersions { get; } = new List<string>();
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the version should exactly match the target version.
@@ -41,18 +42,28 @@ namespace NuGet.Updater.Entities
 		public FileType UpdateTarget { get; set; }
 
 		/// <summary>
-		/// Gets or sets a list of packages to ignore.
+		/// Gets a list of packages to ignore.
 		/// </summary>
-		public ICollection<string> PackagesToIgnore { get; set; } = new List<string>();
+		public ICollection<string> PackagesToIgnore { get; } = new List<string>();
 
 		/// <summary>
-		/// Gets or sets a list of packages to update; all packages found will be updated if nothing is specified.
+		/// Gets a list of packages to update; all packages found will be updated if nothing is specified.
 		/// </summary>
-		public ICollection<string> PackagesToUpdate { get; set; } = new List<string>();
+		public ICollection<string> PackagesToUpdate { get; } = new List<string>();
 
 		/// <summary>
 		/// Gets or sets the name of the author of the packages to update; used with NuGet.org; packages from private feeds are assumed to be required.
 		/// </summary>
 		public string PackageAuthor { get; set; }
+
+		/// <summary>
+		/// Gets the version to set for specific packages.
+		/// </summary>
+		public IDictionary<string, NuGetVersion> VersionOverrides { get; } = new Dictionary<string, NuGetVersion>();
+
+		/// <summary>
+		/// Gets or sets a value indicating whether to actually write the updates to the files.
+		/// </summary>
+		public bool IsDryRun { get; set; }
 	}
 }

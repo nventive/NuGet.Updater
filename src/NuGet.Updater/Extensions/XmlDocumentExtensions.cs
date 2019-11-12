@@ -1,18 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using NuGet.Shared.Entities;
 using NuGet.Shared.Extensions;
 using NuGet.Updater.Log;
-using NuGet.Versioning;
 using Uno.Extensions;
 
 #if UAP
-using System.Text.RegularExpressions;
-using Windows.Data.Xml.Dom;
-using Windows.Storage;
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
-using XmlElement = Windows.Data.Xml.Dom.XmlElement;
-using XmlNode = Windows.Data.Xml.Dom.IXmlNode;
 #else
 using XmlDocument = System.Xml.XmlDocument;
 #endif
@@ -22,22 +15,17 @@ namespace NuGet.Updater.Extensions
 	public static class XmlDocumentExtensions
 	{
 		/// <summary>
-		/// Updates the PackageReferences with the given id in the given XmlDocument.
+		/// Runs an <see cref="UpdateOperation"/> on the PackageReferences contained in a <see cref="XmlDocument"/>.
 		/// </summary>
 		/// <param name="document"></param>
-		/// <param name="packageId"></param>
-		/// <param name="version"></param>
-		/// <param name="path"></param>
-		/// <param name="isDowngradeAllowed"></param>
+		/// <param name="operation"></param>
 		/// <returns></returns>
-		public static UpdateOperation[] UpdatePackageReferences(
+		public static IEnumerable<UpdateOperation> UpdatePackageReferences(
 			this XmlDocument document,
-			string packageId,
-			FeedVersion version,
-			string path,
-			bool isDowngradeAllowed)
+			UpdateOperation operation
+		)
 		{
-			var operations = new List<UpdateOperation>();
+			var packageId = operation.PackageId;
 
 			var packageReferences = document.SelectElements("PackageReference", $"[@Include='{packageId}' or @Update='{packageId}']");
 			var dotnetCliReferences = document.SelectElements("DotNetCliToolReference", $"[@Include='{packageId}' or @Update='{packageId}']");
@@ -48,16 +36,14 @@ namespace NuGet.Updater.Extensions
 
 				if(packageVersion.HasValue())
 				{
-					var currentVersion = new NuGetVersion(packageVersion);
+					operation = operation.WithPreviousVersion(packageVersion);
 
-					var operation = new UpdateOperation(isDowngradeAllowed, packageId, currentVersion, version, path);
-
-					if(operation.IsUpdate)
+					if(operation.ShouldProceed)
 					{
-						packageReference.SetAttribute("Version", version.Version.ToString());
+						packageReference.SetAttribute("Version", operation.UpdatedVersion.ToString());
 					}
 
-					operations.Add(operation);
+					yield return operation;
 				}
 				else
 				{
@@ -65,63 +51,47 @@ namespace NuGet.Updater.Extensions
 
 					if(node != null)
 					{
-						var currentVersion = new NuGetVersion(node.InnerText);
+						operation = operation.WithPreviousVersion(node.InnerText);
 
-						var operation = new UpdateOperation(isDowngradeAllowed, packageId, currentVersion, version, path);
-
-						if(operation.IsUpdate)
+						if(operation.ShouldProceed)
 						{
-							node.InnerText = version.Version.ToString();
+							node.InnerText = operation.UpdatedVersion.ToString();
 						}
 
-						operations.Add(operation);
+						yield return operation;
 					}
 				}
 			}
-
-			return operations.ToArray();
 		}
 
 		/// <summary>
-		/// Updates the dependencies with the given id in the given XmlDocument.
+		/// Runs an <see cref="UpdateOperation"/> on the dependencies contained in a <see cref="XmlDocument"/> loaded from a .nuspec file.
 		/// </summary>
 		/// <param name="document"></param>
-		/// <param name="packageId"></param>
-		/// <param name="version"></param>
-		/// <param name="path"></param>
-		/// <param name="isDowngradeAllowed"></param>
+		/// <param name="operation"></param>
 		/// <returns></returns>
-		public static UpdateOperation[] UpdateDependencies(
+		public static IEnumerable<UpdateOperation> UpdateDependencies(
 			this XmlDocument document,
-			string packageId,
-			FeedVersion version,
-			string path,
-			bool isDowngradeAllowed
+			UpdateOperation operation
 		)
 		{
-			var operations = new List<UpdateOperation>();
-
-			foreach(var node in document.SelectElements("dependency", $"[@id='{packageId}']"))
+			foreach(var node in document.SelectElements("dependency", $"[@id='{operation.PackageId}']"))
 			{
 				var versionNodeValue = node.GetAttribute("version");
 
 				// only nodes with explicit version, skip expansion.
-				if(!versionNodeValue.Contains("{"))
+				if(!versionNodeValue.Contains("{", System.StringComparison.OrdinalIgnoreCase))
 				{
-					var currentVersion = new NuGetVersion(versionNodeValue);
-
-					var operation = new UpdateOperation(isDowngradeAllowed, packageId, currentVersion, version, path);
-
-					if(operation.IsUpdate)
+					operation = operation.WithPreviousVersion(versionNodeValue);
+					
+					if(operation.ShouldProceed)
 					{
-						node.SetAttribute("version", version.Version.ToString());
+						node.SetAttribute("version", operation.UpdatedVersion.ToString());
 					}
 
-					operations.Add(operation);
+					yield return operation;
 				}
 			}
-
-			return operations.ToArray();
 		}
 	}
 }

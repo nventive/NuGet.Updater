@@ -1,30 +1,38 @@
 ﻿using System;
+using System.IO;
 using NuGet.Shared.Entities;
 using NuGet.Shared.Extensions;
+using NuGet.Updater.Entities;
 using NuGet.Versioning;
 
 namespace NuGet.Updater.Log
 {
 	public class UpdateOperation
 	{
-		public UpdateOperation(bool isDowngradeAllowed, string packageName, NuGetVersion previousVersion, FeedVersion updatedVersion, string filePath)
+		private readonly bool _canDowngrade;
+
+		public UpdateOperation(string packageId, FeedVersion updatedVersion, bool canDowngrade)
+			: this(packageId, previousVersion: null, updatedVersion, filePath: null, canDowngrade)
 		{
-			Date = DateTimeOffset.Now;
-
-			PackageName = packageName;
-			PreviousVersion = previousVersion;
-			UpdatedVersion = updatedVersion.Version;
-			FilePath = filePath;
-			FeedUri = updatedVersion.FeedUri;
-
-			IsLatestVersion = PreviousVersion == UpdatedVersion;
-			IsDowngrade = PreviousVersion.IsGreaterThan(UpdatedVersion) && isDowngradeAllowed;
-			IsUpdate = UpdatedVersion.IsGreaterThan(PreviousVersion) || (!IsLatestVersion && isDowngradeAllowed);
 		}
 
-		public DateTimeOffset Date { get; }
+		private UpdateOperation(string packageId, NuGetVersion previousVersion, FeedVersion updatedVersion, string filePath, bool canDowngrade)
+			: this(packageId, previousVersion, updatedVersion.Version, updatedVersion.FeedUri, filePath, canDowngrade)
+		{
+		}
 
-		public string PackageName { get; }
+		private UpdateOperation(string packageId, NuGetVersion previousVersion, NuGetVersion updatedVersion, Uri feedUri, string filePath, bool canDowngrade)
+		{
+			_canDowngrade = canDowngrade;
+
+			PackageId = packageId;
+			PreviousVersion = previousVersion;
+			UpdatedVersion = updatedVersion;
+			FilePath = filePath;
+			FeedUri = feedUri;
+		}
+
+		public string PackageId { get; }
 
 		public NuGetVersion PreviousVersion { get; }
 
@@ -34,30 +42,46 @@ namespace NuGet.Updater.Log
 
 		public Uri FeedUri { get; }
 
-		public bool IsUpdate { get; }
+		public bool ShouldProceed => UpdatedVersion.IsGreaterThan(PreviousVersion) || ShouldDowngrade;
 
-		public bool IsLatestVersion { get; }
-
-		public bool IsDowngrade { get; }
+		public bool ShouldDowngrade => PreviousVersion.IsGreaterThan(UpdatedVersion) && _canDowngrade;
 
 		public string GetLogMessage()
 		{
-			if(IsLatestVersion)
+			if(PreviousVersion == UpdatedVersion)
 			{
-				return $"Version [{UpdatedVersion}] of [{PackageName}] already found in [{FilePath}]. Skipping.";
+				return $"Version [{UpdatedVersion}] of [{PackageId}] already found in [{FilePath}]. Skipping.";
 			}
-			else if(IsDowngrade)
+			else if(ShouldDowngrade)
 			{
-				return $"Downgrading [{PackageName}] from [{PreviousVersion}] to [{UpdatedVersion}] in [{FilePath}]";
+				return $"Downgrading [{PackageId}] from [{PreviousVersion}] to [{UpdatedVersion}] in [{FilePath}]";
 			}
-			else if(IsUpdate)
+			else if(ShouldProceed)
 			{
-				return $"Updating [{PackageName}] from [{PreviousVersion}] to [{UpdatedVersion}] in [{FilePath}]";
+				return $"Updating [{PackageId}] from [{PreviousVersion}] to [{UpdatedVersion}] in [{FilePath}]";
 			}
 			else
 			{ 
-				return $"Version [{PreviousVersion}] of [{PackageName}] found in [{FilePath}]. Higher than [{UpdatedVersion}]. Skipping.";
+				return $"Version [{PreviousVersion}] of [{PackageId}] found in [{FilePath}]. Higher than [{UpdatedVersion}]. Skipping.";
 			}
 		}
+
+		public UpdateOperation WithPreviousVersion(string version) => new UpdateOperation(
+			PackageId,
+			previousVersion: new NuGetVersion(version),
+			UpdatedVersion,
+			FeedUri,
+			FilePath,
+			_canDowngrade
+		);
+
+		public UpdateOperation WithFilePath(string filePath) => new UpdateOperation(
+			PackageId,
+			PreviousVersion,
+			UpdatedVersion,
+			FeedUri,
+			filePath,
+			_canDowngrade
+		);
 	}
 }

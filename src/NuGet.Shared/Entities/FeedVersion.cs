@@ -10,6 +10,11 @@ namespace NuGet.Shared.Entities
 		{
 		}
 
+		public FeedVersion(NuGetVersion version)
+			: this(version, null)
+		{
+		}
+
 		public FeedVersion(NuGetVersion version, Uri feedUri)
 		{
 			Version = version;
@@ -19,6 +24,8 @@ namespace NuGet.Shared.Entities
 		public NuGetVersion Version { get; }
 
 		public Uri FeedUri { get; }
+
+		public bool IsOverride => FeedUri == null;
 
 		public int CompareTo(FeedVersion other) => Version.CompareTo(other.Version);
 	}

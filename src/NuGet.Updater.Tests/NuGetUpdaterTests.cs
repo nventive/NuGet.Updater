@@ -30,8 +30,8 @@ namespace NuGet.Updater.Tests
 			{
 				SolutionRoot = "MySolution.sln",
 				UpdateTarget = FileType.Unspecified,
-				TargetVersions = new[] { "stable" },
-				Feeds = new List<IPackageFeed> { TestFeed },
+				TargetVersions = { "stable" },
+				Feeds = { TestFeed },
 			};
 
 			var logger = new UpdaterLogger(Console.Out);

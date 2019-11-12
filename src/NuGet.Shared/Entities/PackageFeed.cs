@@ -53,7 +53,7 @@ namespace NuGet.Shared.Entities
 				logMessage.AppendLine(versions.Length > 0 ? $"Found {versions.Length} versions from {author}" : $"No versions from {author} found");
 			}
 
-			Logger.LogInformation(logMessage.ToString());
+			Logger.LogInformation(logMessage.ToString().Trim());
 
 			return versions
 				.Select(m => new FeedVersion(m.Version, Url))

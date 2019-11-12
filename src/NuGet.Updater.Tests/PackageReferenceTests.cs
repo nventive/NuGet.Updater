@@ -7,6 +7,7 @@ using NuGet.Shared.Entities;
 using NuGet.Updater.Entities;
 using NuGet.Updater.Extensions;
 using NuGet.Updater.Tests.Entities;
+using NuGet.Versioning;
 
 namespace NuGet.Updater.Tests
 {
@@ -27,8 +28,8 @@ namespace NuGet.Updater.Tests
 		{
 			var parameters = new UpdaterParameters
 			{
-				TargetVersions = new[] { "beta" },
-				Feeds = new[] { TestFeed },
+				TargetVersions = { "beta" },
+				Feeds = { TestFeed },
 			};
 
 			var packageVersion = "1.0-beta.1";
@@ -47,7 +48,7 @@ namespace NuGet.Updater.Tests
 		{
 			var parameters = new UpdaterParameters
 			{
-				TargetVersions = new[] { "stable" },
+				TargetVersions = { "stable" },
 			};
 
 			var packageVersion = "1.0-beta.1";
@@ -58,6 +59,26 @@ namespace NuGet.Updater.Tests
 			var version = await reference.GetLatestVersion(CancellationToken.None, parameters);
 
 			Assert.IsNull(version);
+		}
+
+		[TestMethod]
+		public async Task GivenManualUpdates_AndVersionNotInFeed_ManualVersionIsFound()
+		{
+			var reference = new PackageReference("nventive.NuGet.Updater", "1.0");
+
+			var parameters = new UpdaterParameters
+			{
+				TargetVersions = { "stable" },
+				Feeds = { TestFeed },
+				VersionOverrides =
+				{
+					{ reference.Identity.Id, reference.Identity.Version },
+				},
+			};
+
+			var version = await reference.GetLatestVersion(CancellationToken.None, parameters);
+
+			Assert.AreEqual(version.Version, reference.Identity.Version);
 		}
 	}
 }

@@ -4,25 +4,17 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Uno.Extensions;
 
 namespace NuGet.Shared.Helpers
 {
-	internal class FileHelper
+	public class FileHelper
 	{
-		public static void LogToFile(string outputFilePath, IEnumerable<string> log)
+		public static void LogToFile(string outputFilePath, string line)
 		{
-			if (File.Exists(outputFilePath))
+			using (var writer = File.AppendText(outputFilePath))
 			{
-				File.WriteAllText(outputFilePath, "");
-			}
-
-			using (var file = File.OpenWrite(outputFilePath))
-			using (var writer = new StreamWriter(file))
-			{
-				foreach (var line in log)
-				{
-					writer.WriteLine(line);
-				}
+				writer.WriteLine(line);
 			}
 		}
 
@@ -32,7 +24,7 @@ namespace NuGet.Shared.Helpers
 				? "*" + extensionFilter
 				: null;
 
-			if (nameFilter != null && filter == null)
+			if (nameFilter.HasValue())
 			{
 				filter = nameFilter;
 			}

@@ -50,6 +50,12 @@ namespace NuGet.Updater.Extensions
 			UpdaterParameters parameters
 		)
 		{
+			if(parameters.VersionOverrides.TryGetValue(reference.Identity.Id, out var manualVersion))
+			{
+				PackageFeed.Logger.LogInformation($"Overriding version for {reference.Identity.Id}");
+				return new FeedVersion(manualVersion);
+			}
+
 			var availableVersions = await Task.WhenAll(parameters
 				.Feeds
 				.Select(f => f.GetPackageVersions(ct, reference, parameters.PackageAuthor))

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NuGet.Common;
-using NuGet.Shared.Helpers;
 using NuGet.Updater.Entities;
 using NuGet.Updater.Extensions;
 using NuGet.Updater.Helpers;
@@ -16,9 +15,9 @@ namespace NuGet.Updater.Log
 	{
 		private readonly List<UpdateOperation> _updateOperations = new List<UpdateOperation>();
 		private readonly TextWriter _writer;
-		private readonly string _summaryFilePath;
+		private readonly TextWriter _summaryWriter;
 
-		public UpdaterLogger(TextWriter writer, string summaryFilePath = null)
+		public UpdaterLogger(TextWriter writer, TextWriter summaryWriter = null)
 		{
 			_writer = writer
 #if DEBUG
@@ -26,7 +25,7 @@ namespace NuGet.Updater.Log
 #else
 				?? TextWriter.Null;
 #endif
-			_summaryFilePath = summaryFilePath;
+			_summaryWriter = summaryWriter;
 		}
 
 		public void Clear() => _updateOperations.Clear();
@@ -56,18 +55,20 @@ namespace NuGet.Updater.Log
 				Write(line);
 			}
 
-			if (_summaryFilePath != null)
+			if (_summaryWriter != null)
 			{
 				try
 				{
-					FileHelper.LogToFile(_summaryFilePath, GetSummary(parameters, includeUrl: true));
+					_summaryWriter.Write(string.Join(Environment.NewLine, GetSummary(parameters, includeUrl: true)));
 				}
 				catch (Exception ex)
 				{
-					Write($"Failed to write to {_summaryFilePath}. Reason : {ex.Message}");
+					Write($"Failed to write summary. Reason : {ex.Message}");
 				}
 			}
 		}
+
+		public IEnumerable<UpdateResult> GetResult() => _updateOperations.Where(o => o.ShouldProceed).Select(o => o.ToUpdateResult()).Distinct();
 
 		private IEnumerable<string> GetSummary(UpdaterParameters parameters, bool includeUrl = false)
 		{
@@ -83,12 +84,12 @@ namespace NuGet.Updater.Log
 				yield return line;
 			}
 
-			foreach(var message in LogPackageOperations(_updateOperations.Where(o => o.IsUpdate), isUpdate: true, includeUrl))
+			foreach(var message in LogPackageOperations(_updateOperations.Where(o => o.ShouldProceed), isUpdate: true, includeUrl))
 			{
 				yield return message;
 			}
 
-			foreach(var message in LogPackageOperations(_updateOperations.Where(o => !o.IsUpdate), isUpdate: false, includeUrl))
+			foreach(var message in LogPackageOperations(_updateOperations.Where(o => !o.ShouldProceed), isUpdate: false, includeUrl))
 			{
 				yield return message;
 			}
@@ -103,7 +104,7 @@ namespace NuGet.Updater.Log
 
 			var packages = operations
 				.Select(o => (
-					name: o.PackageName,
+					name: o.PackageId,
 					version: isUpdate ? o.UpdatedVersion : o.PreviousVersion,
 					uri: o.FeedUri
 				))

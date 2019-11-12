@@ -12,9 +12,9 @@ namespace NuGet.Shared.Helpers
 	/// <summary>
 	/// UAP-Specific methods.
 	/// </summary>
-	internal class FileHelper
+	public class FileHelper
 	{
-		public static void LogToFile(string outputFilePath, IEnumerable<string> log)
+		public static void LogToFile(string outputFilePath, string line)
 		{
 		}
 

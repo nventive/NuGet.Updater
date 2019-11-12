@@ -113,7 +113,7 @@ namespace NuGet.Shared.Helpers
 				file = Path.Combine(solutionFolder, target.GetDescription());
 			}
 
-			if(file != null && File.Exists(file))
+			if(file.HasValue() && File.Exists(file))
 			{
 				log.LogInformation($"Found {target.GetDescription()}");
 				return file;
@@ -138,7 +138,7 @@ namespace NuGet.Shared.Helpers
 			var files = await FileHelper.GetFiles(ct, solutionFolder, extensionFilter: ".nuspec");
 
 			//Nuspec files are generated in obj when using the new csproj format
-			files = files.Where(f => !f.Contains("\\obj\\")).ToArray();
+			files = files.Where(f => !f.Contains("\\obj\\", StringComparison.OrdinalIgnoreCase)).ToArray();
 
 			log.LogInformation($"Found {files.Length} nuspec files");
 
