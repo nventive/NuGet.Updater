@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -9,6 +10,7 @@ using NuGet.Shared.Helpers;
 using NuGet.Updater.Entities;
 using NuGet.Updater.Extensions;
 using NuGet.Updater.Log;
+using Uno.Extensions;
 
 #if UAP
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
@@ -25,20 +27,20 @@ namespace NuGet.Updater
 		private readonly UpdaterParameters _parameters;
 		private readonly UpdaterLogger _log;
 
-		public static async Task<bool> UpdateAsync(
+		public static async Task<IEnumerable<UpdateResult>> UpdateAsync(
 			CancellationToken ct,
 			UpdaterParameters parameters,
 			TextWriter logWriter = null,
-			string summaryOutputFilePath = null
+			TextWriter summaryWriter = null
 		)
 		{
-			var updater = new NuGetUpdater(parameters, logWriter, summaryOutputFilePath);
+			var updater = new NuGetUpdater(parameters, logWriter, summaryWriter);
 
 			return await updater.UpdatePackages(ct);
 		}
 
-		public NuGetUpdater(UpdaterParameters parameters, TextWriter logWriter, string summaryOutputFilePath)
-			: this(parameters, new UpdaterLogger(logWriter, summaryOutputFilePath))
+		public NuGetUpdater(UpdaterParameters parameters, TextWriter logWriter, TextWriter summaryWriter)
+			: this(parameters, new UpdaterLogger(logWriter, summaryWriter))
 		{
 		}
 
@@ -50,7 +52,7 @@ namespace NuGet.Updater
 			PackageFeed.Logger = _log;
 		}
 
-		public async Task<bool> UpdatePackages(CancellationToken ct)
+		public async Task<IEnumerable<UpdateResult>> UpdatePackages(CancellationToken ct)
 		{
 			_log.Clear();
 
@@ -62,17 +64,31 @@ namespace NuGet.Updater
 
 			foreach(var package in packages)
 			{
-				var latestVersion = package.Version;
-
-				if(latestVersion == null)
+				if(package.Version == null)
 				{
-					_log.Write($"Skipping [{package.PackageId}]: no {string.Join(" or ", _parameters.TargetVersions)} version found.");
+					var targetVersionText = string.Join(" or ", _parameters.TargetVersions);
+
+					if(targetVersionText.HasValue())
+					{
+						targetVersionText += " ";
+					}
+
+					_log.Write($"Skipping [{package.PackageId}]: no {targetVersionText}version found.");
 				}
 				else
 				{
-					_log.Write($"Latest matching version for [{package.PackageId}] is [{latestVersion.Version}] on {latestVersion.FeedUri}");
+					var operation = package.ToUpdateOperation(_parameters.IsDowngradeAllowed);
 
-					_log.Write(await UpdateFiles(ct, package.PackageId, latestVersion, package.Reference.Files, documents));
+					if(package.Version.IsOverride)
+					{
+						_log.Write($"Version forced to [{operation.UpdatedVersion}] for [{operation.PackageId}]");
+					}
+					else
+					{
+						_log.Write($"Latest matching version for [{operation.PackageId}] is [{operation.UpdatedVersion}] on {operation.FeedUri}");
+					}
+
+					_log.Write(await UpdateFiles(ct, operation, package.Reference.Files, documents));
 				}
 
 				_log.Write("");
@@ -80,7 +96,7 @@ namespace NuGet.Updater
 
 			_log.WriteSummary(_parameters);
 
-			return true;
+			return _log.GetResult();
 		}
 
 		/// <summary>
@@ -94,8 +110,11 @@ namespace NuGet.Updater
 			var references = await SolutionHelper.GetPackageReferences(ct, _parameters.SolutionRoot, _parameters.UpdateTarget, _log);
 
 			_log.Write($"Found {references.Length} references");
-			_log.Write("");
-			_log.Write($"Retrieving packages from {_parameters.Feeds.Count} feeds");
+
+			if(_parameters.Feeds.Any())
+			{
+				_log.Write($"Retrieving packages from {_parameters.Feeds.Count} feeds");
+			}
 
 			foreach(var reference in references.OrderBy(r => r.Identity))
 			{
@@ -107,8 +126,6 @@ namespace NuGet.Updater
 				}
 
 				packages.Add(new UpdaterPackage(reference, await reference.GetLatestVersion(ct, _parameters)));
-
-				_log.Write("");
 			}
 
 			return packages.ToArray();
@@ -118,14 +135,12 @@ namespace NuGet.Updater
 		/// Updates a package to the given value in the given files.
 		/// </summary>
 		/// <param name="ct"></param>
-		/// <param name="packageId"></param>
-		/// <param name="version"></param>
+		/// <param name="operation"></param>
 		/// <param name="targetFiles"></param>
 		/// <returns></returns>
 		private async Task<UpdateOperation[]> UpdateFiles(
 		   CancellationToken ct,
-		   string packageId,
-		   FeedVersion version,
+		   UpdateOperation operation,
 		   Dictionary<FileType, string[]> targetFiles,
 		   Dictionary<string, XmlDocument> documents
 	   )
@@ -138,19 +153,27 @@ namespace NuGet.Updater
 
 				foreach(var path in files.Value)
 				{
-					var document = documents[path];
-					var updates = new UpdateOperation[0];
+					var document = documents.GetValueOrDefault(path);
+
+					if(document == null)
+					{
+						continue;
+					}
+
+					IEnumerable<UpdateOperation> updates = Array.Empty<UpdateOperation>();
+
+					operation = operation.WithFilePath(path);
 
 					if(fileType.HasFlag(FileType.Nuspec))
 					{
-						updates = document.UpdateDependencies(packageId, version, path, _parameters.IsDowngradeAllowed);
+						updates = document.UpdateDependencies(operation);
 					}
 					else if(fileType.HasAnyFlag(FileType.DirectoryProps, FileType.DirectoryTargets, FileType.Csproj))
 					{
-						updates = document.UpdatePackageReferences(packageId, version, path, _parameters.IsDowngradeAllowed);
+						updates = document.UpdatePackageReferences(operation);
 					}
 
-					if(updates.Any(u => u.IsUpdate))
+					if(!_parameters.IsDryRun && updates.Any(u => u.ShouldProceed))
 					{
 						await document.Save(ct, path);
 					}

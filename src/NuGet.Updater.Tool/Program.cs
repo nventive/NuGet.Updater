@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
+using Newtonsoft.Json;
+using NuGet.Packaging;
 using NuGet.Shared.Entities;
+using NuGet.Shared.Helpers;
+using NuGet.Shared.Log;
 using NuGet.Updater.Entities;
+using NuGet.Versioning;
 
 namespace NuGet.Updater.Tool
 {
@@ -21,6 +27,7 @@ namespace NuGet.Updater.Tool
 				var isHelp = false;
 				var isSilent = false;
 				string summaryFile = default;
+				string resultFile = default;
 
 				var options = new OptionSet
 				{
@@ -36,6 +43,9 @@ namespace NuGet.Updater.Tool
 					{ "useNuGetorg|n", "Whether to use packages from NuGet.org", _ => Set(p => p.Feeds.Add(PackageFeed.NuGetOrg)) },
 					{ "silent", "Suppress all output from NuGet Updater", _ => isSilent = true },
 					{ "strict", "Whether to use versions with only the specified version tag (ie. dev, but not dev.test)", _ => Set(p => p.Strict = true) },
+					{ "dryrun", "Runs the updater but doesn't write the updates to files.", _ => Set(p => p.IsDryRun = true) },
+					{ "result|r=", "The path to the file where the update result should be saved.", s => resultFile = s },
+					{ "versionOverrides=", "The path to a JSON file to force specifc versions to be used; format should be the same as the result file", s => Set(p => p.VersionOverrides.AddRange(LoadManualOperations(s))) },
 				};
 
 				_isParameterSet = false;
@@ -43,9 +53,6 @@ namespace NuGet.Updater.Tool
 				{
 					SolutionRoot = Environment.CurrentDirectory,
 					UpdateTarget = FileType.All,
-					Feeds = new List<IPackageFeed>(),
-					PackagesToIgnore = new List<string>(),
-					PackagesToUpdate = new List<string>(),
 				};
 
 				options.Parse(args);
@@ -58,9 +65,11 @@ namespace NuGet.Updater.Tool
 				}
 				else
 				{
-					var updater = new NuGetUpdater(_parameters, isSilent ? null : Console.Out, summaryFile);
+					var updater = new NuGetUpdater(_parameters, isSilent ? null : Console.Out, GetSummaryWriter(summaryFile));
 
-					await updater.UpdatePackages(CancellationToken.None);
+					var result = await updater.UpdatePackages(CancellationToken.None);
+
+					Save(result, resultFile);
 				}
 			}
 			catch(Exception ex)
@@ -75,6 +84,32 @@ namespace NuGet.Updater.Tool
 			_isParameterSet = true;
 		}
 
-		private static string[] GetList(string value) => !string.IsNullOrEmpty(value) ? value.Split(",;".ToArray(), StringSplitOptions.RemoveEmptyEntries) : null;
+		private static TextWriter GetSummaryWriter(string summaryFile) => summaryFile == null ? null : new SimpleTextWriter(line => FileHelper.LogToFile(summaryFile, line));
+
+		private static void Save(IEnumerable<UpdateResult> result, string path)
+		{
+			if(path == null || path == "")
+			{
+				return;
+			}
+
+			var serializer = JsonSerializer.CreateDefault();
+
+			using(var writer = File.CreateText(path))
+			{
+				serializer.Serialize(writer, result);
+			}
+		}
+
+		private static Dictionary<string, NuGetVersion> LoadManualOperations(string inputFilePath)
+		{
+			using(var fileReader = File.OpenText(inputFilePath))
+			using(var jsonReader = new JsonTextReader(fileReader))
+			{
+				var result = JsonSerializer.CreateDefault().Deserialize<IEnumerable<UpdateResult>>(jsonReader);
+
+				return result.ToDictionary(r => r.PackageId, r => new NuGetVersion(r.UpdatedVersion));
+			}
+		}
 	}
 }

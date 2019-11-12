@@ -60,11 +60,6 @@ namespace NuGet.Updater.Extensions
 				throw new InvalidOperationException("The solution root must be specified");
 			}
 
-			if(parameters.Feeds.None())
-			{
-				throw new InvalidOperationException("At least one NuGet feed should be specified");
-			}
-
 			return parameters;
 		}
 	}

@@ -12,7 +12,7 @@
 		<Owners>nventive</Owners>
 		<Description>Nuget Updater allows to automatically update the NuGet packages in a solution at build time</Description>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-		<PackageIconUrl>https://nventive-email-assets.s3.amazonaws.com/packages/nv-package-logo%400%2C25x.png</PackageIconUrl>
+		<PackageIcon>icon.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/nventive/NuGet.Updater</PackageProjectUrl>
 	</PropertyGroup>
 
@@ -42,6 +42,13 @@
 		<Reference Include="../Packages/NuGet.Protocol/uap10.0/*.dll">
 			<Private>true</Private>
 		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="../icon.png">
+			<Pack>True</Pack>
+			<PackagePath />
+		</None>
 	</ItemGroup>
 
 	<Target Name="IncludeDependencies" AfterTargets="Build">
