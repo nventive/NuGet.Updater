@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using NuGet.Shared.Extensions;
 using NuGet.Updater.Log;
 using Uno.Extensions;
 
 #if UAP
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
+using XmlElement = Windows.Data.Xml.Dom.XmlElement;
 #else
 using XmlDocument = System.Xml.XmlDocument;
 #endif
@@ -25,6 +27,8 @@ namespace NuGet.Updater.Extensions
 			UpdateOperation operation
 		)
 		{
+			var operations = new List<UpdateOperation>();
+
 			var packageId = operation.PackageId;
 
 			var packageReferences = document.SelectElements("PackageReference", $"[@Include='{packageId}' or @Update='{packageId}']");
@@ -32,35 +36,58 @@ namespace NuGet.Updater.Extensions
 
 			foreach(var packageReference in packageReferences.Concat(dotnetCliReferences))
 			{
-				var packageVersion = packageReference.GetAttribute("Version");
+				var packageVersion = packageReference.GetAttributeOrChild("Version");
 
 				if(packageVersion.HasValue())
 				{
-					operation = operation.WithPreviousVersion(packageVersion);
+					var currentOperation = operation.WithPreviousVersion(packageVersion);
 
-					if(operation.ShouldProceed)
+					if(currentOperation.ShouldProceed)
 					{
-						packageReference.SetAttribute("Version", operation.UpdatedVersion.ToString());
+						packageReference.SetAttributeOrChild("Version", currentOperation.UpdatedVersion.ToString());
 					}
 
-					yield return operation;
+					operations.Add(currentOperation);
 				}
-				else
+			}
+
+			return operations;
+		}
+
+		/// <summary>
+		/// Gets the attribute or child (in this order) of the given <see cref="XmlElement"/> with the given name.
+		/// </summary>
+		private static string GetAttributeOrChild(this XmlElement element, string name)
+		{
+			var attribute = element.GetAttribute(name);
+
+			if(attribute.HasValue())
+			{
+				return attribute;
+			}
+
+			return element.SelectNode(name)?.InnerText;
+		}
+
+		/// <summary>
+		/// Sets the attribute or child (in this order) of the given <see cref="XmlElement"/> with the given name.
+		/// </summary>
+		private static void SetAttributeOrChild(this XmlElement element, string name, string value)
+		{
+			var attribute = element.GetAttribute(name);
+
+			if(attribute.HasValue())
+			{
+				element.SetAttribute(name, value);
+			}
+			else
+			{
+				var node = element.SelectNode(name);
+
+				if(node != null)
 				{
-					var node = packageReference.SelectNode("Version");
-
-					if(node != null)
-					{
-						operation = operation.WithPreviousVersion(node.InnerText);
-
-						if(operation.ShouldProceed)
-						{
-							node.InnerText = operation.UpdatedVersion.ToString();
-						}
-
-						yield return operation;
-					}
-				}
+					node.InnerText = value;
+				} 
 			}
 		}
 
@@ -75,6 +102,8 @@ namespace NuGet.Updater.Extensions
 			UpdateOperation operation
 		)
 		{
+			var operations = new List<UpdateOperation>();
+
 			foreach(var node in document.SelectElements("dependency", $"[@id='{operation.PackageId}']"))
 			{
 				var versionNodeValue = node.GetAttribute("version");
@@ -82,16 +111,18 @@ namespace NuGet.Updater.Extensions
 				// only nodes with explicit version, skip expansion.
 				if(!versionNodeValue.Contains("{", System.StringComparison.OrdinalIgnoreCase))
 				{
-					operation = operation.WithPreviousVersion(versionNodeValue);
+					var currentOperation = operation.WithPreviousVersion(versionNodeValue);
 					
-					if(operation.ShouldProceed)
+					if(currentOperation.ShouldProceed)
 					{
-						node.SetAttribute("version", operation.UpdatedVersion.ToString());
+						node.SetAttribute("version", currentOperation.UpdatedVersion.ToString());
 					}
 
-					yield return operation;
+					operations.Add(currentOperation);
 				}
 			}
+
+			return operations;
 		}
 	}
 }

@@ -8,12 +8,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Added NuGet.Downloader
+
 #### NuGet.Updater:
 - Added option to do a dry run
 - Added option to have a summary of the operations exectued, allowing to re-execute a specific run
 
 ### Changed
 - Re-organized code to improve reusability
+
+### Fixed
+- Fixed a double call of the method used to update the documents; this was causing the update to work but a wrong output.
 
 ## Version 1.0
 

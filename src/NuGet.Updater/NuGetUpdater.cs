@@ -64,7 +64,9 @@ namespace NuGet.Updater
 
 			foreach(var package in packages)
 			{
-				if(package.Version == null)
+				var version = package.Version;
+
+				if(version == null)
 				{
 					var targetVersionText = string.Join(" or ", _parameters.TargetVersions);
 
@@ -79,7 +81,7 @@ namespace NuGet.Updater
 				{
 					var operation = package.ToUpdateOperation(_parameters.IsDowngradeAllowed);
 
-					if(package.Version.IsOverride)
+					if(version.IsOverride)
 					{
 						_log.Write($"Version forced to [{operation.UpdatedVersion}] for [{operation.PackageId}]");
 					}
@@ -90,8 +92,6 @@ namespace NuGet.Updater
 
 					_log.Write(await UpdateFiles(ct, operation, package.Reference.Files, documents));
 				}
-
-				_log.Write("");
 			}
 
 			_log.WriteSummary(_parameters);
@@ -162,15 +162,15 @@ namespace NuGet.Updater
 
 					IEnumerable<UpdateOperation> updates = Array.Empty<UpdateOperation>();
 
-					operation = operation.WithFilePath(path);
+					var currentOperation = operation.WithFilePath(path);
 
 					if(fileType.HasFlag(FileType.Nuspec))
 					{
-						updates = document.UpdateDependencies(operation);
+						updates = document.UpdateDependencies(currentOperation);
 					}
 					else if(fileType.HasAnyFlag(FileType.DirectoryProps, FileType.DirectoryTargets, FileType.Csproj))
 					{
-						updates = document.UpdatePackageReferences(operation);
+						updates = document.UpdatePackageReferences(currentOperation);
 					}
 
 					if(!_parameters.IsDryRun && updates.Any(u => u.ShouldProceed))
