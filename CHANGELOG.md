@@ -15,9 +15,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Re-organized code to improve reusability
+- Improved summary structure
 
 ### Fixed
 - Fixed a double call of the method used to update the documents; this was causing the update to work but a wrong output.
+
+### Removed
+- Removed the "IncludeNuGetOrg" parameter; the NuGet feed must be added to the feeds instead (PackageFeed.NuGetOrg).
 
 ## Version 1.0
 

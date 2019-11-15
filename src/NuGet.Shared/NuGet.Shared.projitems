@@ -12,6 +12,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Entities\PackageNotFoundException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Extensions\PackageSourceExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Entities\LocalPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\MarkdownHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\StringHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Log\ConsoleLogger.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Entities\FeedVersion.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Entities\IPackageFeed.cs" />

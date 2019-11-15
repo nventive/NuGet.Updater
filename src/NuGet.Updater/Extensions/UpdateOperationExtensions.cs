@@ -14,7 +14,7 @@ namespace NuGet.Updater.Extensions
 		public static UpdateResult ToUpdateResult(this UpdateOperation operation) => new UpdateResult
 		{
 			PackageId = operation.PackageId,
-			PreviousVersion = operation.PreviousVersion.OriginalVersion,
+			OriginalVersion = operation.PreviousVersion.OriginalVersion,
 			UpdatedVersion = operation.UpdatedVersion.OriginalVersion,
 		};
 	}

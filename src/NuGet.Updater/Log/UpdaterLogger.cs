@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using NuGet.Common;
+using NuGet.Shared.Helpers;
 using NuGet.Updater.Entities;
 using NuGet.Updater.Extensions;
 using NuGet.Updater.Helpers;
@@ -50,7 +51,7 @@ namespace NuGet.Updater.Log
 
 		public void WriteSummary(UpdaterParameters parameters)
 		{
-			foreach (var line in GetSummary(parameters))
+			foreach (var line in GetSummary(parameters, includeUrl: true))
 			{
 				Write(line);
 			}
@@ -68,7 +69,9 @@ namespace NuGet.Updater.Log
 			}
 		}
 
-		public IEnumerable<UpdateResult> GetResult() => _updateOperations.Where(o => o.ShouldProceed).Select(o => o.ToUpdateResult()).Distinct();
+		public IEnumerable<UpdateResult> GetResult() => _updateOperations
+			.Select(o => o.ToUpdateResult())
+			.Distinct();
 
 		private IEnumerable<string> GetSummary(UpdaterParameters parameters, bool includeUrl = false)
 		{
@@ -79,11 +82,6 @@ namespace NuGet.Updater.Log
 				yield return $"No packages have been updated.";
 			}
 
-			foreach(var line in parameters.GetSummary())
-			{
-				yield return line;
-			}
-
 			foreach(var message in LogPackageOperations(_updateOperations.Where(o => o.ShouldProceed), isUpdate: true, includeUrl))
 			{
 				yield return message;
@@ -92,6 +90,11 @@ namespace NuGet.Updater.Log
 			foreach(var message in LogPackageOperations(_updateOperations.Where(o => !o.ShouldProceed), isUpdate: false, includeUrl))
 			{
 				yield return message;
+			}
+
+			foreach(var line in parameters.GetSummary())
+			{
+				yield return line;
 			}
 		}
 
@@ -105,22 +108,38 @@ namespace NuGet.Updater.Log
 			var packages = operations
 				.Select(o => (
 					name: o.PackageId,
-					version: isUpdate ? o.UpdatedVersion : o.PreviousVersion,
+					oldVersion: o.PreviousVersion,
+					newVersion: isUpdate ? o.UpdatedVersion : o.PreviousVersion,
 					uri: o.FeedUri
 				))
 				.Distinct()
 				.ToArray();
 
-			yield return $"## {(isUpdate ? "Updated" : "Skipped")} {packages.Length} packages:";
+			yield return $"## {(isUpdate ? "Updated" : "Skipped")} {packages.Length} packages";
+
+			var tableBuilder = new MarkdownHelper.TableBuilder();
+
+			tableBuilder.AddHeader("Package");
+
+			if(isUpdate)
+			{
+				tableBuilder.AddHeader("Original version");
+				tableBuilder.AddHeader("Updated version");
+			}
+			else
+			{
+				tableBuilder.AddHeader("Version");
+			}
 
 			foreach(var p in packages)
 			{
-				var logMessage = $"[{p.name}] {(isUpdate ? "to" : "is at version")} [{p.version}]";
+				var oldVersionUrl = includeUrl ? PackageHelper.GetUrl(p.name, p.oldVersion, p.uri) : default;
+				var newVersionUrl = includeUrl ? PackageHelper.GetUrl(p.name, p.newVersion, p.uri) : default;
 
-				var url = includeUrl ? PackageHelper.GetUrl(p.name, p.version, p.uri) : default;
-
-				yield return url == null ? $"- {logMessage}" : $"- [{logMessage}]({url})";
+				tableBuilder.AddLine(p.name, MarkdownHelper.Link(p.oldVersion.OriginalVersion, oldVersionUrl), isUpdate ? MarkdownHelper.Link(p.newVersion.OriginalVersion, newVersionUrl) : null);
 			}
+
+			yield return tableBuilder.Build();
 		}
 
 		#region ILogger
