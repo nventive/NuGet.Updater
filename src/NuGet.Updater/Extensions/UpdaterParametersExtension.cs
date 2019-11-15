@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NuGet.Shared.Entities;
 using NuGet.Shared.Extensions;
+using NuGet.Shared.Helpers;
 using NuGet.Updater.Entities;
 using Uno.Extensions;
 
@@ -14,42 +15,43 @@ namespace NuGet.Updater.Extensions
 		{
 			yield return $"## Configuration";
 
+			yield return $"- Targeting solution {MarkdownHelper.CodeBlock(parameters.SolutionRoot)}";
+
 			var files = parameters.UpdateTarget == FileType.All
-				? string.Join(", ", Enum
+				? Enum
 					.GetValues(typeof(FileType))
 					.Cast<FileType>()
 					.Select(t => t.GetDescription())
 					.Trim()
-				)
-				: parameters.UpdateTarget.GetDescription();
+				: new[] { parameters.UpdateTarget.GetDescription() };
 
-			yield return $"- Update targeting {files} files under {parameters.SolutionRoot}";
+			yield return $"- Updating files of type {MarkdownHelper.CodeBlocksEnumeration(files)}";
 
 			if(parameters.Feeds?.Any() ?? false)
 			{
-				yield return $"- Using NuGet packages from {string.Join(", ", parameters.Feeds.Select(s => s.Url))}";
+				yield return $"- Fetching packages from {MarkdownHelper.CodeBlocksEnumeration(parameters.Feeds.Select(s => s.Url.OriginalString))}";
 			}
 
 			if(parameters.PackageAuthor.HasValue())
 			{
-				yield return $"- Using only public packages authored by {parameters.PackageAuthor}";
+				yield return $"- Limiting to public packages authored by {MarkdownHelper.Bold(parameters.PackageAuthor)}";
 			}
 
-			yield return $"- Using {(parameters.Strict ? "exact " : "")}target version {string.Join(", then ", parameters.TargetVersions)}";
+			yield return $"- Using {MarkdownHelper.CodeBlocksEnumeration(parameters.TargetVersions)} versions {(parameters.Strict ? "(exact match)" : "")}";
 
 			if (parameters.IsDowngradeAllowed)
 			{
-				yield return $"- Allowing package downgrade if a lower version is found";
+				yield return $"- Downgrading packages if a lower version is found";
 			}
 
 			if (parameters.PackagesToIgnore?.Any() ?? false)
 			{
-				yield return $"- Ignoring {string.Join(",", parameters.PackagesToIgnore)}";
+				yield return $"- Ignoring {MarkdownHelper.CodeBlocksEnumeration(parameters.PackagesToIgnore)}";
 			}
 
 			if (parameters.PackagesToUpdate?.Any() ?? false)
 			{
-				yield return $"- Updating only {string.Join(",", parameters.PackagesToUpdate)}";
+				yield return $"- Updating only {MarkdownHelper.CodeBlocksEnumeration(parameters.PackagesToUpdate)}";
 			}
 		}
 

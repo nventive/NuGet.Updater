@@ -7,7 +7,7 @@ namespace NuGet.Updater.Entities
 	{
 		public string PackageId { get; set; }
 
-		public string PreviousVersion { get; set; }
+		public string OriginalVersion { get; set; }
 
 		public string UpdatedVersion { get; set; }
 

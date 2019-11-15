@@ -27,11 +27,6 @@ namespace NuGet.Updater.Entities
 		public bool Strict { get; set; }
 
 		/// <summary>
-		/// Gets or sets a value indicating whether whether to include packages from NuGet.org.
-		/// </summary>
-		public bool IncludeNuGetOrg { get; set; }
-
-		/// <summary>
 		/// Gets or sets a value indicating whether whether the packages can be downgraded if the version found is lower than the current one.
 		/// </summary>
 		public bool IsDowngradeAllowed { get; set; }
