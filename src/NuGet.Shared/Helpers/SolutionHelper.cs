@@ -86,7 +86,7 @@ namespace NuGet.Shared.Helpers
 				files = Regex
 					.Matches(solutionContent, "[^\\s\"]*\\.csproj")
 					.Cast<Match>()
-					.Select(m => Path.Combine(solutionFolder, m.Value))
+					.Select(m => Path.Combine(solutionFolder, m.Value.Replace('\\', Path.DirectorySeparatorChar)))
 					.ToArray();
 			}
 
@@ -138,7 +138,7 @@ namespace NuGet.Shared.Helpers
 			var files = await FileHelper.GetFiles(ct, solutionFolder, extensionFilter: ".nuspec");
 
 			//Nuspec files are generated in obj when using the new csproj format
-			files = files.Where(f => !f.Contains("\\obj\\", StringComparison.OrdinalIgnoreCase)).ToArray();
+			files = files.Where(f => !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)).ToArray();
 
 			log.LogInformation($"Found {files.Length} nuspec files");
 
