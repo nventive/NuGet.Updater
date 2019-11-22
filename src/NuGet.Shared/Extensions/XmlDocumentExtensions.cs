@@ -45,19 +45,21 @@ namespace NuGet.Shared.Extensions
 
 				if(packageVersion.HasValue())
 				{
-					references.Add(new PackageIdentity(packageId, new NuGetVersion(packageReference.GetAttribute("Version"))));
+					references.Add(CreatePackageIdentity(packageId, packageReference.GetAttribute("Version")));
 				}
 				else
 				{
 					var node = packageReference.SelectNode("Version");
 					if(node != null)
 					{
-						references.Add(new PackageIdentity(packageId, new NuGetVersion(node.InnerText)));
+						references.Add(CreatePackageIdentity(packageId, node.InnerText));
 					}
 				}
 			}
 
-			return references.ToArray();
+			return references
+				.Trim()
+				.ToArray();
 		}
 
 		/// <summary>
@@ -68,8 +70,19 @@ namespace NuGet.Shared.Extensions
 		public static PackageIdentity[] GetDependencies(this XmlDocument document)
 			=> document
 				.SelectElements("dependency")
-				.Select(e => new PackageIdentity(e.GetAttribute("id"), new NuGetVersion(e.GetAttribute("version"))))
+				.Select(e => CreatePackageIdentity(e.GetAttribute("id"), e.GetAttribute("version")))
+				.Trim()
 				.ToArray();
+
+		private static PackageIdentity CreatePackageIdentity(string id, string version)
+		{
+			if(NuGetVersion.TryParse(version, out var parsedVersion))
+			{
+				return new PackageIdentity(id, parsedVersion);
+			}
+
+			return default;
+		}
 
 		#region Utilities
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Added NuGet.Downloader
+- Added proper parsing of the versions read in the files
 
 #### NuGet.Updater:
 - Added option to do a dry run
