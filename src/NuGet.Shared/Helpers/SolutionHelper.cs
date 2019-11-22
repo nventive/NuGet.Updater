@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
+using NuGet.Packaging.Core;
 using NuGet.Shared.Entities;
 using NuGet.Shared.Extensions;
 using NuGet.Versioning;
@@ -153,7 +154,7 @@ namespace NuGet.Shared.Helpers
 			}
 
 			var document = await file.LoadDocument(ct);
-			var references = new Dictionary<string, string>();
+			var references = Array.Empty<PackageIdentity>();
 
 			if(target.HasAnyFlag(FileType.Csproj, FileType.DirectoryProps, FileType.DirectoryTargets))
 			{
@@ -165,7 +166,8 @@ namespace NuGet.Shared.Helpers
 			}
 
 			return references
-				.Select(g => new PackageReference(g.Key, new NuGetVersion(g.Value), file, target))
+				.GroupBy(r => r.Id)
+				.Select(g => new PackageReference(g.Key, new NuGetVersion(g.FirstOrDefault().Version), file, target))
 				.ToArray();
 		}
 	}

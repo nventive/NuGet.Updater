@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using Uno.Extensions;
 
 #if UAP
@@ -27,9 +29,9 @@ namespace NuGet.Shared.Extensions
 		/// </summary>
 		/// <param name="document"></param>
 		/// <returns>A Dictionary where the key is the id of a package and the value its version.</returns>
-		public static Dictionary<string, string> GetPackageReferences(this XmlDocument document)
+		public static PackageIdentity[] GetPackageReferences(this XmlDocument document)
 		{
-			var references = new Dictionary<string, string>();
+			var references = new List<PackageIdentity>();
 
 			var packageReferences = document.SelectElements("PackageReference");
 			var dotnetCliReferences = document.SelectElements("DotNetCliToolReference");
@@ -43,19 +45,19 @@ namespace NuGet.Shared.Extensions
 
 				if(packageVersion.HasValue())
 				{
-					references.TryAdd(packageId, packageReference.GetAttribute("Version"));
+					references.Add(new PackageIdentity(packageId, new NuGetVersion(packageReference.GetAttribute("Version"))));
 				}
 				else
 				{
 					var node = packageReference.SelectNode("Version");
 					if(node != null)
 					{
-						references.TryAdd(packageId, node.InnerText);
+						references.Add(new PackageIdentity(packageId, new NuGetVersion(node.InnerText)));
 					}
 				}
 			}
 
-			return references;
+			return references.ToArray();
 		}
 
 		/// <summary>
@@ -63,10 +65,11 @@ namespace NuGet.Shared.Extensions
 		/// </summary>
 		/// <param name="document"></param>
 		/// <returns>A Dictionary where the key is the id of a package and the value its version.</returns>
-		public static Dictionary<string, string> GetDependencies(this XmlDocument document)
+		public static PackageIdentity[] GetDependencies(this XmlDocument document)
 			=> document
 				.SelectElements("dependency")
-				.ToDictionary(dependency => dependency.GetAttribute("id"), dependency => dependency.GetAttribute("version"));
+				.Select(e => new PackageIdentity(e.GetAttribute("id"), new NuGetVersion(e.GetAttribute("version"))))
+				.ToArray();
 
 		#region Utilities
 
@@ -143,7 +146,7 @@ namespace NuGet.Shared.Extensions
 		public static XmlNode SelectNode(this XmlElement element, string name) => element
 			.ChildNodes
 			.OfType<XmlElement>()
-			.FirstOrDefault(e => e.LocalName.ToString().Equals(name, StringComparison.OrdinalIgnoreCase));
+			.FirstOrDefault(e => e.LocalName.ToString().Equals(name, StringComparison.OrdinalIgnoreCase)); //LocalName is not a string in UWP
 		#endregion
 	}
 }
