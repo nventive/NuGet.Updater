@@ -42,16 +42,20 @@ namespace NuGet.Shared.Helpers
 			{
 				const FileType currentTarget = FileType.DirectoryProps;
 
-				var file = await GetDirectoryFile(ct, solutionPath, currentTarget, log);
-				packages.AddRange(await GetFileReferences(ct, file, currentTarget));
+				foreach(var file in await GetDirectoryFiles(ct, solutionPath, currentTarget, log))
+				{
+					packages.AddRange(await GetFileReferences(ct, file, currentTarget));
+				}
 			}
 
 			if(fileType.HasFlag(FileType.DirectoryTargets))
 			{
 				const FileType currentTarget = FileType.DirectoryTargets;
 
-				var file = await GetDirectoryFile(ct, solutionPath, currentTarget, log);
-				packages.AddRange(await GetFileReferences(ct, file, currentTarget));
+				foreach(var file in await GetDirectoryFiles(ct, solutionPath, currentTarget, log))
+				{
+					packages.AddRange(await GetFileReferences(ct, file, currentTarget));
+				}
 			}
 
 			if(fileType.HasFlag(FileType.Nuspec))
@@ -98,7 +102,7 @@ namespace NuGet.Shared.Helpers
 
 		//To improve: https://docs.microsoft.com/en-us/visualstudio/msbuild/customize-your-build?view=vs-2019#search-scope
 		//The file should be looked for at all levels
-		private static async Task<string> GetDirectoryFile(CancellationToken ct, string solutionPath, FileType target, ILogger log)
+		private static async Task<string[]> GetDirectoryFiles(CancellationToken ct, string solutionPath, FileType target, ILogger log)
 		{
 			string file;
 
@@ -106,7 +110,7 @@ namespace NuGet.Shared.Helpers
 			{
 				var matchingFiles = await FileHelper.GetFiles(ct, solutionPath, nameFilter: target.GetDescription());
 
-				file = matchingFiles.SingleOrDefault();
+				return matchingFiles.ToArray();
 			}
 			else
 			{
@@ -117,10 +121,10 @@ namespace NuGet.Shared.Helpers
 			if(file.HasValue() && File.Exists(file))
 			{
 				log.LogInformation($"Found {target.GetDescription()}");
-				return file;
+				return new[] { file };
 			}
 
-			return null;
+			return new string[0];
 		}
 
 		private static async Task<string[]> GetNuspecFiles(CancellationToken ct, string solutionPath, ILogger log)
