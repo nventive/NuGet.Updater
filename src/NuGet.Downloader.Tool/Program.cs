@@ -47,6 +47,7 @@ namespace NuGet.Downloader.Tool
 			catch(Exception ex)
 			{
 				Console.Error.WriteLine($"Failed to download nuget packages: {ex.Message}");
+				Console.Error.WriteLine($"{ex}");
 			}
 		}
 
