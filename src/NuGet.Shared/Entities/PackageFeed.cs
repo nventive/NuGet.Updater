@@ -30,7 +30,7 @@ namespace NuGet.Shared.Entities
 
 		public Uri Url => _packageSource.SourceUri;
 
-		public bool IsPrivate => _packageSource.Credentials == null;
+		public bool IsPrivate => _packageSource.Credentials != null;
 
 		public async Task<FeedVersion[]> GetPackageVersions(
 			CancellationToken ct,
