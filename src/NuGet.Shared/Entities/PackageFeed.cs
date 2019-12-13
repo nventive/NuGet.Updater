@@ -46,7 +46,7 @@ namespace NuGet.Shared.Entities
 
 			logMessage.AppendLine(versions.Length > 0 ? $"Found {versions.Length} versions" : "No versions found");
 
-			if(author.HasValue() && versions.Any())
+			if(!IsPrivate && author.HasValue() && versions.Any())
 			{
 				versions = versions.Where(m => m.HasAuthor(author)).ToArray();
 
