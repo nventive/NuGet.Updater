@@ -11,7 +11,7 @@ namespace NuGet.Shared.Entities
 		}
 
 		public PackageNotFoundException(PackageIdentity package, Uri sourceUrl)
-			: this($"{package} not found in {sourceUrl.AbsoluteUri}.")
+			: this($"{package} not found in {sourceUrl.AbsoluteUri}")
 		{
 		}
 

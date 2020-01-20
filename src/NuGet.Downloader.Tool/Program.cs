@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Mono.Options;
 using NuGet.Downloader.Entities;
 using NuGet.Shared.Entities;
-using NuGet.Shared.Extensions;
 using Uno.Extensions;
 
 namespace NuGet.Downloader.Tool
@@ -40,9 +39,14 @@ namespace NuGet.Downloader.Tool
 					options.WriteOptionDescriptions(Console.Out);
 				}
 
-				var packages = await NuGetDownloader.DownloadAsync(CancellationToken.None, parameters, ConsoleLogger.Instance);
+				var result = await NuGetDownloader.RunAsync(CancellationToken.None, parameters, ConsoleLogger.Instance);
 
-				Console.WriteLine($"{packages.Length} packages have been downloaded under {parameters.PackageOutputPath}");
+				Console.WriteLine($"{result.DownloadedPackages.Length} packages have been downloaded under {parameters.PackageOutputPath}");
+
+				if(parameters.Target != null)
+				{
+					Console.WriteLine($"{result.PushedPackages?.Length ?? 0} packages have been pushed to {parameters.Target.Url}");
+				}
 			}
 			catch(Exception ex)
 			{

@@ -101,17 +101,17 @@ namespace NuGet.Shared.Entities
 			return new LocalPackage(packageIdentity, localPackagePath);
 		}
 
-		public async Task PushPackage(CancellationToken ct, LocalPackage package)
+		public async Task<bool> PushPackage(CancellationToken ct, LocalPackage package)
 		{
 			var version = await _packageSource.GetPackageVersion(ct, package.Identity);
 
 			if(version != null)
 			{
-				Logger.LogInformation($"{package.Identity} already exists in source, skipping.");
-				return;
+				Logger.LogInformation($"{package.Identity} already exists in source, skipping");
+				return false;
 			}
 
-			await _packageSource.PushPackage(ct, package, Logger);
+			return await _packageSource.PushPackage(ct, package, Logger);
 		}
 	}
 }
