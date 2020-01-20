@@ -1,15 +1,17 @@
 ﻿using System;
-using System.IO;
+using NuGet.Packaging.Core;
 using NuGet.Shared.Entities;
-using NuGet.Shared.Extensions;
-using NuGet.Updater.Entities;
 using NuGet.Versioning;
 
 namespace NuGet.Updater.Log
 {
 	public class UpdateOperation
 	{
-		private readonly bool _canDowngrade;
+		public UpdateOperation(PackageIdentity identity, bool isIgnored)
+			: this(identity.Id, identity.Version, null, null, null, canDowngrade: false)
+		{
+			IsIgnored = isIgnored;
+		}
 
 		public UpdateOperation(string packageId, FeedVersion updatedVersion, bool canDowngrade)
 			: this(packageId, previousVersion: null, updatedVersion, filePath: null, canDowngrade)
@@ -23,14 +25,17 @@ namespace NuGet.Updater.Log
 
 		private UpdateOperation(string packageId, NuGetVersion previousVersion, NuGetVersion updatedVersion, Uri feedUri, string filePath, bool canDowngrade)
 		{
-			_canDowngrade = canDowngrade;
-
+			CanDowngrade = canDowngrade;
 			PackageId = packageId;
 			PreviousVersion = previousVersion;
 			UpdatedVersion = updatedVersion;
 			FilePath = filePath;
 			FeedUri = feedUri;
 		}
+
+		public bool IsIgnored { get; }
+
+		public bool CanDowngrade { get; }
 
 		public string PackageId { get; }
 
@@ -42,37 +47,13 @@ namespace NuGet.Updater.Log
 
 		public Uri FeedUri { get; }
 
-		public bool ShouldProceed => UpdatedVersion.IsGreaterThan(PreviousVersion) || ShouldDowngrade;
-
-		public bool ShouldDowngrade => PreviousVersion.IsGreaterThan(UpdatedVersion) && _canDowngrade;
-
-		public string GetLogMessage()
-		{
-			if(PreviousVersion == UpdatedVersion)
-			{
-				return $"Version [{UpdatedVersion}] of [{PackageId}] already found in [{FilePath}]. Skipping.";
-			}
-			else if(ShouldDowngrade)
-			{
-				return $"Downgrading [{PackageId}] from [{PreviousVersion}] to [{UpdatedVersion}] in [{FilePath}]";
-			}
-			else if(ShouldProceed)
-			{
-				return $"Updating [{PackageId}] from [{PreviousVersion}] to [{UpdatedVersion}] in [{FilePath}]";
-			}
-			else
-			{ 
-				return $"Version [{PreviousVersion}] of [{PackageId}] found in [{FilePath}]. Higher than [{UpdatedVersion}]. Skipping.";
-			}
-		}
-
 		public UpdateOperation WithPreviousVersion(string version) => new UpdateOperation(
 			PackageId,
 			previousVersion: new NuGetVersion(version),
 			UpdatedVersion,
 			FeedUri,
 			FilePath,
-			_canDowngrade
+			CanDowngrade
 		);
 
 		public UpdateOperation WithFilePath(string filePath) => new UpdateOperation(
@@ -81,7 +62,7 @@ namespace NuGet.Updater.Log
 			UpdatedVersion,
 			FeedUri,
 			filePath,
-			_canDowngrade
+			CanDowngrade
 		);
 	}
 }

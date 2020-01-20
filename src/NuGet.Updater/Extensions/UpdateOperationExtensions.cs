@@ -1,4 +1,5 @@
-﻿using NuGet.Updater.Entities;
+﻿using NuGet.Shared.Extensions;
+using NuGet.Updater.Entities;
 using NuGet.Updater.Log;
 
 namespace NuGet.Updater.Extensions
@@ -17,5 +18,35 @@ namespace NuGet.Updater.Extensions
 			OriginalVersion = operation.PreviousVersion.OriginalVersion,
 			UpdatedVersion = operation.UpdatedVersion.OriginalVersion,
 		};
+
+		public static bool ShouldProceed(this UpdateOperation operation)
+			=> !operation.IsIgnored
+			&& (operation.UpdatedVersion.IsGreaterThan(operation.PreviousVersion) || operation.IsDowngrade());
+
+		public static bool IsDowngrade(this UpdateOperation operation) => operation.PreviousVersion.IsGreaterThan(operation.UpdatedVersion) && operation.CanDowngrade;
+
+		public static string GetLogMessage(this UpdateOperation operation)
+		{
+			if(operation.IsIgnored)
+			{
+				return $"Ignoring {operation.PackageId}";
+			}
+			else if(operation.PreviousVersion == operation.UpdatedVersion)
+			{
+				return $"Skipping {operation.PackageId}: version {operation.UpdatedVersion} already found in {operation.FilePath}";
+			}
+			else if(operation.IsDowngrade())
+			{
+				return $"Downgrading {operation.PackageId} from {operation.PreviousVersion} to {operation.UpdatedVersion} in {operation.FilePath}";
+			}
+			else if(operation.ShouldProceed())
+			{
+				return $"Updating {operation.PackageId} from {operation.PreviousVersion} to {operation.UpdatedVersion} in {operation.FilePath}";
+			}
+			else
+			{
+				return $"Skipping {operation.PackageId}: version {operation.PreviousVersion} found in {operation.FilePath}, version {operation.UpdatedVersion} found in {operation.FeedUri}";
+			}
+		}
 	}
 }

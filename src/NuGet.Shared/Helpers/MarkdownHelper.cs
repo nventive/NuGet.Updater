@@ -31,33 +31,76 @@ namespace NuGet.Shared.Helpers
 			return $"`{text}`";
 		}
 
-		internal class TableBuilder
+		internal static string Table(
+			string[] header,
+			string[][] rows,
+			bool prettify
+		) => new TableBuilder()
+			.AddHeader(header)
+			.AddRows(rows)
+			.Build(prettify);
+
+		private class TableBuilder
 		{
 			private readonly List<string> _header = new List<string>();
 			private readonly List<string[]> _body = new List<string[]>();
 
-			public void AddHeader(string text) => _header.Add(text);
+			public TableBuilder AddHeader(params string[] header)
+				=> this.Apply(b => b._header.AddRange(header));
 
-			public void AddLine(params string[] columns) => _body.Add(columns.Trim().ToArray());
+			public TableBuilder AddRows(params string[][] rows)
+				=> this.Apply(b => _body.AddRange(rows));
 
-			public string Build()
+			public string Build(bool prettify)
 			{
 				var builder = new StringBuilder();
 
 				if(_header.Any())
 				{
 					builder
-						.AppendLine($"|{string.Join("|", _header)}|")
-						.AppendLine($"|{string.Join("|", Enumerable.Repeat("-", _header.Count))}|");
+						.AppendLine(GetTableRow(_header, prettify))
+						.AppendLine(GetTableRow(_header.Select(_ => "-"), prettify));
 				}
 
-				foreach(var line in _body)
+				foreach(var row in _body)
 				{
-					builder.AppendLine($"|{string.Join("|", line)}|");
+					builder.AppendLine(GetTableRow(row, prettify));
 				}
 
 				return builder.ToString();
 			}
+
+			private string GetTableRow(IEnumerable<string> row, bool prettify)
+				=> "|"
+					+ row.Select((c, index) => GetTableCellContent(c, index, prettify)).JoinBy("|")
+					+ "|";
+
+			private string GetTableCellContent(string content, int columnIndex, bool prettify)
+			{
+				var columnLength = prettify ? GetColumnLength(columnIndex) + 2 : 0;
+
+				if(columnLength <= content.Length)
+				{
+					return content;
+				}
+				else if(content == "-")
+				{
+					return string.Join("", Enumerable.Repeat(content, columnLength));
+				}
+				else
+				{
+					return content
+						.PadLeft(content.Length + 1)
+						.PadRight(columnLength);
+				}
+			}
+
+			private int GetColumnLength(int index)
+				=> _body
+					.Select(l => l.ElementAtOrDefault(index))
+					.Concat(_header.ElementAtOrDefault(index))
+					.Trim()
+					.Max(s => s.Length);
 		}
-	}
+}
 }

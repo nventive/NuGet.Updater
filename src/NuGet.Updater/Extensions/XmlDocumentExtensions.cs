@@ -42,7 +42,7 @@ namespace NuGet.Updater.Extensions
 				{
 					var currentOperation = operation.WithPreviousVersion(packageVersion);
 
-					if(currentOperation.ShouldProceed)
+					if(currentOperation.ShouldProceed())
 					{
 						packageReference.SetAttributeOrChild("Version", currentOperation.UpdatedVersion.ToString());
 					}
@@ -113,7 +113,7 @@ namespace NuGet.Updater.Extensions
 				{
 					var currentOperation = operation.WithPreviousVersion(versionNodeValue);
 					
-					if(currentOperation.ShouldProceed)
+					if(currentOperation.ShouldProceed())
 					{
 						node.SetAttribute("version", currentOperation.UpdatedVersion.ToString());
 					}

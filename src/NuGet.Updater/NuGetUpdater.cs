@@ -122,10 +122,11 @@ namespace NuGet.Updater
 					(_parameters.PackagesToUpdate.Any() && !_parameters.PackagesToUpdate.Contains(reference.Identity.Id))
 				)
 				{
+					_log.Write(new UpdateOperation(reference.Identity, isIgnored: true)); 
 					continue;
 				}
 
-				packages.Add(new UpdaterPackage(reference, await reference.GetLatestVersion(ct, _parameters)));
+				packages.Add(new UpdaterPackage(reference, await reference.GetLatestVersion(ct, packages, _parameters)));
 			}
 
 			return packages.ToArray();
@@ -173,7 +174,7 @@ namespace NuGet.Updater
 						updates = document.UpdatePackageReferences(currentOperation);
 					}
 
-					if(!_parameters.IsDryRun && updates.Any(u => u.ShouldProceed))
+					if(!_parameters.IsDryRun && updates.Any(u => u.ShouldProceed()))
 					{
 						await document.Save(ct, path);
 					}
