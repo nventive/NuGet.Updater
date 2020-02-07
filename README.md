@@ -6,7 +6,7 @@ NuGet packages manipulations made easy.
 
 ## NuGet.Updater
 
-Documentation about the NuGet.Updater can be found [here](src/NuGet.Updater.Tool/README.md)
+Documentation about the NuGet.Updater can be found [here](src/NuGet.Updater.Tool/Readme.md)
 
 ## NuGet.Downloader
 
