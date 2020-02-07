@@ -21,17 +21,22 @@ namespace NuGet.Updater.Tool
 		{
 			try
 			{
-				var (context, options) = ConsoleArgsParser.Parse(args);
-				context.Parameters.SolutionRoot ??= Environment.CurrentDirectory;
+				var context = ConsoleArgsParser.Parse(args);
 
-				if(context.IsHelp)
+				if (context.HasError)
+				{
+					Console.Error.WriteLine(context.Errors.FirstOrDefault().Message);
+					Environment.Exit(-1);
+				}
+				else if (context.IsHelp)
 				{
 					Console.WriteLine("NuGet Updater is a tool allowing the automatic update of the NuGet packages found in a solution");
 					Console.WriteLine();
-					options.WriteOptionDescriptions(Console.Out);
+					ConsoleArgsParser.GetOptions().WriteOptionDescriptions(Console.Out);
 				}
 				else
 				{
+					context.Parameters.SolutionRoot ??= Environment.CurrentDirectory;
 					var updater = new NuGetUpdater(context.Parameters, context.IsSilent ? null : Console.Out, GetSummaryWriter(context.SummaryFile));
 
 					var result = await updater.UpdatePackages(CancellationToken.None);

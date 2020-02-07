@@ -13,19 +13,20 @@ namespace NuGet.Updater.Tests
 		public void Given_HelpArgument_ContextIsHelp()
 		{
 			var arguments = new[] { "-help" };
-			var (context, _) = ConsoleArgsParser.Parse(arguments);
+			var context = ConsoleArgsParser.Parse(arguments);
 
 			Assert.IsTrue(context.IsHelp);
 		}
 
 		[TestMethod]
-		public void Given_InvalidArgument_ContextIsError()
+		public void Given_UnrecognizedArgument_ContextHasError()
 		{
 			var arguments = new[] { "--absolutelyWrong" };
-			var (context, _) = ConsoleArgsParser.Parse(arguments);
+			var context = ConsoleArgsParser.Parse(arguments);
 
-			//throw new NotImplementedException();
-			Assert.IsTrue(context.IsHelp);
+			Assert.IsTrue(context.HasError);
+			Assert.AreEqual(context.Errors[0].Argument, arguments[0]);
+			Assert.AreEqual(context.Errors[0].Type, ConsoleArgsParser.ConsoleArgError.ErrorType.UnrecognizedArgument);
 		}
 	}
 }
