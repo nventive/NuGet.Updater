@@ -19,24 +19,65 @@ namespace NuGet.Updater.Tool
 		{
 			return new OptionSet
 			{
-				{ "help|h", "Displays this help screen", s => context.IsHelp = true },
-				{ "solution=|s=", "The {path} to the solution or folder to update; defaults to the current folder", s => Set(p => p.Parameters.SolutionRoot = s) },
-				{ "feed=|f=", "A NuGet feed to use for the update; a private feed can be specified with the format {url|accessToken}; can be specified multiple times", s => Set(p => p.Parameters.Feeds.Add(PackageFeed.FromString(s)))},
-				{ "version=|versions=|v=", "The target {version} to use; latest stable is always considered; can be specified multiple times", s => Set(p => p.Parameters.TargetVersions.Add(s))},
-				{ "ignorePackages=|ignore=|i=", "A specific {package} to ignore; can be specified multiple times", s => Set(p => p.Parameters.PackagesToIgnore.Add(s)) },
-				{ "updatePackages=|update=|u=", "A specific {package} to update; not specifying this will update all packages found; can be specified multiple times", s => Set(p => p.Parameters.PackagesToUpdate.Add(s)) },
-				{ "packageAuthor=|a=", "The {author} of the packages to update; used for public packages only", s => Set(p => p.Parameters.PackageAuthor = s)},
-				{ "outputFile=|of=", "The {path} to a markdown file where the update summary will be written", s => context.SummaryFile = s },
-				{ "allowDowngrade|d", "Whether package downgrade is allowed", s => Set(p => p.Parameters.IsDowngradeAllowed = true)},
-				{ "useNuGetorg|n", "Whether to use packages from NuGet.org", _ => Set(p => p.Parameters.Feeds.Add(PackageFeed.NuGetOrg)) },
-				{ "silent", "Suppress all output from NuGet Updater", _ => context.IsSilent = true },
-				{ "strict", "Whether to use versions with only the specified version tag (ie. dev, but not dev.test)", _ => Set(p => p.Parameters.Strict = true) },
-				{ "dryrun", "Runs the updater but doesn't write the updates to files.", _ => Set(p => p.Parameters.IsDryRun = true) },
-				{ "result|r=", "The path to the file where the update result should be saved.", s => context.ResultFile = s },
-				{ "versionOverrides=", "The path to a JSON file to force specifc versions to be used; format should be the same as the result file", s => Set(p => p.Parameters.VersionOverrides.AddRange(LoadManualOperations(s))) },
+				{ "help|h", "Displays this help screen", TrySet(_ => context.IsHelp = true) },
+				{ "solution=|s=", "The {path} to the solution or folder to update; defaults to the current folder", TrySet(x => context.Parameters.SolutionRoot = x) },
+				{ "feed=|f=", "A NuGet feed to use for the update; a private feed can be specified with the format {url|accessToken}; can be specified multiple times", TryParseAndSet(PackageFeed.FromString, x => context.Parameters.Feeds.Add(x)) },
+				{ "version=|versions=|v=", "The target {version} to use; latest stable is always considered; can be specified multiple times", TrySet(x => context.Parameters.TargetVersions.Add(x)) },
+				{ "ignorePackages=|ignore=|i=", "A specific {package} to ignore; can be specified multiple times", TrySet(x => context.Parameters.PackagesToIgnore.Add(x)) },
+				{ "updatePackages=|update=|u=", "A specific {package} to update; not specifying this will update all packages found; can be specified multiple times", TrySet(x => context.Parameters.PackagesToUpdate.Add(x)) },
+				{ "packageAuthor=|a=", "The {author} of the packages to update; used for public packages only", TrySet(x => context.Parameters.PackageAuthor = x)},
+				{ "outputFile=|of=", "The {path} to a markdown file where the update summary will be written", TrySet(x => context.SummaryFile = x) },
+				{ "allowDowngrade|d", "Whether package downgrade is allowed", TrySet(x => context.Parameters.IsDowngradeAllowed = true)},
+				{ "useNuGetorg|n", "Whether to use packages from NuGet.org", TrySet(_ => context.Parameters.Feeds.Add(PackageFeed.NuGetOrg)) },
+				{ "silent", "Suppress all output from NuGet Updater", TrySet(_ => context.IsSilent = true) },
+				{ "strict", "Whether to use versions with only the specified version tag (ie. dev, but not dev.test)", TrySet(_ => context.Parameters.Strict = true) },
+				{ "dryrun", "Runs the updater but doesn't write the updates to files.", TrySet(_ => context.Parameters.IsDryRun = true) },
+				{ "result|r=", "The path to the file where the update result should be saved.", TrySet(x => context.ResultFile = x) },
+				{ "versionOverrides=", "The path to a JSON file to force specifc versions to be used; format should be the same as the result file", TryParseAndSet(LoadManualOperations, x => context.Parameters.VersionOverrides.AddRange(x)) },
 			};
 
-			void Set(Action<ConsoleArgsContext> setter) => context?.Apply(setter);
+			Action<string> TrySet(Action<string> set)
+			{
+				return value =>
+				{
+					if (context != null)
+					{
+						try
+						{
+							set(value);
+						}
+						catch(Exception e)
+						{
+							context.Errors.Add(new ConsoleArgError(value, ConsoleArgError.ErrorType.ValueAssignmentError, e));
+						}
+					}
+				};
+			}
+
+			Action<string> TryParseAndSet<T>(Func<string, T> parse, Action<T> set)
+			{
+				return value =>
+				{
+					if(context != null)
+					{
+						var isParsing = true;
+						try
+						{
+							var parsed = parse(value);
+							isParsing = false;
+							set(parsed);
+						}
+						catch(Exception e)
+						{
+							context.Errors.Add(new ConsoleArgError(
+								value,
+								isParsing ? ConsoleArgError.ErrorType.ValueParsingError : ConsoleArgError.ErrorType.ValueAssignmentError,
+								e
+							));
+						}
+					}
+				};
+			}
 		}
 
 		public static ConsoleArgsContext Parse(string[] args)
@@ -51,7 +92,7 @@ namespace NuGet.Updater.Tool
 				Parameters = new UpdaterParameters { UpdateTarget = FileType.All },
 			};
 			var unparsed = CreateOptionsFor(context).Parse(args);
-			context.Errors.AddRange(unparsed.Select(ConsoleArgError.UnrecognizedArgument));
+			context.Errors.AddRange(unparsed.Select(x => new ConsoleArgError(x, ConsoleArgError.ErrorType.UnrecognizedArgument)));
 
 			return context;
 		}
@@ -102,15 +143,18 @@ namespace NuGet.Updater.Tool
 			public string Message => Type switch
 			{
 				ErrorType.UnrecognizedArgument => "unrecognized argument: " + Argument,
+				ErrorType.ValueAssignmentError => "error while trying to assign value: " + Argument,
+				ErrorType.ValueParsingError => "error while trying to parse value: " + Argument,
+
 				_ => $"{Type}: " + Argument,
 			};
-
-			internal static ConsoleArgError UnrecognizedArgument(string argument) => new ConsoleArgError(argument, ErrorType.UnrecognizedArgument);
 
 			[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1602:Enumeration items should be documented", Justification = "Self-Explantory")]
 			public enum ErrorType
 			{
 				UnrecognizedArgument,
+				ValueAssignmentError,
+				ValueParsingError,
 			}
 		}
 	}
