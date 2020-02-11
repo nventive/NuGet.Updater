@@ -9,13 +9,28 @@ using NuGet.Updater.Entities;
 using NuGet.Versioning;
 using Uno.Extensions;
 
-namespace NuGet.Updater.Tool
+namespace NuGet.Updater.Tool.Arguments
 {
-	public static class ConsoleArgsParser
+	public partial class ConsoleArgsContext
 	{
-		public static OptionSet GetOptions() => CreateOptionsFor(default);
+		public static ConsoleArgsContext Parse(string[] args)
+		{
+			if(args.Length == 0)
+			{
+				return new ConsoleArgsContext { IsHelp = true };
+			}
 
-		private static OptionSet CreateOptionsFor(ConsoleArgsContext context = null)
+			var context = new ConsoleArgsContext
+			{
+				Parameters = new UpdaterParameters { UpdateTarget = FileType.All },
+			};
+			var unparsed = CreateOptionsFor(context).Parse(args);
+			context.Errors.AddRange(unparsed.Select(x => new ConsoleArgError(x, ConsoleArgErrorType.UnrecognizedArgument)));
+
+			return context;
+		}
+
+		internal static OptionSet CreateOptionsFor(ConsoleArgsContext context = null)
 		{
 			return new OptionSet
 			{
@@ -48,7 +63,7 @@ namespace NuGet.Updater.Tool
 						}
 						catch(Exception e)
 						{
-							context.Errors.Add(new ConsoleArgError(value, ConsoleArgError.ErrorType.ValueAssignmentError, e));
+							context.Errors.Add(new ConsoleArgError(value, ConsoleArgErrorType.ValueAssignmentError, e));
 						}
 					}
 				};
@@ -71,7 +86,7 @@ namespace NuGet.Updater.Tool
 						{
 							context.Errors.Add(new ConsoleArgError(
 								value,
-								isParsing ? ConsoleArgError.ErrorType.ValueParsingError : ConsoleArgError.ErrorType.ValueAssignmentError,
+								isParsing ? ConsoleArgErrorType.ValueParsingError : ConsoleArgErrorType.ValueAssignmentError,
 								e
 							));
 						}
@@ -80,22 +95,7 @@ namespace NuGet.Updater.Tool
 			}
 		}
 
-		public static ConsoleArgsContext Parse(string[] args)
-		{
-			if (args.Empty())
-			{
-				return new ConsoleArgsContext { IsHelp = true };
-			}
-
-			var context = new ConsoleArgsContext
-			{
-				Parameters = new UpdaterParameters { UpdateTarget = FileType.All },
-			};
-			var unparsed = CreateOptionsFor(context).Parse(args);
-			context.Errors.AddRange(unparsed.Select(x => new ConsoleArgError(x, ConsoleArgError.ErrorType.UnrecognizedArgument)));
-
-			return context;
-		}
+		public void WriteOptionDescriptions(TextWriter writer) => CreateOptionsFor(default).WriteOptionDescriptions(writer);
 
 		private static Dictionary<string, NuGetVersion> LoadManualOperations(string inputFilePath)
 		{
@@ -105,56 +105,6 @@ namespace NuGet.Updater.Tool
 				var result = JsonSerializer.CreateDefault().Deserialize<IEnumerable<UpdateResult>>(jsonReader);
 
 				return result.ToDictionary(r => r.PackageId, r => new NuGetVersion(r.UpdatedVersion));
-			}
-		}
-
-		public class ConsoleArgsContext
-		{
-			public bool HasError => Errors.Any();
-
-			public IList<ConsoleArgError> Errors { get; } = new List<ConsoleArgError>();
-
-			public bool IsHelp { get; set; }
-
-			public bool IsSilent { get; set; }
-
-			public string SummaryFile { get; set; }
-
-			public string ResultFile { get; set; }
-
-			public UpdaterParameters Parameters { get; set; }
-		}
-
-		public class ConsoleArgError
-		{
-			public ErrorType Type { get; set; }
-
-			public string Argument { get; set; }
-
-			public Exception Exception { get; set; }
-
-			public ConsoleArgError(string argument, ErrorType type, Exception e = null)
-			{
-				Argument = argument;
-				Type = type;
-				Exception = e;
-			}
-
-			public string Message => Type switch
-			{
-				ErrorType.UnrecognizedArgument => "unrecognized argument: " + Argument,
-				ErrorType.ValueAssignmentError => "error while trying to assign value: " + Argument,
-				ErrorType.ValueParsingError => "error while trying to parse value: " + Argument,
-
-				_ => $"{Type}: " + Argument,
-			};
-
-			[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1602:Enumeration items should be documented", Justification = "Self-Explantory")]
-			public enum ErrorType
-			{
-				UnrecognizedArgument,
-				ValueAssignmentError,
-				ValueParsingError,
 			}
 		}
 	}

@@ -4,14 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Mono.Options;
 using Newtonsoft.Json;
-using NuGet.Packaging;
-using NuGet.Shared.Entities;
 using NuGet.Shared.Helpers;
 using NuGet.Shared.Log;
 using NuGet.Updater.Entities;
-using NuGet.Versioning;
+using NuGet.Updater.Tool.Arguments;
 
 namespace NuGet.Updater.Tool
 {
@@ -21,7 +18,7 @@ namespace NuGet.Updater.Tool
 		{
 			try
 			{
-				var context = ConsoleArgsParser.Parse(args);
+				var context = ConsoleArgsContext.Parse(args);
 
 				if (context.HasError)
 				{
@@ -32,7 +29,7 @@ namespace NuGet.Updater.Tool
 				{
 					Console.WriteLine("NuGet Updater is a tool allowing the automatic update of the NuGet packages found in a solution");
 					Console.WriteLine();
-					ConsoleArgsParser.GetOptions().WriteOptionDescriptions(Console.Out);
+					context.WriteOptionDescriptions(Console.Out);
 				}
 				else
 				{
