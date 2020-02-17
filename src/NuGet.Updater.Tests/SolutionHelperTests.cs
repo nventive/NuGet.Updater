@@ -10,6 +10,7 @@ namespace NuGet.Updater.Tests
 	[TestClass]
 	public class SolutionHelperTests
 	{
+		[Ignore("hardcoded local path")]
 		[TestMethod]
 		public async Task GivenSolution_PackageReferencesAreFound()
 		{

@@ -35,6 +35,12 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+		<AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+			<_Parameter1>NuGet.Updater.Tests</_Parameter1>
+		</AssemblyAttribute>
+	</ItemGroup>
+
 	<!-- This target ensures the output of the ProjectReferences marked with PrivateAssets="All" are copied to the resulting NuGet package -->
 	<Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
 		<ItemGroup>
