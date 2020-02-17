@@ -17,4 +17,10 @@
     <ProjectReference Include="..\NuGet.Updater.Tool\NuGet.Updater.Tool.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Resources\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

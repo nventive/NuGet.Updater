@@ -19,6 +19,7 @@ namespace NuGet.Updater.Tests
 		private const string SomeText = nameof(SomeText);
 		private const string SomePublicFeed = "https://pkgs.dev.azure.com/qwe/_packaging/asd/nuget/v3/index.json";
 		private const string SomePrivateFeed = "https://pkgs.dev.azure.com/qwe/_packaging/asd/nuget/v3/index.json|hunter2";
+		private const string PinnedVersionJsonPath = @"Resources\version_overrides.json";
 
 		[TestMethod]
 		public void Given_HelpArgument_ContextIsHelp()
@@ -155,6 +156,22 @@ namespace NuGet.Updater.Tests
 			var collection = propertySelector.Compile()(context.Parameters);
 			var actualValue = collection?.Cast<object>().FirstOrDefault();
 			Assert.AreEqual(expectedValue, actualValue);
+		}
+
+		[TestMethod]
+		[DeploymentItem(PinnedVersionJsonPath)]
+		public void Given_UpdaterParametersArgument_ContextTargetVersionIsSet()
+		{
+			var arguments = new[] { "--versionOverrides=" + PinnedVersionJsonPath };
+			var context = ConsoleArgsContext.Parse(arguments);
+
+			Assert.IsFalse(context.HasError);
+
+			var actualValues = context.Parameters.VersionOverrides
+				.ToDictionary(x => x.Key, x => x.Value);
+			var expectedValues = ConsoleArgsContext.LoadManualOperations(PinnedVersionJsonPath);
+
+			CollectionAssert.AreEqual(expectedValues, actualValues);
 		}
 	}
 }

@@ -97,7 +97,7 @@ namespace NuGet.Updater.Tool.Arguments
 
 		public void WriteOptionDescriptions(TextWriter writer) => CreateOptionsFor(default).WriteOptionDescriptions(writer);
 
-		private static Dictionary<string, NuGetVersion> LoadManualOperations(string inputFilePath)
+		internal static Dictionary<string, NuGetVersion> LoadManualOperations(string inputFilePath)
 		{
 			using(var fileReader = File.OpenText(inputFilePath))
 			using(var jsonReader = new JsonTextReader(fileReader))
