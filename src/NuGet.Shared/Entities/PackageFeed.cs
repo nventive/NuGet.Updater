@@ -113,5 +113,20 @@ namespace NuGet.Shared.Entities
 
 			await _packageSource.PushPackage(ct, package, Logger);
 		}
+
+		public override int GetHashCode() => _packageSource.GetHashCode();
+
+		public override bool Equals(object obj)
+		{
+			if(obj is PackageFeed other)
+			{
+				if(_packageSource != null && other?._packageSource != null)
+				{
+					return this._packageSource.Equals(other._packageSource);
+				}
+			}
+
+			return base.Equals(obj);
+		}
 	}
 }

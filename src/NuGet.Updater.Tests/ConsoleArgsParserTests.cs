@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NuGet.Shared.Entities;
 using NuGet.Updater.Entities;
 using NuGet.Updater.Tool.Arguments;
 
@@ -13,6 +17,8 @@ namespace NuGet.Updater.Tests
 	{
 		private const string NotExistingFilePath = @"c:\not\existing\file.mia";
 		private const string SomeText = nameof(SomeText);
+		private const string SomePublicFeed = "https://pkgs.dev.azure.com/qwe/_packaging/asd/nuget/v3/index.json";
+		private const string SomePrivateFeed = "https://pkgs.dev.azure.com/qwe/_packaging/asd/nuget/v3/index.json|hunter2";
 
 		[TestMethod]
 		public void Given_HelpArgument_ContextIsHelp()
@@ -115,6 +121,39 @@ namespace NuGet.Updater.Tests
 			Assert.IsFalse(context.HasError);
 
 			var actualValue = propertySelector(context.Parameters);
+			Assert.AreEqual(expectedValue, actualValue);
+		}
+
+		private static IEnumerable<object[]> CollectionPropertiesTestSetup() => new (Expression<Func<UpdaterParameters, IEnumerable>>, string, object)[]
+		{
+			( x => x.Feeds, "--useNuGetorg", PackageFeed.NuGetOrg ),
+			( x => x.Feeds, "-n", PackageFeed.NuGetOrg ),
+			( x => x.Feeds, "--feed=" + SomePublicFeed, PackageFeed.FromString(SomePublicFeed) ),
+			( x => x.Feeds, "--feed=" + SomePrivateFeed, PackageFeed.FromString(SomePrivateFeed) ),
+			( x => x.Feeds, "-f=" + SomePublicFeed, PackageFeed.FromString(SomePublicFeed) ),
+			( x => x.Feeds, "-f=" + SomePrivateFeed, PackageFeed.FromString(SomePrivateFeed) ),
+			( x => x.PackagesToUpdate, "--updatePackages=" + SomeText, SomeText ),
+			( x => x.PackagesToUpdate, "--update=" + SomeText, SomeText ),
+			( x => x.PackagesToUpdate, "-u=" + SomeText, SomeText ),
+			( x => x.PackagesToIgnore, "--ignorePackages=" + SomeText, SomeText ),
+			( x => x.PackagesToIgnore, "--ignore=" + SomeText, SomeText ),
+			( x => x.PackagesToIgnore, "-i=" + SomeText, SomeText ),
+			( x => x.TargetVersions, "--versions=" + SomeText, SomeText ),
+			( x => x.TargetVersions, "--version=" + SomeText, SomeText ),
+			( x => x.TargetVersions, "-v=" + SomeText, SomeText ),
+		}.Select(x => new[] { x.Item1, x.Item2, x.Item3 });
+
+		[DataTestMethod]
+		[DynamicData(nameof(CollectionPropertiesTestSetup), DynamicDataSourceType.Method)]
+		public void Given_UpdaterParametersArgument_ContextCollectionPropertyIsSet(Expression<Func<UpdaterParameters, IEnumerable>> propertySelector, string argument, object expectedValue)
+		{
+			var arguments = new[] { argument };
+			var context = ConsoleArgsContext.Parse(arguments);
+
+			Assert.IsFalse(context.HasError);
+
+			var collection = propertySelector.Compile()(context.Parameters);
+			var actualValue = collection?.Cast<object>().FirstOrDefault();
 			Assert.AreEqual(expectedValue, actualValue);
 		}
 	}
