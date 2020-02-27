@@ -45,6 +45,6 @@ namespace NuGet.Updater.Tests.Entities
 			?.Select(v => new FeedVersion(v, Url))
 			.ToArray() ?? new FeedVersion[0];
 
-		public Task PushPackage(CancellationToken ct, LocalPackage package) => throw new NotSupportedException();
+		public Task<bool> PushPackage(CancellationToken ct, LocalPackage package) => throw new NotSupportedException();
 	}
 }
