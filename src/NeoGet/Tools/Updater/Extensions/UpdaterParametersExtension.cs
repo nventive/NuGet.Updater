@@ -90,10 +90,10 @@ namespace NeoGet.Tools.Updater.Extensions
 			PackageReference reference
 		)
 		{
-			if(parameters.VersionOverrides.TryGetValue(reference.Identity.Id, out var manualVersion))
+			if(parameters.VersionOverrides.TryGetValue(reference.Identity.Id, out var manualVersion) && manualVersion.forceVersion)
 			{
 				PackageFeed.Logger.LogInformation($"Overriding version for {reference.Identity.Id}");
-				return new FeedVersion(manualVersion);
+				return new FeedVersion(manualVersion.range.MinVersion);
 			}
 
 			var availableVersions = await Task.WhenAll(parameters
@@ -103,6 +103,7 @@ namespace NeoGet.Tools.Updater.Extensions
 
 			var versionsPerTarget = availableVersions
 				.SelectMany(x => x)
+				.Where(v => manualVersion.range?.Satisfies(v.Version) ?? true)
 				.OrderByDescending(v => v)
 				.GroupBy(version => parameters.TargetVersions.FirstOrDefault(t => version.IsMatchingVersion(t, parameters.Strict)))
 				.Where(g => g.Key.HasValue());

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -35,12 +36,18 @@ namespace NuGet.Updater.Tool
 				}
 				else
 				{
+					var stopwatch = Stopwatch.StartNew();
+
 					context.Parameters.SolutionRoot ??= Environment.CurrentDirectory;
 					var updater = new NuGetUpdater(context.Parameters, context.IsSilent ? null : Console.Out, GetSummaryWriter(context.SummaryFile));
 
 					var result = await updater.UpdatePackages(CancellationToken.None);
 
 					Save(result, context.ResultFile);
+
+					stopwatch.Stop();
+
+					Console.WriteLine($"Operation completed in {stopwatch.Elapsed}");
 				}
 			}
 			catch(Exception ex)

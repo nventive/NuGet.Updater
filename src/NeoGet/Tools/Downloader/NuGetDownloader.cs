@@ -6,8 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using NeoGet.Contracts;
 using NeoGet.Entities;
-using NeoGet.Helpers;
 using NeoGet.Tools.Downloader.Entities;
+using NeoGet.Tools.Hierarchy;
+using NeoGet.Tools.Hierarchy.Extensions;
 using NuGet.Common;
 using NuGet.Packaging.Core;
 using Uno.Extensions;
@@ -57,23 +58,11 @@ namespace NeoGet.Tools.Downloader
 			string outputPath
 		)
 		{
-			var downloadedPackages = new List<LocalPackage>();
-
 			Directory.CreateDirectory(outputPath);
 
-			foreach(var package in packages)
-			{
-				var localPackage = await sourceFeed.DownloadPackage(ct, package, outputPath);
+			var downloadedPackages = await Task.WhenAll(packages.Select(package => sourceFeed.DownloadPackage(ct, package, outputPath)));
 
-				if(localPackage == null)
-				{
-					throw new PackageNotFoundException(package, sourceFeed.Url); //Shouldn't happen
-				}
-
-				downloadedPackages.Add(localPackage);
-			}
-
-			return downloadedPackages.ToArray();
+			return downloadedPackages.Trim().ToArray();
 		}
 
 		private async Task<LocalPackage[]> PushPackages(CancellationToken ct, IEnumerable<LocalPackage> packages, IPackageFeed targetFeed)
@@ -98,69 +87,11 @@ namespace NeoGet.Tools.Downloader
 
 		private async Task<IEnumerable<PackageIdentity>> GetPackagesToDownload(CancellationToken ct, string solutionPath, IPackageFeed source)
 		{
-			var references = await SolutionHelper.GetPackageReferences(ct, solutionPath, FileType.All, _log);
+			var hierachy = new NuGetHierarchy(solutionPath, new[] { source }, _log);
 
-			var identities = new HashSet<PackageIdentity>(references.Select(r => r.Identity));
+			var result = await hierachy.RunAsync(ct);
 
-			return await GetPackagesWithDependencies(ct, identities, source);
-		}
-
-		private async Task<HashSet<PackageIdentity>> GetPackagesWithDependencies(
-			CancellationToken ct,
-			ISet<PackageIdentity> packages,
-			IPackageFeed source,
-			ISet<PackageIdentity> knownPackages = null,
-			ISet<PackageIdentity> missingPackages = null
-		)
-		{
-			knownPackages = knownPackages ?? new HashSet<PackageIdentity>();
-			missingPackages = missingPackages ?? new HashSet<PackageIdentity>();
-
-			//Assume we will have to download the packages passed
-			var packagesToDonwload = new HashSet<PackageIdentity>(packages);
-
-			foreach(var package in packages)
-			{
-				try
-				{
-					var packageDependencies = await source.GetDependencies(ct, package);
-
-					var flatDependencies = packageDependencies.SelectMany(g => g.Value).ToArray();
-
-					_log.LogInformation($"Found {flatDependencies.Length} dependencies for {package} in {source.Url}");
-
-					//TODO: make the version used parametrable (Use MaxVersion or MinVersion)
-					packagesToDonwload.AddRange(flatDependencies.Select(d => new PackageIdentity(d.Id, d.VersionRange.MinVersion)));
-
-					knownPackages.Add(package);
-				}
-				catch(PackageNotFoundException ex)
-				{
-					_log.LogInformation(ex.Message);
-
-					missingPackages.Add(package);
-				}
-			}
-
-			//Take all the dependencies found
-			var unknownPackages = new HashSet<PackageIdentity>(packagesToDonwload);
-			//Remove the packages that we already know are missing
-			unknownPackages.ExceptWith(missingPackages);
-			//Remove the packages we already have dependencies for
-			unknownPackages.ExceptWith(knownPackages);
-
-			if(unknownPackages.Any())
-			{
-				//Get the dependencies for the rest
-				var subDependencies = await GetPackagesWithDependencies(ct, unknownPackages, source, knownPackages, missingPackages);
-				//Add those to the packages to download
-				packagesToDonwload.UnionWith(subDependencies);
-			}
-
-			//Remove the packages that we know are missing
-			packagesToDonwload.ExceptWith(missingPackages);
-
-			return packagesToDonwload;
+			return result.GetAllIdentities();
 		}
 	}
 }
