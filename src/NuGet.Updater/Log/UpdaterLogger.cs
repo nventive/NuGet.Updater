@@ -8,11 +8,11 @@ using NuGet.Shared.Helpers;
 using NuGet.Updater.Entities;
 using NuGet.Updater.Extensions;
 using NuGet.Updater.Helpers;
-using Uno.Extensions;
+using NuGet.Versioning;
 
 namespace NuGet.Updater.Log
 {
-	public class UpdaterLogger : ILogger
+	public class UpdaterLogger : ILogger, IEqualityComparer<UpdateOperation>
 	{
 		private readonly List<UpdateOperation> _updateOperations = new List<UpdateOperation>();
 		private readonly TextWriter _writer;
@@ -37,7 +37,7 @@ namespace NuGet.Updater.Log
 
 		public void Write(IEnumerable<UpdateOperation> operations)
 		{
-			foreach (var o in operations)
+			foreach(var o in operations)
 			{
 				Write(o);
 			}
@@ -51,18 +51,18 @@ namespace NuGet.Updater.Log
 
 		public void WriteSummary(UpdaterParameters parameters)
 		{
-			foreach (var line in GetSummary(parameters, includeUrl: true))
+			foreach(var line in GetSummary(parameters, LogDisplayOptions.Console))
 			{
 				Write(line);
 			}
 
-			if (_summaryWriter != null)
+			if(_summaryWriter != null)
 			{
 				try
 				{
-					_summaryWriter.Write(string.Join(Environment.NewLine, GetSummary(parameters, includeUrl: true)));
+					_summaryWriter.Write(string.Join(Environment.NewLine, GetSummary(parameters, LogDisplayOptions.Summary)));
 				}
-				catch (Exception ex)
+				catch(Exception ex)
 				{
 					Write($"Failed to write summary. Reason : {ex.Message}");
 				}
@@ -73,21 +73,16 @@ namespace NuGet.Updater.Log
 			.Select(o => o.ToUpdateResult())
 			.Distinct();
 
-		private IEnumerable<string> GetSummary(UpdaterParameters parameters, bool includeUrl = false)
+		private IEnumerable<string> GetSummary(UpdaterParameters parameters, LogDisplayOptions options)
 		{
 			yield return $"# Package update summary";
 
-			if (_updateOperations.Count == 0)
+			if(_updateOperations.Count == 0)
 			{
-				yield return $"No packages have been updated.";
+				yield return $"No packages have been updated";
 			}
 
-			foreach(var message in LogPackageOperations(_updateOperations.Where(o => o.ShouldProceed), isUpdate: true, includeUrl))
-			{
-				yield return message;
-			}
-
-			foreach(var message in LogPackageOperations(_updateOperations.Where(o => !o.ShouldProceed), isUpdate: false, includeUrl))
+			foreach(var message in LogPackageOperations(_updateOperations, options))
 			{
 				yield return message;
 			}
@@ -98,49 +93,102 @@ namespace NuGet.Updater.Log
 			}
 		}
 
-		private IEnumerable<string> LogPackageOperations(IEnumerable<UpdateOperation> operations, bool isUpdate, bool includeUrl)
+		private IEnumerable<string> LogPackageOperations(IEnumerable<UpdateOperation> operations, LogDisplayOptions options)
 		{
-			if(operations.None())
-			{
-				yield break;
-			}
-
-			var packages = operations
-				.Select(o => (
-					name: o.PackageId,
-					oldVersion: o.PreviousVersion,
-					newVersion: isUpdate ? o.UpdatedVersion : o.PreviousVersion,
-					uri: o.FeedUri
-				))
-				.Distinct()
+			var ignores = operations
+				.Where(o => o.IsIgnored)
+				.Distinct(this)
 				.ToArray();
 
-			yield return $"## {(isUpdate ? "Updated" : "Skipped")} {packages.Length} packages";
-
-			var tableBuilder = new MarkdownHelper.TableBuilder();
-
-			tableBuilder.AddHeader("Package");
-
-			if(isUpdate)
+			if(ignores.Any())
 			{
-				tableBuilder.AddHeader("Original version");
-				tableBuilder.AddHeader("Updated version");
-			}
-			else
-			{
-				tableBuilder.AddHeader("Version");
-			}
+				yield return $"## Ignored {ignores.Length} packages";
 
-			foreach(var p in packages)
-			{
-				var oldVersionUrl = includeUrl ? PackageHelper.GetUrl(p.name, p.oldVersion, p.uri) : default;
-				var newVersionUrl = includeUrl ? PackageHelper.GetUrl(p.name, p.newVersion, p.uri) : default;
-
-				tableBuilder.AddLine(p.name, MarkdownHelper.Link(p.oldVersion.OriginalVersion, oldVersionUrl), isUpdate ? MarkdownHelper.Link(p.newVersion.OriginalVersion, newVersionUrl) : null);
+				yield return GetOperationsTable(
+					ignores,
+					new Dictionary<string, Func<UpdateOperation, string>>
+					{
+						{ "Package", o => o.PackageId },
+						{ "Version", o => GetPreviousVersionText(o, options.IncludeUrls) },
+					},
+					options.PrettifyTable
+				);
 			}
 
-			yield return tableBuilder.Build();
+			var updates = operations
+				.Where(o => o.ShouldProceed())
+				.Distinct(this)
+				.ToArray();
+
+			if(updates.Any())
+			{
+				yield return $"## Updated {updates.Length} packages";
+
+				yield return GetOperationsTable(
+					updates,
+					new Dictionary<string, Func<UpdateOperation, string>>
+					{
+						{ "Package", o => o.PackageId },
+						{ "Referenced version", o => GetPreviousVersionText(o, options.IncludeUrls) },
+						{ "Updated version", o => GetUpdatedVersionText(o, options.IncludeUrls) },
+					},
+					options.PrettifyTable
+				);
+			}
+
+			var skips = operations
+				.Where(o => !o.IsIgnored && !o.ShouldProceed())
+				.Distinct(this)
+				.ToArray();
+
+			if(skips.Any())
+			{
+				yield return $"## Skipped {skips.Length} packages";
+
+				yield return GetOperationsTable(
+					skips,
+					new Dictionary<string, Func<UpdateOperation, string>>
+					{
+						{ "Package", o => o.PackageId },
+						{ "Referenced version", o => GetPreviousVersionText(o, options.IncludeUrls) },
+						{ "Available version", o => GetUpdatedVersionText(o, options.IncludeUrls) },
+					},
+					options.PrettifyTable
+				);
+			}
 		}
+
+		private string GetOperationsTable(
+			IEnumerable<UpdateOperation> operations,
+			Dictionary<string, Func<UpdateOperation, string>> columnBuilder,
+			bool prettify
+		) => MarkdownHelper.Table(
+				columnBuilder.Keys.ToArray(),
+				operations.Select(o => columnBuilder.Select(p => p.Value(o)).ToArray()).ToArray(),
+				prettify
+			);
+
+		private string GetUpdatedVersionText(UpdateOperation operation, bool includeUrl)
+			=> GetVersionText(
+				operation.UpdatedVersion,
+				operation.PackageId,
+				operation.FeedUri,
+				includeUrl
+			);
+
+		private string GetPreviousVersionText(UpdateOperation operation, bool includeUrl)
+			=> GetVersionText(
+				operation.PreviousVersion,
+				operation.PackageId,
+				operation.FeedUri,
+				includeUrl
+			);
+
+		private string GetVersionText(NuGetVersion version, string packageId, Uri feedUri, bool includeUrl)
+			=> MarkdownHelper.Link(
+				version.OriginalVersion,
+				includeUrl ? PackageHelper.GetUrl(packageId, version, feedUri) : null
+			);
 
 		#region ILogger
 		public void LogDebug(string data) => Log(LogLevel.Debug, data);
@@ -164,6 +212,14 @@ namespace NuGet.Updater.Log
 		public void Log(ILogMessage message) => Write(message.Message);
 
 		public async Task LogAsync(ILogMessage message) => Log(message);
+		#endregion
+
+		#region IEqualityComparer<UpdateOperation>
+		public bool Equals(UpdateOperation x, UpdateOperation y)
+			=> x != null && y != null
+				&& (x.PackageId == y.PackageId && x.PreviousVersion == y.PreviousVersion && x.UpdatedVersion == x.UpdatedVersion);
+
+		public int GetHashCode(UpdateOperation obj) => obj?.PackageId.GetHashCode() ?? 0;
 		#endregion
 	}
 }

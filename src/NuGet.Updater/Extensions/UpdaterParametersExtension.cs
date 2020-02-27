@@ -44,11 +44,6 @@ namespace NuGet.Updater.Extensions
 				yield return $"- Downgrading packages if a lower version is found";
 			}
 
-			if (parameters.PackagesToIgnore?.Any() ?? false)
-			{
-				yield return $"- Ignoring {MarkdownHelper.CodeBlocksEnumeration(parameters.PackagesToIgnore)}";
-			}
-
 			if (parameters.PackagesToUpdate?.Any() ?? false)
 			{
 				yield return $"- Updating only {MarkdownHelper.CodeBlocksEnumeration(parameters.PackagesToUpdate)}";

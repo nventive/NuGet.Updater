@@ -16,11 +16,11 @@ namespace NuGet.Downloader
 {
 	public class NuGetDownloader
 	{
-		public static async Task<LocalPackage[]> DownloadAsync(CancellationToken ct, DownloaderParameters parameters, ILogger log)
+		public static async Task<DownloaderResult> RunAsync(CancellationToken ct, DownloaderParameters parameters, ILogger log)
 		{
 			var downloader = new NuGetDownloader(log);
 
-			return await downloader.DownloadPackages(ct, parameters);
+			return await downloader.RunAsync(ct, parameters);
 		}
 
 		private readonly ILogger _log;
@@ -30,45 +30,70 @@ namespace NuGet.Downloader
 			_log = log;
 		}
 
-		public async Task<LocalPackage[]> DownloadPackages(CancellationToken ct, DownloaderParameters parameters)
+		public async Task<DownloaderResult> RunAsync(CancellationToken ct, DownloaderParameters parameters)
 		{
 			var stopwatch = Stopwatch.StartNew();
 
-			var localPackages = new List<LocalPackage>();
-
-			Directory.CreateDirectory(parameters.PackageOutputPath);
+			var result = new DownloaderResult();
 
 			var packages = await GetPackagesToDownload(ct, parameters.SolutionPath, parameters.Source);
 
-			_log.LogInformation($"Found {packages.Count()} packages to download.");
+			_log.LogInformation($"Found {packages.Count()} packages to download");
 
-			foreach(var package in packages)
-			{
-				var localPackage = await parameters.Source.DownloadPackage(ct, package, parameters.PackageOutputPath);
-
-				if(localPackage == null)
-				{
-					throw new PackageNotFoundException(package, parameters.Source.Url); //Shouldn't happen
-				}
-
-				localPackages.Add(localPackage);
-			}
-
-			if(parameters.Target != null)
-			{
-				_log.LogInformation($"Pushing packages to {parameters.Target.Url}.");
-
-				foreach(var package in localPackages)
-				{
-					await parameters.Target.PushPackage(ct, package);
-				}
-			}
+			result.DownloadedPackages = await DownloadPackages(ct, packages, parameters.Source, parameters.PackageOutputPath);
+			result.PushedPackages = await PushPackages(ct, result.DownloadedPackages, parameters.Target);
 
 			stopwatch.Stop();
 
-			_log.LogInformation($"Operation completed in {stopwatch.Elapsed}.");
+			_log.LogInformation($"Operation completed in {stopwatch.Elapsed}");
 
-			return localPackages.ToArray();
+			return result;
+		}
+
+		private async Task<LocalPackage[]> DownloadPackages(
+			CancellationToken ct,
+			IEnumerable<PackageIdentity> packages,
+			IPackageFeed sourceFeed,
+			string outputPath
+		)
+		{
+			var downloadedPackages = new List<LocalPackage>();
+
+			Directory.CreateDirectory(outputPath);
+
+			foreach(var package in packages)
+			{
+				var localPackage = await sourceFeed.DownloadPackage(ct, package, outputPath);
+
+				if(localPackage == null)
+				{
+					throw new PackageNotFoundException(package, sourceFeed.Url); //Shouldn't happen
+				}
+
+				downloadedPackages.Add(localPackage);
+			}
+
+			return downloadedPackages.ToArray();
+		}
+
+		private async Task<LocalPackage[]> PushPackages(CancellationToken ct, IEnumerable<LocalPackage> packages, IPackageFeed targetFeed)
+		{
+			var pushedPackages = new List<LocalPackage>();
+
+			if(targetFeed != null)
+			{
+				_log.LogInformation($"Pushing packages to {targetFeed.Url}");
+
+				foreach(var package in packages)
+				{
+					if(await targetFeed.PushPackage(ct, package))
+					{
+						pushedPackages.Add(package);
+					}
+				}
+			}
+
+			return pushedPackages.ToArray();
 		}
 
 		private async Task<IEnumerable<PackageIdentity>> GetPackagesToDownload(CancellationToken ct, string solutionPath, IPackageFeed source)

@@ -90,14 +90,19 @@ namespace NuGet.Shared.Extensions
 				.GetDownloadResourceResultAsync(identity, downloadContext, downloadDirectory, log, ct);
 		}
 
-		public static Task PushPackage(
+		public static async Task<bool> PushPackage(
 			this PackageSource source,
 			CancellationToken ct,
 			LocalPackage package,
 			ILogger log
-		) => source
-			.GetResource<PackageUpdateResource>()
-			.Push(package.Path, null, 100, true, s => s, s => s, true, log);
+		)
+		{
+			await source
+				.GetResource<PackageUpdateResource>()
+				.Push(package.Path, null, 100, true, s => s, s => s, true, log);
+
+			return true;
+		}
 
 		private static TResource GetResource<TResource>(this PackageSource source)
 			where TResource : class, INuGetResource

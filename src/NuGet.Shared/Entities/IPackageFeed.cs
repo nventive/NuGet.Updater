@@ -49,7 +49,7 @@ namespace NuGet.Shared.Entities
 		/// </summary>
 		/// <param name="ct"></param>
 		/// <param name="package"></param>
-		/// <returns></returns>
-		Task PushPackage(CancellationToken ct, LocalPackage package);
+		/// <returns>A value indicating whether or not the package has been pushed</returns>
+		Task<bool> PushPackage(CancellationToken ct, LocalPackage package);
 	}
 }
