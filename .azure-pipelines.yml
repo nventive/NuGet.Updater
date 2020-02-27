@@ -9,6 +9,8 @@ trigger:
 variables:
 - name: PackageOutputPath
   value: '$(Build.ArtifactStagingDirectory)'
+- name: GeneratePackageOnBuild
+  value: true
 
 steps:
 - task: GitVersion@4
