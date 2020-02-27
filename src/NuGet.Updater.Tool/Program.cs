@@ -4,15 +4,17 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NeoGet.Helpers;
+using NeoGet.Log;
+using NeoGet.Tools.Updater;
+using NeoGet.Tools.Updater.Arguments;
+using NeoGet.Tools.Updater.Entities;
 using Newtonsoft.Json;
-using NuGet.Shared.Helpers;
-using NuGet.Shared.Log;
-using NuGet.Updater.Entities;
-using NuGet.Updater.Tool.Arguments;
+using Uno.Extensions;
 
 namespace NuGet.Updater.Tool
 {
-	public class Program
+	public static class Program
 	{
 		public static async Task Main(string[] args)
 		{
@@ -43,7 +45,8 @@ namespace NuGet.Updater.Tool
 			}
 			catch(Exception ex)
 			{
-				Console.WriteLine($"Error: {ex.Message}");
+				Console.Error.WriteLine($"Failed to update nuget packages: {ex.Message}");
+				Console.Error.WriteLine($"{ex}");
 			}
 		}
 
@@ -51,7 +54,7 @@ namespace NuGet.Updater.Tool
 
 		private static void Save(IEnumerable<UpdateResult> result, string path)
 		{
-			if(path == null || path == "")
+			if(path.IsNullOrEmpty())
 			{
 				return;
 			}

@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NuGet.Downloader\NuGet.Downloader.csproj" />
+    <ProjectReference Include="..\NeoGet\NeoGet.csproj" />
   </ItemGroup>
 
 </Project>

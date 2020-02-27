@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29021.104
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Updater", "Nuget.Updater\NuGet.Updater.csproj", "{29277270-8EFE-41A3-8CD8-D54EBF514C41}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Updater.Tool", "NuGet.Updater.Tool\NuGet.Updater.Tool.csproj", "{3DAA81DB-00A6-4A84-8180-19A588398F52}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0547178F-3639-4797-940F-265958B7FECA}"
@@ -23,35 +21,27 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Updater.Tests", "NuGet.Updater.Tests\NuGet.Updater.Tests.csproj", "{D240ABFD-6A48-4E4B-A946-9EBF9840FADA}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Downloader", "NuGet.Downloader\NuGet.Downloader.csproj", "{912018BD-D988-4C90-B4EC-BA1C171207C3}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "NuGet.Shared", "NuGet.Shared\NuGet.Shared.shproj", "{3890CCA3-B7CF-450B-A6CD-4A4106B0008C}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet.Updater", "NuGet.Updater", "{54F00313-D565-4D02-9A4B-D2FFF0190934}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet.Downloader", "NuGet.Downloader", "{58AE6856-BDF1-4676-8FF3-39B95B7762C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeoGet.Tests", "NeoGet.Tests\NeoGet.Tests.csproj", "{D240ABFD-6A48-4E4B-A946-9EBF9840FADA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Downloader.Tool", "NuGet.Downloader.Tool\NuGet.Downloader.Tool.csproj", "{17979C76-865A-4983-977B-E242BCE1B038}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Downloader.Tests", "NuGet.Downloader.Tests\NuGet.Downloader.Tests.csproj", "{4CCA4711-1333-4D4F-91A4-B6E4263D7244}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeoGet", "NeoGet\NeoGet.csproj", "{5FBA174D-C841-4968-A8E0-3BA97B839123}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{7B2F2CBF-9EC9-4C18-A471-D36862EE23D9}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "NeoGet.Tools.Shared", "NeoGet.Tools.Shared\NeoGet.Tools.Shared.shproj", "{4C395D24-0028-47EF-B07E-5566344E78DE}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		NuGet.Shared\NuGet.Shared.projitems*{29277270-8efe-41a3-8cd8-d54ebf514c41}*SharedItemsImports = 5
-		NuGet.Shared\NuGet.Shared.projitems*{3890cca3-b7cf-450b-a6cd-4a4106b0008c}*SharedItemsImports = 13
-		NuGet.Shared\NuGet.Shared.projitems*{912018bd-d988-4c90-b4ec-ba1c171207c3}*SharedItemsImports = 5
+		NeoGet.Tools.Shared\NeoGet.Tools.Shared.projitems*{3daa81db-00a6-4a84-8180-19a588398f52}*SharedItemsImports = 5
+		NeoGet.Tools.Shared\NeoGet.Tools.Shared.projitems*{4c395d24-0028-47ef-b07e-5566344e78de}*SharedItemsImports = 13
+		NeoGet.Tools.Shared\NeoGet.Tools.Shared.projitems*{d240abfd-6a48-4e4b-a946-9ebf9840fada}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{29277270-8EFE-41A3-8CD8-D54EBF514C41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{29277270-8EFE-41A3-8CD8-D54EBF514C41}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{29277270-8EFE-41A3-8CD8-D54EBF514C41}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{29277270-8EFE-41A3-8CD8-D54EBF514C41}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3DAA81DB-00A6-4A84-8180-19A588398F52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3DAA81DB-00A6-4A84-8180-19A588398F52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3DAA81DB-00A6-4A84-8180-19A588398F52}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -60,29 +50,21 @@ Global
 		{D240ABFD-6A48-4E4B-A946-9EBF9840FADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D240ABFD-6A48-4E4B-A946-9EBF9840FADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D240ABFD-6A48-4E4B-A946-9EBF9840FADA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{912018BD-D988-4C90-B4EC-BA1C171207C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{912018BD-D988-4C90-B4EC-BA1C171207C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{912018BD-D988-4C90-B4EC-BA1C171207C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{912018BD-D988-4C90-B4EC-BA1C171207C3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{17979C76-865A-4983-977B-E242BCE1B038}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{17979C76-865A-4983-977B-E242BCE1B038}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17979C76-865A-4983-977B-E242BCE1B038}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17979C76-865A-4983-977B-E242BCE1B038}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4CCA4711-1333-4D4F-91A4-B6E4263D7244}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4CCA4711-1333-4D4F-91A4-B6E4263D7244}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4CCA4711-1333-4D4F-91A4-B6E4263D7244}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4CCA4711-1333-4D4F-91A4-B6E4263D7244}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FBA174D-C841-4968-A8E0-3BA97B839123}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FBA174D-C841-4968-A8E0-3BA97B839123}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FBA174D-C841-4968-A8E0-3BA97B839123}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FBA174D-C841-4968-A8E0-3BA97B839123}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{29277270-8EFE-41A3-8CD8-D54EBF514C41} = {54F00313-D565-4D02-9A4B-D2FFF0190934}
-		{3DAA81DB-00A6-4A84-8180-19A588398F52} = {54F00313-D565-4D02-9A4B-D2FFF0190934}
-		{D240ABFD-6A48-4E4B-A946-9EBF9840FADA} = {54F00313-D565-4D02-9A4B-D2FFF0190934}
-		{912018BD-D988-4C90-B4EC-BA1C171207C3} = {58AE6856-BDF1-4676-8FF3-39B95B7762C1}
-		{17979C76-865A-4983-977B-E242BCE1B038} = {58AE6856-BDF1-4676-8FF3-39B95B7762C1}
-		{4CCA4711-1333-4D4F-91A4-B6E4263D7244} = {58AE6856-BDF1-4676-8FF3-39B95B7762C1}
+		{3DAA81DB-00A6-4A84-8180-19A588398F52} = {7B2F2CBF-9EC9-4C18-A471-D36862EE23D9}
+		{17979C76-865A-4983-977B-E242BCE1B038} = {7B2F2CBF-9EC9-4C18-A471-D36862EE23D9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1C528FB3-4BD1-4D56-ABEE-A20F6367040F}

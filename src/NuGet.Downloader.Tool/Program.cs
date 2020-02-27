@@ -3,13 +3,14 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
-using NuGet.Downloader.Entities;
-using NuGet.Shared.Entities;
+using NeoGet.Entities;
+using NeoGet.Tools.Downloader;
+using NeoGet.Tools.Downloader.Entities;
 using Uno.Extensions;
 
 namespace NuGet.Downloader.Tool
 {
-	public class Program
+	public static class Program
 	{
 		public static async Task Main(string[] args)
 		{
