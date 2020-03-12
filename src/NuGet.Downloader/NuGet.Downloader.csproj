@@ -4,6 +4,17 @@
 		<TargetFrameworks>netstandard20;net472</TargetFrameworks>
 	</PropertyGroup>
 
+	<!-- NuGet metadata -->
+	<PropertyGroup>
+		<PackageId>nventive.NuGet.Downloader</PackageId>
+		<Authors>nventive</Authors>
+		<Owners>nventive</Owners>
+		<Description>Nuget Dowloader allows to download the NuGet packages found in a solution</Description>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/nventive/NuGet.Updater</PackageProjectUrl>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<PackageReference Include="Uno.Core" Version="1.28.0" />
 	</ItemGroup>
