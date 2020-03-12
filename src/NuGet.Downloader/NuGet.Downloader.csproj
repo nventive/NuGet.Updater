@@ -16,6 +16,13 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
+		<None Include="../icon.png">
+			<Pack>True</Pack>
+			<PackagePath />
+		</None>
+	</ItemGroup>
+	
+	<ItemGroup>
 		<PackageReference Include="Uno.Core" Version="1.28.0" />
 	</ItemGroup>
 
