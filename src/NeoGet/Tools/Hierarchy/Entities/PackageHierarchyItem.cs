@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using NeoGet.Extensions;
 using NuGet.Frameworks;
@@ -6,7 +7,7 @@ using NuGet.Packaging.Core;
 
 namespace NeoGet.Tools.Hierarchy.Entities
 {
-	public class PackageHierarchyItem
+	public class PackageHierarchyItem : IEquatable<PackageHierarchyItem>
 	{
 		public PackageHierarchyItem(PackageIdentity identity)
 		{
@@ -27,6 +28,8 @@ namespace NeoGet.Tools.Hierarchy.Entities
 		public PackageIdentity Identity { get; set; }
 
 		public Dictionary<NuGetFramework, PackageHierarchyItem[]> Dependencies { get; set; }
+
+		public bool Equals(PackageHierarchyItem other) => other == null ? false : other.Identity == Identity;
 
 		public override string ToString() => Identity.ToString();
 	}

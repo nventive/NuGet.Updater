@@ -5,12 +5,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using NeoGet.Contracts;
 using NeoGet.Entities;
+using NeoGet.Extensions;
 using NeoGet.Helpers;
 using NeoGet.Tools.Hierarchy.Entities;
 using NeoGet.Tools.Hierarchy.Extensions;
 using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
+using PackageReference = NeoGet.Entities.PackageReference;
 
 namespace NeoGet.Tools.Hierarchy
 {
@@ -27,14 +29,28 @@ namespace NeoGet.Tools.Hierarchy
 			_log = log;
 		}
 
-		public async Task<PackageHierarchy> RunAsync(CancellationToken ct)
+		public async Task<SolutionPackageHierarchy> RunAsync(CancellationToken ct)
 		{
 			var references = await SolutionHelper.GetPackageReferences(ct, _target, FileType.All, _log);
 			var identities = new HashSet<PackageIdentity>(references.Select(r => r.Identity));
 
-			var packages = await GetPackagesWithDependencies(ct, identities);
+			var hierarchy = await GetPackagesWithDependencies(ct, identities);
 
-			return new PackageHierarchy(_target, packages);
+			return GetSolutionPackageHierarchy(references, hierarchy);
+		}
+
+		private SolutionPackageHierarchy GetSolutionPackageHierarchy(IEnumerable<PackageReference> references, IEnumerable<PackageHierarchyItem> hierarchy)
+		{
+			var solutionHierarchy = new SolutionPackageHierarchy(_target);
+
+			var solutionItems = references.GetReferenceHolders();
+
+			foreach(var item in solutionItems)
+			{
+				solutionHierarchy.Projects.Add(new ProjectPackageHierarchy(item.Name, hierarchy.Where(i => item.Packages.Contains(i.Identity))));
+			}
+
+			return solutionHierarchy;
 		}
 
 		private async Task<IEnumerable<PackageHierarchyItem>> GetPackagesWithDependencies(

@@ -7,7 +7,7 @@ using Uno.Extensions;
 
 namespace NeoGet.Extensions
 {
-	internal static class StringExtensions
+	public static class StringExtensions
 	{
 		private const string LegacyAzureArtifactsFeedUrlPattern = @"https:\/\/(?'account'[^.]*).*_packaging\/(?'feed'[^\/]*)";
 		private const string AzureArtifactsFeedUrlPattern = @"https:\/\/pkgs\.dev.azure.com\/(?'account'[^\/]*).*_packaging\/(?'feed'[^\/]*)";

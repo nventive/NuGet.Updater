@@ -31,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{7B2F2CBF
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "NeoGet.Tools.Shared", "NeoGet.Tools.Shared\NeoGet.Tools.Shared.shproj", "{4C395D24-0028-47EF-B07E-5566344E78DE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Hierarchy.Tool", "NuGet.Hierarchy.Tool\NuGet.Hierarchy.Tool.csproj", "{464BC350-3EE3-4D03-B34F-BDC53D6E0FAE}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		NeoGet.Tools.Shared\NeoGet.Tools.Shared.projitems*{3daa81db-00a6-4a84-8180-19a588398f52}*SharedItemsImports = 5
@@ -58,6 +60,10 @@ Global
 		{5FBA174D-C841-4968-A8E0-3BA97B839123}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FBA174D-C841-4968-A8E0-3BA97B839123}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FBA174D-C841-4968-A8E0-3BA97B839123}.Release|Any CPU.Build.0 = Release|Any CPU
+		{464BC350-3EE3-4D03-B34F-BDC53D6E0FAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{464BC350-3EE3-4D03-B34F-BDC53D6E0FAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{464BC350-3EE3-4D03-B34F-BDC53D6E0FAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{464BC350-3EE3-4D03-B34F-BDC53D6E0FAE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -65,6 +71,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{3DAA81DB-00A6-4A84-8180-19A588398F52} = {7B2F2CBF-9EC9-4C18-A471-D36862EE23D9}
 		{17979C76-865A-4983-977B-E242BCE1B038} = {7B2F2CBF-9EC9-4C18-A471-D36862EE23D9}
+		{464BC350-3EE3-4D03-B34F-BDC53D6E0FAE} = {7B2F2CBF-9EC9-4C18-A471-D36862EE23D9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1C528FB3-4BD1-4D56-ABEE-A20F6367040F}

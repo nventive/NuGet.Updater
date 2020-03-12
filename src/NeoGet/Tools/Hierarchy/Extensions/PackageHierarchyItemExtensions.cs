@@ -9,17 +9,20 @@ namespace NeoGet.Tools.Hierarchy.Extensions
 {
 	public static class PackageHierarchyItemExtensions
 	{
-		public static IEnumerable<PackageIdentity> GetAllIdentities(this PackageHierarchy hierarchy)
+		public static IEnumerable<PackageIdentity> GetAllIdentities(this SolutionPackageHierarchy hierarchy)
+			=> hierarchy?.Projects?.SelectMany(i => i.GetAllIdentities()).Distinct() ?? Array.Empty<PackageIdentity>();
+
+		public static IEnumerable<PackageIdentity> GetAllIdentities(this ProjectPackageHierarchy hierarchy)
 			=> hierarchy?.Packages?.SelectMany(i => i.GetAllIdentities()).Distinct() ?? Array.Empty<PackageIdentity>();
 
 		private static IEnumerable<PackageIdentity> GetAllIdentities(this PackageHierarchyItem hierarchyItem)
 			=> new[] { hierarchyItem.Identity }
-			.Concat(hierarchyItem.Dependencies?.SelectMany(p => p.Value.SelectMany(i => i.GetAllIdentities())) ?? Array.Empty<PackageIdentity>());
+			.Concat(hierarchyItem.GetDependenciesIdentities());
 
 		public static IEnumerable<PackageIdentity> GetDependenciesIdentities(this PackageHierarchyItem hierarchyItem)
 			=> hierarchyItem.Dependencies?.SelectMany(d => d.Value).Select(i => i.Identity).Distinct() ?? Array.Empty<PackageIdentity>();
 
-		public static Dictionary<NuGetFramework, PackageHierarchyItem[]> GetMatchingDependencies(this PackageHierarchyItem item, NuGetFramework framework)
+		public static Dictionary<NuGetFramework, PackageHierarchyItem[]> GetMatchingDependencies(this PackageHierarchyItem item, NuGetFramework framework = null)
 		{
 			var dependencies = new Dictionary<NuGetFramework, PackageHierarchyItem[]>();
 

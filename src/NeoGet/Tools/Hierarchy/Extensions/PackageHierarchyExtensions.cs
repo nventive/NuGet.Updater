@@ -1,16 +1,76 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using NeoGet.Extensions;
 using NeoGet.Tools.Hierarchy.Entities;
 using NuGet.Frameworks;
+using NuGet.Packaging;
+using NuGet.Packaging.Core;
 
 namespace NeoGet.Tools.Hierarchy.Extensions
 {
 	public static class PackageHierarchyExtensions
 	{
-		public static IEnumerable<string> GetSummary(this PackageHierarchy hierarchy)
+		public static IDictionary<string, ReversePackageReference[]> GetReversePackageReferences(this SolutionPackageHierarchy solution)
 		{
-			yield return hierarchy.Source;
+			var references = new Dictionary<string, ReversePackageReference[]>();
+
+			foreach(var project in solution.Projects)
+			{
+				references.Add(project.Name, project.GetReversePackageReferences().ToArray());
+			}
+
+			return references;
+		}
+
+		private static IEnumerable<ReversePackageReference> GetReversePackageReferences(this ProjectPackageHierarchy project)
+		{
+			var references = new List<KeyValuePair<PackageIdentity, PackageIdentity[]>>();
+			var rootPackages = project.Packages.Select(i => i.Identity);
+
+			foreach(var item in project.Packages)
+			{
+				references.AddRange(item.GetParentReferences(rootPackages));
+			}
+
+			return references
+				.GroupBy(p => p.Key, p => p.Value)
+				.Select(p => new ReversePackageReference { Identity = p.Key, ReferencedBy = p.SelectMany(x => x).Distinct().ToList() });
+		}
+
+		private static IEnumerable<KeyValuePair<PackageIdentity, PackageIdentity[]>> GetParentReferences(this PackageHierarchyItem item, IEnumerable<PackageIdentity> packages)
+		{
+			var references = new List<KeyValuePair<PackageIdentity, PackageIdentity>>();
+
+			if(item.Dependencies != null)
+			{
+				foreach(var d in item.Dependencies.SelectMany(p => p.Value).Distinct())
+				{
+					if(packages.Contains(d.Identity))
+					{
+						references.Add(new KeyValuePair<PackageIdentity, PackageIdentity>(d.Identity, item.Identity));
+					}
+				}
+			}
+
+			return references
+				.GroupBy(p => p.Key, p => p.Value)
+				.Select(g => new KeyValuePair<PackageIdentity, PackageIdentity[]>(g.Key, g.ToArray()));
+		}
+
+		public static IEnumerable<string> GetSummary(this SolutionPackageHierarchy hierarchy)
+		{
+			yield return hierarchy.Name;
+
+			foreach(var line in GetSummary(hierarchy.Projects, p => p.GetSummary()))
+			{
+				yield return line;
+			}
+		}
+
+		private static IEnumerable<string> GetSummary(this ProjectPackageHierarchy hierarchy)
+		{
+			yield return $"({hierarchy.Name})";
 
 			foreach(var line in GetSummary(hierarchy.Packages, p => p.GetSummary()))
 			{

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Uno;
+using Uno.Extensions.ValueType;
 
 namespace NeoGet.Extensions
 {
@@ -12,6 +14,22 @@ namespace NeoGet.Extensions
 		) => dictionary
 			.Where(g => keys.Contains(g.Key))
 			.ToDictionary(g => g.Key, g => g.Value);
+
+		public static void AddOrUpdate<TKey, TValue>(
+			this IDictionary<TKey, TValue> dictionary,
+			TKey key,
+			Func<TValue, TValue> update
+		)
+		{
+			if(dictionary.TryGetValue(key, out var existing))
+			{
+				dictionary[key] = update(existing);
+			}
+			else
+			{
+				dictionary.Add(key, update(default));
+			}
+		}
 
 #if !WINDOWS_UWP
 		public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
