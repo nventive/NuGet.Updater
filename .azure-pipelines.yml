@@ -13,7 +13,7 @@ variables:
   value: true
 
 steps:
-- task: GitVersion@4
+- task: GitVersion@5
 
 - task: NuGetToolInstaller@1
   inputs:
