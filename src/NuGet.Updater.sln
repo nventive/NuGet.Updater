@@ -39,7 +39,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Downloader.Tests", "N
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		NuGet.Shared\NuGet.Shared.projitems*{29277270-8efe-41a3-8cd8-d54ebf514c41}*SharedItemsImports = 5
 		NuGet.Shared\NuGet.Shared.projitems*{3890cca3-b7cf-450b-a6cd-4a4106b0008c}*SharedItemsImports = 13
+		NuGet.Shared\NuGet.Shared.projitems*{912018bd-d988-4c90-b4ec-ba1c171207c3}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

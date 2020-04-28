@@ -52,3 +52,21 @@ nugetupdater -s=MySolution.sln -n -f=https://pkgs.dev.azure.com/account/_packagi
 ```
 nugetupdater -s=MySolution.sln -n --allowDowngrade
 ```
+
+- Update packages to specific versions (forcefully and/or with nuget version ranges). See : https://docs.microsoft.com/en-us/nuget/concepts/package-versioning#version-ranges
+```
+nugetupdater -s=MySolution.sln -n -v=dev -v=stable --allowDowngrade --versionOverrides=versions.json
+```
+Versions.json example:
+```
+[
+  {
+    "PackageId": "Uno.UI",
+    "UpdatedVersion": "2.3.0-dev.76" -> Force 2.3.0-dev.76
+  },
+  {
+    "PackageId": "Uno.Wasm.Bootstrap",
+    "UpdatedVersion": "(,1.2.0-dev.18]" -> Resolves 1.2.0-dev.18 (-v=dev + -v=stable), 1.0.10 (-v=stable)
+  }
+]
+```
