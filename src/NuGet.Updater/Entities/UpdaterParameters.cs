@@ -52,9 +52,9 @@ namespace NuGet.Updater.Entities
 		public string PackageAuthor { get; set; }
 
 		/// <summary>
-		/// Gets the version to set for specific packages.
+		/// Gets the version range overrides for specific packages.
 		/// </summary>
-		public IDictionary<string, NuGetVersion> VersionOverrides { get; } = new Dictionary<string, NuGetVersion>();
+		public IDictionary<string, (bool forceVersion, VersionRange range)> VersionOverrides { get; } = new Dictionary<string, (bool, VersionRange)>();
 
 		/// <summary>
 		/// Gets or sets a value indicating whether to actually write the updates to the files.

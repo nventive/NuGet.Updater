@@ -19,6 +19,7 @@ namespace NuGet.Updater.Tests
 		private static readonly Dictionary<string, string[]> TestPackages = new Dictionary<string, string[]>
 		{
 			{"nventive.NuGet.Updater", new[] { "1.0-beta.1" } },
+			{"Uno.UI", new[] { "2.1.39", "2.2.0", "2.3.0-dev.44", "2.3.0-dev.48", "2.3.0-dev.58" } },
 		};
 
 		private static readonly TestPackageFeed TestFeed = new TestPackageFeed(TestFeedUri, TestPackages);
@@ -72,13 +73,59 @@ namespace NuGet.Updater.Tests
 				Feeds = { TestFeed },
 				VersionOverrides =
 				{
-					{ reference.Identity.Id, reference.Identity.Version },
+					{ reference.Identity.Id, (true, new VersionRange(reference.Identity.Version, true, reference.Identity.Version, true)) },
 				},
 			};
 
 			var version = await reference.GetLatestVersion(CancellationToken.None, parameters);
 
 			Assert.AreEqual(version.Version, reference.Identity.Version);
+		}
+
+		[TestMethod]
+		public async Task GivenRangeOverrides_CorrectVersionsAreResolved()
+		{
+			var reference = new PackageReference("Uno.UI", "2.1.39");
+
+			var parameters = new UpdaterParameters
+			{
+				TargetVersions = { "dev", "stable" },
+				Feeds = { TestFeed },
+				VersionOverrides =
+				{
+					{ reference.Identity.Id, (false, VersionRange.Parse("(,2.3.0-dev.48]")) },
+				},
+			};
+
+			var version = await reference.GetLatestVersion(CancellationToken.None, parameters);
+
+			Assert.AreEqual(NuGetVersion.Parse("2.3.0-dev.48"), version.Version);
+
+			parameters.VersionOverrides["Uno.UI"] = (false, VersionRange.Parse("(,2.3.0-dev.48)"));
+
+			version = await reference.GetLatestVersion(CancellationToken.None, parameters);
+
+			Assert.AreEqual(NuGetVersion.Parse("2.3.0-dev.44"), version.Version);
+		}
+
+		[TestMethod]
+		public async Task GivenRangeOverrides_CorrectVersionsAreResolved_AndTargetVersionIsHonored()
+		{
+			var reference = new PackageReference("Uno.UI", "2.1.39");
+
+			var parameters = new UpdaterParameters
+			{
+				TargetVersions = { "stable" },
+				Feeds = { TestFeed },
+				VersionOverrides =
+				{
+					{ reference.Identity.Id, (false, VersionRange.Parse("(,2.3.0-dev.48]")) },
+				},
+			};
+
+			var version = await reference.GetLatestVersion(CancellationToken.None, parameters);
+
+			Assert.AreEqual(NuGetVersion.Parse("2.2.0"), version.Version);
 		}
 	}
 }

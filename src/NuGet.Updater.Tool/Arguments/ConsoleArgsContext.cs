@@ -97,14 +97,24 @@ namespace NuGet.Updater.Tool.Arguments
 
 		public void WriteOptionDescriptions(TextWriter writer) => CreateOptionsFor(default).WriteOptionDescriptions(writer);
 
-		internal static Dictionary<string, NuGetVersion> LoadManualOperations(string inputFilePath)
+		internal static Dictionary<string, (bool, VersionRange)> LoadManualOperations(string inputFilePath)
 		{
 			using(var fileReader = File.OpenText(inputFilePath))
 			using(var jsonReader = new JsonTextReader(fileReader))
 			{
 				var result = JsonSerializer.CreateDefault().Deserialize<IEnumerable<UpdateResult>>(jsonReader);
 
-				return result.ToDictionary(r => r.PackageId, r => new NuGetVersion(r.UpdatedVersion));
+				return result.ToDictionary(
+					r => r.PackageId,
+					r => NuGetVersion.TryParse(r.UpdatedVersion, out var version) ?
+						(true, new VersionRange(
+							minVersion: version,
+							includeMinVersion: true,
+							maxVersion: version,
+							includeMaxVersion: true,
+							floatRange: null,
+							originalString: null)) :
+								(false, VersionRange.Parse(r.UpdatedVersion)));
 			}
 		}
 	}
