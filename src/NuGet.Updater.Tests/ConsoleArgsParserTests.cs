@@ -168,7 +168,7 @@ namespace NuGet.Updater.Tests
 			Assert.IsFalse(context.HasError);
 
 			var actualValues = (ICollection)context.Parameters.VersionOverrides;
-			var expectedValues = ConsoleArgsContext.LoadManualOperations(PinnedVersionJsonPath);
+			var expectedValues = ConsoleArgsContext.LoadOverrides(PinnedVersionJsonPath);
 
 			CollectionAssert.AreEqual(expectedValues, actualValues);
 		}
