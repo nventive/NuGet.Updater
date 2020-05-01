@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 using Mono.Options;
 using Newtonsoft.Json;
 using NuGet.Shared.Entities;
@@ -48,7 +51,7 @@ namespace NuGet.Updater.Tool.Arguments
 				{ "strict", "Whether to use versions with only the specified version tag (ie. dev, but not dev.test)", TrySet(_ => context.Parameters.Strict = true) },
 				{ "dryrun", "Runs the updater but doesn't write the updates to files.", TrySet(_ => context.Parameters.IsDryRun = true) },
 				{ "result|r=", "The path to the file where the update result should be saved.", TrySet(x => context.ResultFile = x) },
-				{ "versionOverrides=", "The path to a JSON file to force specifc versions to be used; format should be the same as the result file", TryParseAndSet(LoadManualOperations, x => context.Parameters.VersionOverrides.AddRange(x)) },
+				{ "versionOverrides=", "The path to a JSON file to force specifc versions to be used; format should be the same as the result file", TryParseAndSet(LoadOverrides, x => context.Parameters.VersionOverrides.AddRange(x)) },
 			};
 
 			Action<string> TrySet(Action<string> set)
@@ -97,24 +100,45 @@ namespace NuGet.Updater.Tool.Arguments
 
 		public void WriteOptionDescriptions(TextWriter writer) => CreateOptionsFor(default).WriteOptionDescriptions(writer);
 
-		internal static Dictionary<string, (bool, VersionRange)> LoadManualOperations(string inputFilePath)
+		internal static Dictionary<string, (bool, VersionRange)> LoadOverrides(string inputPathOrUrl)
 		{
-			using(var fileReader = File.OpenText(inputFilePath))
-			using(var jsonReader = new JsonTextReader(fileReader))
-			{
-				var result = JsonSerializer.CreateDefault().Deserialize<IEnumerable<UpdateResult>>(jsonReader);
+			var results =
+				LoadFromStreamAsync()
+					.GetAwaiter()
+					.GetResult();
 
-				return result.ToDictionary(
-					r => r.PackageId,
-					r => NuGetVersion.TryParse(r.UpdatedVersion, out var version) ?
-						(true, new VersionRange(
-							minVersion: version,
-							includeMinVersion: true,
-							maxVersion: version,
-							includeMaxVersion: true,
-							floatRange: null,
-							originalString: null)) :
-								(false, VersionRange.Parse(r.UpdatedVersion)));
+			return results.ToDictionary(
+				r => r.PackageId,
+				r => NuGetVersion.TryParse(r.UpdatedVersion, out var version) ?
+					(true, new VersionRange(
+						minVersion: version,
+						includeMinVersion: true,
+						maxVersion: version,
+						includeMaxVersion: true,
+						floatRange: null,
+						originalString: null)) :
+							(false, VersionRange.Parse(r.UpdatedVersion)));
+
+			async Task<IEnumerable<UpdateResult>> LoadFromStreamAsync()
+			{
+				var jsonSerializer = JsonSerializer.CreateDefault();
+
+				if(inputPathOrUrl.StartsWith("http://") || inputPathOrUrl.StartsWith("https://"))
+				{
+					using(var httpClient = new HttpClient())
+					using(var stream = await httpClient.GetStreamAsync(inputPathOrUrl))
+					using(var jsonTextReader = new JsonTextReader(new StreamReader(stream, Encoding.UTF8)))
+					{
+						return jsonSerializer.Deserialize<IEnumerable<UpdateResult>>(jsonTextReader);
+					}
+				}
+				else
+				{
+					using(var jsonTextReader = new JsonTextReader(File.OpenText(inputPathOrUrl)))
+					{
+						return jsonSerializer.Deserialize<IEnumerable<UpdateResult>>(jsonTextReader);
+					}
+				}
 			}
 		}
 	}
