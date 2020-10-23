@@ -5,7 +5,7 @@ using NuGet.Shared.Extensions;
 using NuGet.Updater.Log;
 using Uno.Extensions;
 
-#if UAP
+#if WINDOWS_UWP
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
 using XmlElement = Windows.Data.Xml.Dom.XmlElement;
 #else

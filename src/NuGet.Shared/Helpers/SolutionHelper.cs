@@ -118,7 +118,7 @@ namespace NuGet.Shared.Helpers
 				file = Path.Combine(solutionFolder, target.GetDescription());
 			}
 
-			if(file.HasValue() && File.Exists(file))
+			if(file.HasValue() && await FileHelper.Exists(file))
 			{
 				log.LogInformation($"Found {target.GetDescription()}");
 				return new[] { file };

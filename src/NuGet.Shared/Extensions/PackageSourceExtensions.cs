@@ -39,7 +39,7 @@ namespace NuGet.Shared.Extensions
 
 			return new PackageSource(url)
 			{
-#if UAP
+#if WINDOWS_UWP
 				Credentials = PackageSourceCredential.FromUserInput(sourceName, "user", accessToken, false),
 #else
 				Credentials = PackageSourceCredential.FromUserInput(sourceName, "user", accessToken, false, null),

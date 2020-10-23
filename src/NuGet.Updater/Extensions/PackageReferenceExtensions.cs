@@ -8,7 +8,7 @@ using NuGet.Shared.Extensions;
 using NuGet.Updater.Entities;
 using Uno.Extensions;
 
-#if UAP
+#if WINDOWS_UWP
 using XmlDocument = Windows.Data.Xml.Dom.XmlDocument;
 #else
 using XmlDocument = System.Xml.XmlDocument;

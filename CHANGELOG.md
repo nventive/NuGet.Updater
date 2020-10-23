@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
+### Changed
+### Fixed
+- Fixed issue where the UWP implementation was not properly checking for files' existence.
+### Removed
+
+## Version 2.1
+
+### Added
 - Added NuGet.Downloader
 - Added proper parsing of the versions read in the files
 

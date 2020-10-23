@@ -1,4 +1,4 @@
-﻿#if !UAP
+﻿#if !WINDOWS_UWP
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -46,6 +46,8 @@ namespace NuGet.Shared.Helpers
 		{
 			return (File.GetAttributes(path) & FileAttributes.Directory) == FileAttributes.Directory;
 		}
+
+		public static async Task<bool> Exists(string path) => File.Exists(path);
 	}
 }
 #endif

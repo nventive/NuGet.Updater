@@ -1,6 +1,5 @@
-﻿#if UAP
+﻿#if WINDOWS_UWP
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -69,6 +68,19 @@ namespace NuGet.Shared.Helpers
 				return true;
 			}
 			catch(ArgumentException)
+			{
+				return false;
+			}
+		}
+
+		public static async Task<bool> Exists(string path)
+		{
+			try
+			{
+				var file = await StorageFile.GetFileFromPathAsync(path);
+				return true;
+			}
+			catch(Exception)
 			{
 				return false;
 			}
