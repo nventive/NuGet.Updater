@@ -7,7 +7,7 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using Uno.Extensions;
 
-#if UAP
+#if WINDOWS_UWP
 using System.Text.RegularExpressions;
 using Windows.Data.Xml.Dom;
 using Windows.Storage;
@@ -94,7 +94,7 @@ namespace NuGet.Shared.Extensions
 		/// <returns></returns>
 		public static async Task<XmlDocument> LoadDocument(this string path, CancellationToken ct)
 		{
-#if UAP
+#if WINDOWS_UWP
 			var file = await StorageFile
 				.GetFileFromPathAsync(path)
 				.AsTask(ct);
@@ -123,7 +123,7 @@ namespace NuGet.Shared.Extensions
 		/// <returns></returns>
 		public static async Task Save(this XmlDocument document, CancellationToken ct, string path)
 		{
-#if UAP
+#if WINDOWS_UWP
 			var xml = document.GetXml();
 
 			xml = Regex.Replace(xml, @"(<\? ?xml)(?<declaration>.+)( ?\?>)", x => !x.Groups["declaration"].Value.Contains("encoding", StringComparison.OrdinalIgnoreCase)

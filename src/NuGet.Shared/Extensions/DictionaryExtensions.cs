@@ -13,7 +13,7 @@ namespace NuGet.Shared.Extensions
 			.Where(g => keys.Contains(g.Key))
 			.ToDictionary(g => g.Key, g => g.Value);
 
-#if !UAP
+#if !WINDOWS_UWP
 		public static bool TryAdd<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, TValue value)
 		{
 			if(dictionary.ContainsKey(key))
