@@ -3,7 +3,7 @@
 		<TargetFrameworks>netstandard20;net472</TargetFrameworks>
 		<NoWarn>$(NoWarn);CA1068;NU1701</NoWarn>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<LangVersion>7.2</LangVersion>
+		<LangVersion>9.0</LangVersion>
 	</PropertyGroup>
 
 	<!-- NuGet metadata -->
