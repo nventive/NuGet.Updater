@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>netstandard20;net472</TargetFrameworks>
+		<NoWarn>$(NoWarn);CA1068;NU1701</NoWarn>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<LangVersion>7.2</LangVersion>
+	</PropertyGroup>
+
+	<!-- NuGet metadata -->
+	<PropertyGroup>
+		<PackageId>nventive.NuGet.Updater</PackageId>
+		<Authors>nventive</Authors>
+		<Owners>nventive</Owners>
+		<Description>Nuget Updater allows to automatically update the NuGet packages in a solution at build time</Description>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/nventive/NuGet.Updater</PackageProjectUrl>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Security.Cryptography.ProtectedData" Version="5.0.0" />
+		<PackageReference Include="Uno.Core" Version="2.0.0" />
+		<PackageReference Include="NuGet.Protocol" Version="5.8.0" />
+		<PackageReference Include="System.ValueTuple" Version="4.5.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="../icon.png">
+			<Pack>True</Pack>
+			<PackagePath />
+		</None>
+	</ItemGroup>
+</Project>
