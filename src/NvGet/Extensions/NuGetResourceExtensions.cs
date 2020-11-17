@@ -60,7 +60,18 @@ namespace NvGet.Extensions
 			ILogger log
 		)
 		{
-			await resource.Push(package.Path, null, 100, true, s => s, s => s, true, log);
+			await resource.Push(
+				package.Path,
+				symbolSource: null,
+				timeoutInSecond: 100,
+				disableBuffering: true,
+				getApiKey: s => s,
+				getSymbolApiKey: s => s,
+				noServiceEndpoint: true,
+				skipDuplicate: true,
+				symbolPackageUpdateResource: default,
+				log
+			);
 
 			return true;
 		}
@@ -69,7 +80,7 @@ namespace NvGet.Extensions
 			where TResource : class, INuGetResource
 		{
 			var repositoryProvider = new SourceRepositoryProvider(
-				Settings.LoadDefaultSettings(null),
+				new PackageSourceProvider(Settings.LoadDefaultSettings(null)),
 				Repository.Provider.GetCoreV3()
 			);
 

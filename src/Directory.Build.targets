@@ -1,0 +1,9 @@
+<Project ToolsVersion="15.0">
+
+    <!-- This target ensures the output of the ProjectReferences marked with PrivateAssets="All" are copied to the resulting NuGet package -->
+	<Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+		<ItemGroup>
+			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')-&gt;WithMetadataValue('PrivateAssets', 'All'))" />
+		</ItemGroup>
+	</Target>
+</Project>

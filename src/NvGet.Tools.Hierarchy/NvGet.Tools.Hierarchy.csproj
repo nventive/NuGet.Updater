@@ -1,13 +1,39 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
-  </PropertyGroup>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>nugethierarchy</ToolCommandName>
+		<LangVersion>latest</LangVersion>
+		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+	</PropertyGroup>
+
+	<!-- NuGet metadata -->
+	<PropertyGroup>
+		<PackageId>nventive.NuGet.Hierarchy.Tool</PackageId>
+		<Title>NuGet Hierarchy Tool</Title>
+		<Description>NuGet Hierarchy allows you to view the dependency tree of a solution</Description>
+		<Authors>nventive</Authors>
+		<Owners>nventive</Owners>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+		<PackageIcon>icon.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/nventive/NuGet.Updater</PackageProjectUrl>
+	</PropertyGroup>
+
 	<ItemGroup>
-		<PackageReference Include="Mono.Options" Version="5.3.0.1" />
+		<None Include="../icon.png">
+			<Pack>True</Pack>
+			<PackagePath />
+		</None>
 	</ItemGroup>
+
 	<ItemGroup>
-	  <ProjectReference Include="..\NvGet\NvGet.csproj" />
+		<PackageReference Include="Mono.Options" Version="6.6.0.161" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\NvGet\NvGet.csproj" />
 	</ItemGroup>
 </Project>
