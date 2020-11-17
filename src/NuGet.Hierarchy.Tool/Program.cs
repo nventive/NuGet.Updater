@@ -45,10 +45,6 @@ namespace NuGet.Hierarchy.Tool
 
 				var result = await tool.RunAsync(CancellationToken.None);
 
-				var summary = result.GetSummary();
-
-				File.WriteAllLines(outputFile, summary);
-
 				var reverseReferences = result.GetReversePackageReferences();
 
 				var lines = new List<string>();
@@ -68,7 +64,12 @@ namespace NuGet.Hierarchy.Tool
 					}
 				}
 
-				File.WriteAllLines(Path.Combine(Path.GetDirectoryName(outputFile), "unecessary.txt"), lines);
+				if(outputFile != null)
+				{
+					var summary = result.GetSummary();
+					File.WriteAllLines(outputFile, summary);
+					File.WriteAllLines(Path.Combine(Path.GetDirectoryName(outputFile), "unecessary.txt"), lines);
+				}
 			}
 			catch(Exception ex)
 			{
