@@ -14,35 +14,54 @@ pr:
     - develop
 
 variables:
-- name: PackageOutputPath
-  value: '$(Build.ArtifactStagingDirectory)'
-- name: GeneratePackageOnBuild
-  value: true
+  NuGetArtifactName: Packages
+  NuGetToolVersion: 5.8.0
 
-steps:
-- task: GitVersion@5
-  displayName: 'Calculate version'
+stages:
+- stage: Build
+  jobs:
+  - job: Windows_Build
+    steps:
+    - task: GitVersion@5
+      displayName: 'Calculate version'
 
-- task: NuGetToolInstaller@1
-  displayName: 'Install NuGet 5.8.0'
-  inputs:
-    versionSpec: 5.8.0
+    - task: MSBuild@1
+      displayName: 'Build solution in Release | Any CPU'
+      inputs:
+        solution: src\NvGet.sln
+        configuration: Release
+        platform: 'Any CPU'
+        msbuildArguments: >
+         /p:PackageVersion=$(GitVersion.NuGetVersion)
+         /p:PackageOutputPath=$(Build.ArtifactStagingDirectory)
+         /p:GeneratePackageOnBuild=true
+         /r
 
-- task: NuGetCommand@2
-  displayName: 'Restore NuGet packages'
-  inputs:
-    command: restore
-    restoreSolution: src\Nuget.Updater.sln
-    includeNuGetOrg: true
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: $(NuGetArtifactName)
+      displayName: 'Publish NuGet packages'
 
-- task: MSBuild@1
-  displayName: 'Build solution in Release | Any CPU'
-  inputs:
-    solution: src\Nuget.Updater.sln
-    configuration: Release
-    platform: 'Any CPU'
-    msbuildArguments: /p:PackageVersion=$(GitVersion.NuGetVersion)
+- stage: Release
+  condition: ne(variables['Build.Reason'], 'PullRequest')
+  jobs:
+  - deployment: NuGet
+    environment: NuGet
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: $(NuGetArtifactName)
 
-- publish: $(PackageOutputPath)
-  name: Packages
-  displayName: 'Publish NuGet packages'
+          - task: NuGetToolInstaller@1
+            displayName: 'Use NuGet $(NuGetToolVersion)'
+            inputs:
+              versionSpec: $(NuGetToolVersion)
+        
+          - task: NuGetCommand@2
+            displayName: 'NuGet push'
+            inputs:
+              command: push
+              nuGetFeedType: external
+              publishFeedCredentials: 'NuGet.org - nventive'
+                
