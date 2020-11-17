@@ -7,6 +7,12 @@ trigger:
     - master
     - develop
 
+pr:
+  branches:
+    include:
+    - master
+    - develop
+
 variables:
 - name: PackageOutputPath
   value: '$(Build.ArtifactStagingDirectory)'
@@ -15,26 +21,28 @@ variables:
 
 steps:
 - task: GitVersion@5
+  displayName: 'Calculate version'
 
 - task: NuGetToolInstaller@1
+  displayName: 'Install NuGet 5.8.0'
   inputs:
-    versionSpec: 5.0.2
+    versionSpec: 5.8.0
 
 - task: NuGetCommand@2
+  displayName: 'Restore NuGet packages'
   inputs:
     command: restore
     restoreSolution: src\Nuget.Updater.sln
     includeNuGetOrg: true
 
 - task: MSBuild@1
+  displayName: 'Build solution in Release | Any CPU'
   inputs:
     solution: src\Nuget.Updater.sln
     configuration: Release
     platform: 'Any CPU'
     msbuildArguments: /p:PackageVersion=$(GitVersion.NuGetVersion)
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    ArtifactName: Packages
-    PathtoPublish: $(PackageOutputPath)
-    publishLocation: Container
+- publish: $(PackageOutputPath)
+  name: Packages
+  displayName: 'Publish NuGet packages'
