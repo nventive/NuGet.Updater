@@ -8,6 +8,7 @@ namespace NuGet.Shared.Extensions
 	public static class PackageSourceExtensions
 	{
 		private const char PackageFeedInputSeparator = '|';
+		private const char AlternatePackageFeedInputSeparator = ',';
 
 		/// <summary>
 		/// Transforms a input string into a package feed
@@ -19,6 +20,12 @@ namespace NuGet.Shared.Extensions
 		public static PackageSource ToPackageSource(this string input)
 		{
 			var parts = input.Split(PackageFeedInputSeparator);
+			
+			//If nothing split, try with the alternate separator 
+			if(parts.Length == 1)
+			{
+				parts = input.Split(AlternatePackageFeedInputSeparator);
+			}
 
 			var url = parts.ElementAtOrDefault(0);
 			var accessToken = parts.ElementAtOrDefault(1);
