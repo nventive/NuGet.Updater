@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NeoGet\NeoGet.csproj" />
+    <ProjectReference Include="..\NvGet\NvGet.csproj" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -22,6 +22,6 @@
 		</None>
 	</ItemGroup>
 
-	<Import Project="..\NeoGet.Tools.Shared\NeoGet.Tools.Shared.projitems" Label="Shared" />
+	<Import Project="..\NvGet.Tools.Shared\NvGet.Tools.Shared.projitems" Label="Shared" />
 
 </Project>

@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29021.104
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Updater.Tool", "NuGet.Updater.Tool\NuGet.Updater.Tool.csproj", "{3DAA81DB-00A6-4A84-8180-19A588398F52}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0547178F-3639-4797-940F-265958B7FECA}"
 	ProjectSection(SolutionItems) = preProject
 		..\.azure-pipelines.yml = ..\.azure-pipelines.yml
@@ -21,23 +19,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeoGet.Tests", "NeoGet.Tests\NeoGet.Tests.csproj", "{D240ABFD-6A48-4E4B-A946-9EBF9840FADA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NvGet.Tools.Updater", "NvGet.Tools.Updater\NvGet.Tools.Updater.csproj", "{3DAA81DB-00A6-4A84-8180-19A588398F52}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Downloader.Tool", "NuGet.Downloader.Tool\NuGet.Downloader.Tool.csproj", "{17979C76-865A-4983-977B-E242BCE1B038}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NvGet.Tests", "NvGet.Tests\NvGet.Tests.csproj", "{D240ABFD-6A48-4E4B-A946-9EBF9840FADA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeoGet", "NeoGet\NeoGet.csproj", "{5FBA174D-C841-4968-A8E0-3BA97B839123}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NvGet.Tools.Downloader", "NvGet.Tools.Downloader\NvGet.Tools.Downloader.csproj", "{17979C76-865A-4983-977B-E242BCE1B038}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NvGet", "NvGet\NvGet.csproj", "{5FBA174D-C841-4968-A8E0-3BA97B839123}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{7B2F2CBF-9EC9-4C18-A471-D36862EE23D9}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "NeoGet.Tools.Shared", "NeoGet.Tools.Shared\NeoGet.Tools.Shared.shproj", "{4C395D24-0028-47EF-B07E-5566344E78DE}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "NvGet.Tools.Shared", "NvGet.Tools.Shared\NvGet.Tools.Shared.shproj", "{4C395D24-0028-47EF-B07E-5566344E78DE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NuGet.Hierarchy.Tool", "NuGet.Hierarchy.Tool\NuGet.Hierarchy.Tool.csproj", "{464BC350-3EE3-4D03-B34F-BDC53D6E0FAE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NvGet.Tools.Hierarchy", "NvGet.Tools.Hierarchy\NvGet.Tools.Hierarchy.csproj", "{464BC350-3EE3-4D03-B34F-BDC53D6E0FAE}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		NeoGet.Tools.Shared\NeoGet.Tools.Shared.projitems*{3daa81db-00a6-4a84-8180-19a588398f52}*SharedItemsImports = 5
-		NeoGet.Tools.Shared\NeoGet.Tools.Shared.projitems*{4c395d24-0028-47ef-b07e-5566344e78de}*SharedItemsImports = 13
-		NeoGet.Tools.Shared\NeoGet.Tools.Shared.projitems*{d240abfd-6a48-4e4b-a946-9ebf9840fada}*SharedItemsImports = 5
+		NvGet.Tools.Shared\NvGet.Tools.Shared.projitems*{3daa81db-00a6-4a84-8180-19a588398f52}*SharedItemsImports = 5
+		NvGet.Tools.Shared\NvGet.Tools.Shared.projitems*{4c395d24-0028-47ef-b07e-5566344e78de}*SharedItemsImports = 13
+		NvGet.Tools.Shared\NvGet.Tools.Shared.projitems*{d240abfd-6a48-4e4b-a946-9ebf9840fada}*SharedItemsImports = 5
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

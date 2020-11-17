@@ -41,7 +41,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\NeoGet\NeoGet.csproj" />
+	  <ProjectReference Include="..\NvGet\NvGet.csproj" />
 	</ItemGroup>
 
 	<!-- This target ensures the output of the ProjectReferences marked with PrivateAssets="All" are copied to the resulting NuGet package -->
@@ -50,5 +50,5 @@
 			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference')-&gt;WithMetadataValue('PrivateAssets', 'All'))" />
 		</ItemGroup>
 	</Target>
-	<Import Project="..\NeoGet.Tools.Shared\NeoGet.Tools.Shared.projitems" Label="Shared" />
+	<Import Project="..\NvGet.Tools.Shared\NvGet.Tools.Shared.projitems" Label="Shared" />
 </Project>
