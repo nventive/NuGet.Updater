@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace NeoGet.Tools.Hierarchy.Entities
+namespace NvGet.Tools.Hierarchy.Entities
 {
 	public class ProjectPackageHierarchy
 	{

@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using NeoGet.Extensions;
-using NeoGet.Helpers;
-using NeoGet.Tools.Updater.Entities;
-using NeoGet.Tools.Updater.Extensions;
+using NvGet.Extensions;
+using NvGet.Helpers;
+using NvGet.Tools.Updater.Entities;
+using NvGet.Tools.Updater.Extensions;
 using NuGet.Common;
 using NuGet.Versioning;
 
-namespace NeoGet.Tools.Updater.Log
+namespace NvGet.Tools.Updater.Log
 {
 	public class UpdaterLogger : ILogger, IEqualityComparer<UpdateOperation>
 	{

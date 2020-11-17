@@ -4,16 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NeoGet.Contracts;
-using NeoGet.Entities;
-using NeoGet.Tools.Downloader.Entities;
-using NeoGet.Tools.Hierarchy;
-using NeoGet.Tools.Hierarchy.Extensions;
+using NvGet.Contracts;
+using NvGet.Entities;
+using NvGet.Tools.Downloader.Entities;
+using NvGet.Tools.Hierarchy;
+using NvGet.Tools.Hierarchy.Extensions;
 using NuGet.Common;
 using NuGet.Packaging.Core;
 using Uno.Extensions;
 
-namespace NeoGet.Tools.Downloader
+namespace NvGet.Tools.Downloader
 {
 	public class NuGetDownloader
 	{

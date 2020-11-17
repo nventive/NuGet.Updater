@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NeoGet.Contracts
+namespace NvGet.Contracts
 {
 	/// <summary>
 	/// The type of file containing a reference.

@@ -1,6 +1,6 @@
-﻿using NeoGet.Entities;
+﻿using NvGet.Entities;
 
-namespace NeoGet.Tools.Downloader.Entities
+namespace NvGet.Tools.Downloader.Entities
 {
 	public class DownloaderResult
 	{

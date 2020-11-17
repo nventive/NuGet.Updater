@@ -1,9 +1,9 @@
 ﻿using System;
-using NeoGet.Entities;
+using NvGet.Entities;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 
-namespace NeoGet.Tools.Updater.Log
+namespace NvGet.Tools.Updater.Log
 {
 	public class UpdateOperation
 	{

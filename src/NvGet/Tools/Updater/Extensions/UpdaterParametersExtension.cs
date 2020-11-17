@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NeoGet.Contracts;
-using NeoGet.Entities;
-using NeoGet.Extensions;
-using NeoGet.Helpers;
-using NeoGet.Tools.Updater.Entities;
+using NvGet.Contracts;
+using NvGet.Entities;
+using NvGet.Extensions;
+using NvGet.Helpers;
+using NvGet.Tools.Updater.Entities;
 using Uno.Extensions;
 
-namespace NeoGet.Tools.Updater.Extensions
+namespace NvGet.Tools.Updater.Extensions
 {
 	public static class UpdaterParametersExtension
 	{

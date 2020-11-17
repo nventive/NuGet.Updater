@@ -1,6 +1,6 @@
 ﻿using NuGet.Packaging.Core;
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class PackageDependencyExtensions
 	{

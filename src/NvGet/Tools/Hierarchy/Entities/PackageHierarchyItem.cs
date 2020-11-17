@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NeoGet.Extensions;
+using NvGet.Extensions;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
 
-namespace NeoGet.Tools.Hierarchy.Entities
+namespace NvGet.Tools.Hierarchy.Entities
 {
 	public class PackageHierarchyItem : IEquatable<PackageHierarchyItem>
 	{

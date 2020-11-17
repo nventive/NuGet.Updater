@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NeoGet.Contracts;
-using NeoGet.Entities;
-using NeoGet.Extensions;
-using NeoGet.Helpers;
-using NeoGet.Tools.Updater.Entities;
-using NeoGet.Tools.Updater.Extensions;
-using NeoGet.Tools.Updater.Log;
+using NvGet.Contracts;
+using NvGet.Entities;
+using NvGet.Extensions;
+using NvGet.Helpers;
+using NvGet.Tools.Updater.Entities;
+using NvGet.Tools.Updater.Extensions;
+using NvGet.Tools.Updater.Log;
 using Uno.Extensions;
 
 #if WINDOWS_UWP
@@ -21,7 +21,7 @@ using XmlDocument = System.Xml.XmlDocument;
 
 [assembly: System.Runtime.CompilerServices.InternalsVisibleTo("NuGet.Updater.Tests")]
 
-namespace NeoGet.Tools.Updater
+namespace NvGet.Tools.Updater
 {
 	public class NuGetUpdater
 	{

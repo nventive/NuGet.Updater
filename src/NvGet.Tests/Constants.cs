@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using NeoGet.Tools.Tests.Entities;
+using NvGet.Tools.Tests.Entities;
 
-namespace NeoGet.Tests
+namespace NvGet.Tests
 {
 	public static class Constants
 	{

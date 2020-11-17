@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Uno.Extensions;
 
-namespace NeoGet.Helpers
+namespace NvGet.Helpers
 {
 	public static class FileHelper
 	{

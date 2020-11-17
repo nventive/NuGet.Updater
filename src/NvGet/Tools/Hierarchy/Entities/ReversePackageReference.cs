@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using NuGet.Packaging.Core;
 
-namespace NeoGet.Tools.Hierarchy.Entities
+namespace NvGet.Tools.Hierarchy.Entities
 {
 	public class ReversePackageReference
 	{

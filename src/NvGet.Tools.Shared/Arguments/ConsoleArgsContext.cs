@@ -6,14 +6,14 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Mono.Options;
-using NeoGet.Contracts;
-using NeoGet.Entities;
-using NeoGet.Tools.Updater.Entities;
+using NvGet.Contracts;
+using NvGet.Entities;
+using NvGet.Tools.Updater.Entities;
 using Newtonsoft.Json;
 using NuGet.Versioning;
 using Uno.Extensions;
 
-namespace NeoGet.Tools.Updater.Arguments
+namespace NvGet.Tools.Arguments
 {
 	public partial class ConsoleArgsContext
 	{

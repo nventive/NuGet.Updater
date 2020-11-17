@@ -1,7 +1,7 @@
 ﻿using System;
 using NuGet.Versioning;
 
-namespace NeoGet.Entities
+namespace NvGet.Entities
 {
 	public class FeedVersion : IComparable<FeedVersion>
 	{

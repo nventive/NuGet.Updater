@@ -6,12 +6,12 @@
     <SharedGUID>4c395d24-0028-47ef-b07e-5566344e78de</SharedGUID>
   </PropertyGroup>
   <PropertyGroup Label="Configuration">
-    <Import_RootNamespace>NeoGet.Tools</Import_RootNamespace>
+    <Import_RootNamespace>NvGet.Tools</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)Updater\Arguments\ConsoleArgError.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Updater\Arguments\ConsoleArgErrorType.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Updater\Arguments\ConsoleArgsContext.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Updater\Arguments\ConsoleArgsContext.Properties.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Arguments\ConsoleArgError.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Arguments\ConsoleArgErrorType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Arguments\ConsoleArgsContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Arguments\ConsoleArgsContext.Properties.cs" />
   </ItemGroup>
 </Project>

@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using NuGet.Versioning;
 using Uno.Extensions;
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class StringExtensions
 	{

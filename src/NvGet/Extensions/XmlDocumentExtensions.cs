@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NeoGet.Entities;
+using NvGet.Entities;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using Uno.Extensions;
@@ -21,7 +21,7 @@ using XmlElement = System.Xml.XmlElement;
 using XmlNode = System.Xml.XmlNode;
 #endif
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class XmlDocumentExtensions
 	{

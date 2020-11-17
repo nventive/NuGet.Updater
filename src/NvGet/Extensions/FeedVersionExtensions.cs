@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using NeoGet.Entities;
+using NvGet.Entities;
 using Uno.Extensions;
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class FeedVersionExtensions
 	{

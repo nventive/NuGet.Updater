@@ -1,6 +1,6 @@
-﻿using NeoGet.Entities;
+﻿using NvGet.Entities;
 
-namespace NeoGet.Tools.Updater.Entities
+namespace NvGet.Tools.Updater.Entities
 {
 	public class UpdaterPackage
 	{

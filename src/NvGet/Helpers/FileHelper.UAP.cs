@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
 
-namespace NeoGet.Helpers
+namespace NvGet.Helpers
 {
 	/// <summary>
 	/// UAP-Specific methods.

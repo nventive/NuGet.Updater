@@ -5,13 +5,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
-using NeoGet.Contracts;
-using NeoGet.Entities;
-using NeoGet.Extensions;
-using NeoGet.Tools.Hierarchy;
-using NeoGet.Tools.Hierarchy.Extensions;
+using NvGet.Contracts;
+using NvGet.Entities;
+using NvGet.Extensions;
+using NvGet.Tools.Hierarchy.Extensions;
+using Uno.Extensions;
 
-namespace NuGet.Hierarchy.Tool
+namespace NvGet.Tools.Hierarchy.Tool
 {
 	public static class Program
 	{
@@ -39,6 +39,11 @@ namespace NuGet.Hierarchy.Tool
 					Console.WriteLine("NuGet Hierarchy is a tool allowing the view the hierarchy of the NuGet packages found in a solution");
 					Console.WriteLine();
 					options.WriteOptionDescriptions(Console.Out);
+				}
+
+				if(sources.Empty())
+				{
+					sources.Add(PackageFeed.NuGetOrg);
 				}
 
 				var tool = new NuGetHierarchy(target, sources, ConsoleLogger.Instance);

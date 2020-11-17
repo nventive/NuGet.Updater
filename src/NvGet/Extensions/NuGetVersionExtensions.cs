@@ -2,7 +2,7 @@
 using System.Linq;
 using NuGet.Versioning;
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class NuGetVersionExtensions
 	{

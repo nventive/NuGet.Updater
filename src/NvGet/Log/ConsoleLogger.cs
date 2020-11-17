@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using NuGet.Common;
 
-namespace NeoGet.Entities
+namespace NvGet.Entities
 {
 	public class ConsoleLogger : ILogger
 	{

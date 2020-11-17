@@ -1,4 +1,4 @@
-﻿namespace NeoGet.Tools.Updater.Arguments
+﻿namespace NvGet.Tools.Arguments
 {
 	public enum ConsoleArgErrorType
 	{

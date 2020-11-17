@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NeoGet.Extensions;
+using NvGet.Extensions;
 using Uno.Extensions;
 
-namespace NeoGet.Helpers
+namespace NvGet.Helpers
 {
 	public static class MarkdownHelper
 	{

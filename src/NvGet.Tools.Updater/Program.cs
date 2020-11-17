@@ -5,15 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NeoGet.Helpers;
-using NeoGet.Log;
-using NeoGet.Tools.Updater;
-using NeoGet.Tools.Updater.Arguments;
-using NeoGet.Tools.Updater.Entities;
 using Newtonsoft.Json;
+using NvGet.Helpers;
+using NvGet.Log;
+using NvGet.Tools.Arguments;
+using NvGet.Tools.Updater.Entities;
 using Uno.Extensions;
 
-namespace NuGet.Updater.Tool
+namespace NvGet.Tools.Updater
 {
 	public static class Program
 	{

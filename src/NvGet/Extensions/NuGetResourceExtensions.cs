@@ -6,9 +6,9 @@ using NuGet.Configuration;
 using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
-using NeoGet.Entities;
+using NvGet.Entities;
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class NuGetResourceExtensions
 	{

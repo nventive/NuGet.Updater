@@ -1,8 +1,8 @@
-﻿using NeoGet.Extensions;
-using NeoGet.Tools.Updater.Entities;
-using NeoGet.Tools.Updater.Log;
+﻿using NvGet.Extensions;
+using NvGet.Tools.Updater.Entities;
+using NvGet.Tools.Updater.Log;
 
-namespace NeoGet.Tools.Updater.Extensions
+namespace NvGet.Tools.Updater.Extensions
 {
 	public static class UpdateOperationExtensions
 	{

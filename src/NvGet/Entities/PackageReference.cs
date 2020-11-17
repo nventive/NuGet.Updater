@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using NuGet.Packaging.Core;
-using NeoGet.Contracts;
+using NvGet.Contracts;
 using NuGet.Versioning;
 
-namespace NeoGet.Entities
+namespace NvGet.Entities
 {
 	public class PackageReference
 	{

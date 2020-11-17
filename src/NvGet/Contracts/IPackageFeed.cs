@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using NeoGet.Entities;
+using NvGet.Entities;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
 
-namespace NeoGet.Contracts
+namespace NvGet.Contracts
 {
 	public interface IPackageFeed
 	{

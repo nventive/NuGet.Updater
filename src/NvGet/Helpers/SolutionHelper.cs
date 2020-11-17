@@ -7,13 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Common;
 using NuGet.Packaging.Core;
-using NeoGet.Contracts;
-using NeoGet.Entities;
-using NeoGet.Extensions;
+using NvGet.Contracts;
+using NvGet.Entities;
+using NvGet.Extensions;
 using NuGet.Versioning;
 using Uno.Extensions;
 
-namespace NeoGet.Helpers
+namespace NvGet.Helpers
 {
 	/// <summary>
 	/// Shared solution helper methods.

@@ -3,12 +3,11 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Mono.Options;
-using NeoGet.Entities;
-using NeoGet.Tools.Downloader;
-using NeoGet.Tools.Downloader.Entities;
+using NvGet.Entities;
+using NvGet.Tools.Downloader.Entities;
 using Uno.Extensions;
 
-namespace NuGet.Downloader.Tool
+namespace NvGet.Tools.Downloader
 {
 	public static class Program
 	{

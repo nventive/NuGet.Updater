@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NeoGet.Entities;
+using NvGet.Entities;
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class PackageReferenceExtensions
 	{

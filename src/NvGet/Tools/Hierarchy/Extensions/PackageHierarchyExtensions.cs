@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NeoGet.Extensions;
-using NeoGet.Tools.Hierarchy.Entities;
+using NvGet.Extensions;
+using NvGet.Tools.Hierarchy.Entities;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 
-namespace NeoGet.Tools.Hierarchy.Extensions
+namespace NvGet.Tools.Hierarchy.Extensions
 {
 	public static class PackageHierarchyExtensions
 	{

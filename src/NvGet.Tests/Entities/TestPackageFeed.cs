@@ -6,10 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
-using NeoGet.Contracts;
-using NeoGet.Entities;
+using NvGet.Contracts;
+using NvGet.Entities;
 
-namespace NeoGet.Tools.Tests.Entities
+namespace NvGet.Tools.Tests.Entities
 {
 	public class TestPackageFeed : IPackageFeed
 	{

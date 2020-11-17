@@ -4,7 +4,7 @@ using System.Linq;
 using Uno;
 using Uno.Extensions.ValueType;
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class DictionaryExtensions
 	{

@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NeoGet.Entities;
-using NeoGet.Tools.Updater.Arguments;
-using NeoGet.Tools.Updater.Entities;
+using NvGet.Entities;
+using NvGet.Tools.Arguments;
+using NvGet.Tools.Updater.Entities;
 
-namespace NuGet.Updater.Tests
+namespace NvGet.Tests.Tools
 {
 	[TestClass]
 	public class ConsoleArgsParserTests

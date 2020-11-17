@@ -1,6 +1,6 @@
-﻿using NeoGet.Contracts;
+﻿using NvGet.Contracts;
 
-namespace NeoGet.Tools.Downloader.Entities
+namespace NvGet.Tools.Downloader.Entities
 {
 	public class DownloaderParameters
 	{

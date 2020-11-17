@@ -1,4 +1,4 @@
-﻿namespace NeoGet.Tools.Updater.Entities
+﻿namespace NvGet.Tools.Updater.Entities
 {
 	internal struct LogDisplayOptions
 	{

@@ -2,7 +2,7 @@
 using System.IO;
 using NuGet.Packaging.Core;
 
-namespace NeoGet.Entities
+namespace NvGet.Entities
 {
 	public class PackageReferenceHolder
 	{

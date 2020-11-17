@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NeoGet.Tools.Updater.Entities
+namespace NvGet.Tools.Updater.Entities
 {
 	public class UpdateResult : IEquatable<UpdateResult>
 	{

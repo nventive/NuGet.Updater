@@ -10,12 +10,12 @@ using NuGet.Configuration;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
 using NuGet.Protocol.Core.Types;
-using NeoGet.Contracts;
-using NeoGet.Extensions;
+using NvGet.Contracts;
+using NvGet.Extensions;
 using Uno.Extensions;
 using NuGet.Shared.Extensions;
 
-namespace NeoGet.Entities
+namespace NvGet.Entities
 {
 	public class PackageFeed : IPackageFeed
 	{

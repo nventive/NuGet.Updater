@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NeoGet.Contracts;
-using NeoGet.Entities;
-using NeoGet.Extensions;
-using NeoGet.Helpers;
-using NeoGet.Tools.Hierarchy.Entities;
-using NeoGet.Tools.Hierarchy.Extensions;
+using NvGet.Contracts;
+using NvGet.Entities;
+using NvGet.Extensions;
+using NvGet.Helpers;
+using NvGet.Tools.Hierarchy.Entities;
+using NvGet.Tools.Hierarchy.Extensions;
 using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
-using PackageReference = NeoGet.Entities.PackageReference;
+using PackageReference = NvGet.Entities.PackageReference;
 
-namespace NeoGet.Tools.Hierarchy
+namespace NvGet.Tools.Hierarchy
 {
 	public class NuGetHierarchy
 	{

@@ -1,12 +1,12 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NeoGet.Entities;
-using NeoGet.Tools.Updater.Entities;
-using NeoGet.Tools.Updater.Extensions;
+using NvGet.Entities;
+using NvGet.Tools.Updater.Entities;
+using NvGet.Tools.Updater.Extensions;
 using NuGet.Versioning;
 
-namespace NeoGet.Tests.Tools.Updater
+namespace NvGet.Tests.Tools.Updater
 {
 	[TestClass]
 	public class UpdaterParametersTests

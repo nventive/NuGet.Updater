@@ -2,7 +2,7 @@
 using System.Linq;
 using NuGet.Protocol.Core.Types;
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class PackageSearchMetadataExtensions
 	{

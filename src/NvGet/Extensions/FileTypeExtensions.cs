@@ -1,8 +1,8 @@
 ﻿using System.Linq;
-using NeoGet.Contracts;
-using NeoGet.Entities;
+using NvGet.Contracts;
+using NvGet.Entities;
 
-namespace NeoGet.Extensions
+namespace NvGet.Extensions
 {
 	public static class FileTypeExtensions
 	{

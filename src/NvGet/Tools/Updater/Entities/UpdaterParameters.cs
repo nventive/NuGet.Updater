@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using NeoGet.Contracts;
-using NeoGet.Entities;
+using NvGet.Contracts;
+using NvGet.Entities;
 using NuGet.Versioning;
 
-namespace NeoGet.Tools.Updater.Entities
+namespace NvGet.Tools.Updater.Entities
 {
 	public class UpdaterParameters
 	{

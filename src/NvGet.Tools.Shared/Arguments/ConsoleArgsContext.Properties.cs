@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using NeoGet.Tools.Updater.Entities;
+using NvGet.Tools.Updater.Entities;
 
-namespace NeoGet.Tools.Updater.Arguments
+namespace NvGet.Tools.Arguments
 {
 	public partial class ConsoleArgsContext
 	{

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace NeoGet.Log
+namespace NvGet.Log
 {
 	public class SimpleTextWriter : TextWriter
 	{

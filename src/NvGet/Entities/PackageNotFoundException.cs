@@ -1,7 +1,7 @@
 ﻿using System;
 using NuGet.Packaging.Core;
 
-namespace NeoGet.Entities
+namespace NvGet.Entities
 {
 	[Serializable]
 	public class PackageNotFoundException : Exception

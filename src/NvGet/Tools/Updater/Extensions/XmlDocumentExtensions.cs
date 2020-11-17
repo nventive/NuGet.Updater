@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
-using NeoGet.Extensions;
-using NeoGet.Tools.Updater.Log;
+using NvGet.Extensions;
+using NvGet.Tools.Updater.Log;
 using Uno.Extensions;
 
 #if WINDOWS_UWP
@@ -12,7 +12,7 @@ using XmlElement = Windows.Data.Xml.Dom.XmlElement;
 using XmlDocument = System.Xml.XmlDocument;
 #endif
 
-namespace NeoGet.Tools.Updater.Extensions
+namespace NvGet.Tools.Updater.Extensions
 {
 	public static class XmlDocumentExtensions
 	{

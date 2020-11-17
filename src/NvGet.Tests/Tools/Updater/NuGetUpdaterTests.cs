@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NeoGet.Contracts;
-using NeoGet.Tools.Tests.Entities;
-using NeoGet.Tools.Updater;
-using NeoGet.Tools.Updater.Entities;
-using NeoGet.Tools.Updater.Log;
+using NvGet.Contracts;
+using NvGet.Tools.Tests.Entities;
+using NvGet.Tools.Updater;
+using NvGet.Tools.Updater.Entities;
+using NvGet.Tools.Updater.Log;
 using Uno.Extensions;
 
-namespace NeoGet.Tests.Tools
+namespace NvGet.Tests.Tools
 {
 	[TestClass]
 	public class NuGetUpdaterTests

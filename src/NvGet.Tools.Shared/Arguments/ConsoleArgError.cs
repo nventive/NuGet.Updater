@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NeoGet.Tools.Updater.Arguments
+namespace NvGet.Tools.Arguments
 {
 	public class ConsoleArgError
 	{
