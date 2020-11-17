@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
+- Added tool allowing to display package dependencies
 ### Changed
+- Changed code structure to be able to share code between tools
 ### Fixed
 - Fixed issue where the UWP implementation was not properly checking for files' existence.
 ### Removed

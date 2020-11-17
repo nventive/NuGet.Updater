@@ -10,7 +10,7 @@ The NuGet Updater can be installed as a standalone .Net Core tool using the foll
 Help can be found with :
 `nugetupdater --help`
 
-The NuGet updater library can also be installed as a NuGet package in a UWP or .Net Standard application.
+The NuGet Updater can also be used as part of the NvGet library
 
 ## Sample commands
 

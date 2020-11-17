@@ -10,7 +10,7 @@ The NuGet Downloader can be installed as a standalone .Net Core tool using the f
 Help can be found with :
 `nugetdownloader --help`
 
-The NuGet downloader library can also be installed as a NuGet package in a UWP or .Net Standard application.
+The NuGet Downloader can also be used as part of the NvGet library
 
 ## Sample commands
 

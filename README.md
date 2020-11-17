@@ -6,11 +6,15 @@ NuGet packages manipulations made easy.
 
 ## NuGet.Updater
 
-Documentation about the NuGet.Updater can be found [here](src/NuGet.Updater.Tool/Readme.md)
+Documentation about the NuGet.Updater can be found [here](src/NvGet.Tools.Updater/Readme.md)
 
 ## NuGet.Downloader
 
-Documentation about the NuGet.Downloader can be found [here](src/NuGet.Downloader.Tool/README.md)
+Documentation about the NuGet.Downloader can be found [here](src/NvGet.Tools.Downloader/README.md)
+
+## NuGet.Hierarchy
+
+Documentation about the NuGet.Hierarchy can be found [here](src/NvGet.Tools.Hierarchy/README.md)
 
 ## Changelog
 
