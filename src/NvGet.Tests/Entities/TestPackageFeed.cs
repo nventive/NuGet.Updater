@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using NvGet.Contracts;
 using NvGet.Entities;
 
@@ -44,7 +45,7 @@ namespace NvGet.Tools.Tests.Entities
 			string author = null
 		) => _packages
 			.GetValueOrDefault(reference.Identity.Id)
-			?.Select(v => new FeedVersion(v, Url))
+			?.Select(v => new FeedVersion(new NuGetVersion(v), Url))
 			.ToArray() ?? Array.Empty<FeedVersion>();
 
 		public Task<bool> PushPackage(CancellationToken ct, LocalPackage package) => throw new NotSupportedException();

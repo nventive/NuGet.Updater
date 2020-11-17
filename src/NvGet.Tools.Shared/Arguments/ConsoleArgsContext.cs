@@ -12,6 +12,7 @@ using NvGet.Tools.Updater.Entities;
 using Newtonsoft.Json;
 using NuGet.Versioning;
 using Uno.Extensions;
+using System.Runtime.ConstrainedExecution;
 
 namespace NvGet.Tools.Arguments
 {
@@ -101,24 +102,17 @@ namespace NvGet.Tools.Arguments
 
 		public void WriteOptionDescriptions(TextWriter writer) => CreateOptionsFor(default).WriteOptionDescriptions(writer);
 
-		internal static Dictionary<string, (bool, VersionRange)> LoadOverrides(string inputPathOrUrl)
+		internal static IEnumerable<VersionOverride> LoadOverrides(string inputPathOrUrl)
 		{
 			var results =
 				LoadFromStreamAsync()
 					.GetAwaiter()
 					.GetResult();
 
-			return results.ToDictionary(
-				r => r.PackageId,
-				r => NuGetVersion.TryParse(r.UpdatedVersion, out var version) ?
-					(true, new VersionRange(
-						minVersion: version,
-						includeMinVersion: true,
-						maxVersion: version,
-						includeMaxVersion: true,
-						floatRange: null,
-						originalString: null)) :
-							(false, VersionRange.Parse(r.UpdatedVersion)));
+			return results.Select(r => NuGetVersion.TryParse(r.UpdatedVersion, out var version)
+				? new VersionOverride(r.PackageId, r.VersionTag, version)
+				: new VersionOverride(r.PackageId, r.VersionTag, VersionRange.Parse(r.UpdatedVersion))
+			);
 
 			async Task<IEnumerable<UpdateResult>> LoadFromStreamAsync()
 			{

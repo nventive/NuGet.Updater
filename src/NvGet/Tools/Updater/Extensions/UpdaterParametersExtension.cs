@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using NuGet.Versioning;
 using NvGet.Contracts;
 using NvGet.Entities;
 using NvGet.Extensions;
@@ -90,23 +91,34 @@ namespace NvGet.Tools.Updater.Extensions
 			PackageReference reference
 		)
 		{
-			if(parameters.VersionOverrides.TryGetValue(reference.Identity.Id, out var manualVersion) && manualVersion.forceVersion)
+			var manualVersion = parameters.VersionOverrides.FirstOrDefault(v => v.IsFixedVersion);
+			
+			if(manualVersion?.IsFixedVersion ?? false)
 			{
 				PackageFeed.Logger.LogInformation($"Overriding version for {reference.Identity.Id}");
-				return new FeedVersion(manualVersion.range.MinVersion);
+				return new FeedVersion(manualVersion.Version);
 			}
 
-			var availableVersions = await Task.WhenAll(parameters
-				.Feeds
-				.Select(f => f.GetPackageVersions(ct, reference, parameters.PackageAuthor))
-			);
+			var targetVersionTags = (manualVersion?.VersionTag).SelectOrDefault(t => new[] { t }, parameters.TargetVersions);
+
+			Dictionary<Uri, NuGetVersion[]> availableVersions = new();
+
+			foreach(var feed in parameters.Feeds)
+			{
+				availableVersions.Add(feed.Url, await feed.GetPackageVersions(ct, reference, parameters.PackageAuthor));
+			}
 
 			var versionsPerTarget = availableVersions
-				.SelectMany(x => x)
-				.Where(v => manualVersion.range?.Satisfies(v.Version) ?? true)
-				.OrderByDescending(v => v)
-				.GroupBy(version => parameters.TargetVersions.FirstOrDefault(t => version.IsMatchingVersion(t, parameters.Strict)))
-				.Where(g => g.Key.HasValue());
+				.Select(x => x
+					.Value
+					.Where(v => manualVersion.Range?.Satisfies(v) ?? true)
+					.GroupBy(v => targetVersionTags.FirstOrDefault(t => v.IsMatchingVersion(t, parameters.Strict)))
+					.Where(g => g.Key.HasValue())
+					.SelectMany(g => g
+						.OrderByDescending(v => v)
+						.Select(v => new FeedVersion(v, feedUri: x.Key, versionTag: g.Key))
+					)
+				);
 
 			return versionsPerTarget
 				.Select(g => g.FirstOrDefault())

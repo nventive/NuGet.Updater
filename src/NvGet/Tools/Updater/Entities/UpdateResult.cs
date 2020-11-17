@@ -10,6 +10,8 @@ namespace NvGet.Tools.Updater.Entities
 
 		public string UpdatedVersion { get; set; }
 
+		public string VersionTag { get; set; }
+
 		public override int GetHashCode() => PackageId?.GetHashCode() ?? 0;
 
 		public bool Equals(UpdateResult other) => other == null

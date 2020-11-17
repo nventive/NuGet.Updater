@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NvGet.Entities;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
+using NuGet.Versioning;
 
 namespace NvGet.Contracts
 {
@@ -27,7 +28,7 @@ namespace NvGet.Contracts
 		/// <param name="reference"></param>
 		/// <param name="author"></param>
 		/// <returns></returns>
-		Task<FeedVersion[]> GetPackageVersions(CancellationToken ct, PackageReference reference, string author = null);
+		Task<NuGetVersion[]> GetPackageVersions(CancellationToken ct, PackageReference reference, string author = null);
 
 		/// <summary>
 		/// Get the dependencies of the given package identity.

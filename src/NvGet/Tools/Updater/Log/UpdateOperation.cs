@@ -8,7 +8,7 @@ namespace NvGet.Tools.Updater.Log
 	public class UpdateOperation
 	{
 		public UpdateOperation(PackageIdentity identity, bool isIgnored)
-			: this(identity.Id, identity.Version, null, null, null, canDowngrade: false)
+			: this(identity.Id, identity.Version, null, null, null, canDowngrade: false, versionTag: default)
 		{
 			IsIgnored = isIgnored;
 		}
@@ -19,11 +19,19 @@ namespace NvGet.Tools.Updater.Log
 		}
 
 		private UpdateOperation(string packageId, NuGetVersion previousVersion, FeedVersion updatedVersion, string filePath, bool canDowngrade)
-			: this(packageId, previousVersion, updatedVersion.Version, updatedVersion.FeedUri, filePath, canDowngrade)
+			: this(packageId, previousVersion, updatedVersion.Version, updatedVersion.FeedUri, filePath, canDowngrade, updatedVersion.VersionTag)
 		{
 		}
 
-		private UpdateOperation(string packageId, NuGetVersion previousVersion, NuGetVersion updatedVersion, Uri feedUri, string filePath, bool canDowngrade)
+		private UpdateOperation(
+			string packageId,
+			NuGetVersion previousVersion,
+			NuGetVersion updatedVersion,
+			Uri feedUri,
+			string filePath,
+			bool canDowngrade,
+			string versionTag
+		)
 		{
 			CanDowngrade = canDowngrade;
 			PackageId = packageId;
@@ -31,6 +39,7 @@ namespace NvGet.Tools.Updater.Log
 			UpdatedVersion = updatedVersion;
 			FilePath = filePath;
 			FeedUri = feedUri;
+			VersionTag = versionTag;
 		}
 
 		public bool IsIgnored { get; }
@@ -38,6 +47,8 @@ namespace NvGet.Tools.Updater.Log
 		public bool CanDowngrade { get; }
 
 		public string PackageId { get; }
+
+		public string VersionTag { get; }
 
 		public NuGetVersion PreviousVersion { get; }
 
@@ -53,7 +64,8 @@ namespace NvGet.Tools.Updater.Log
 			UpdatedVersion,
 			FeedUri,
 			FilePath,
-			CanDowngrade
+			CanDowngrade,
+			VersionTag
 		);
 
 		public UpdateOperation WithFilePath(string filePath) => new UpdateOperation(
@@ -62,7 +74,8 @@ namespace NvGet.Tools.Updater.Log
 			UpdatedVersion,
 			FeedUri,
 			filePath,
-			CanDowngrade
+			CanDowngrade,
+			VersionTag
 		);
 	}
 }

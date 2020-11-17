@@ -17,6 +17,7 @@ namespace NvGet.Tools.Updater.Extensions
 			PackageId = operation.PackageId,
 			OriginalVersion = operation.PreviousVersion.OriginalVersion,
 			UpdatedVersion = operation.UpdatedVersion?.OriginalVersion,
+			VersionTag = operation.VersionTag,
 		};
 
 		public static bool ShouldProceed(this UpdateOperation operation)

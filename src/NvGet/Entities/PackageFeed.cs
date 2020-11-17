@@ -14,6 +14,7 @@ using NvGet.Contracts;
 using NvGet.Extensions;
 using Uno.Extensions;
 using NuGet.Shared.Extensions;
+using NuGet.Versioning;
 
 namespace NvGet.Entities
 {
@@ -43,7 +44,7 @@ namespace NvGet.Entities
 
 		public bool IsPrivate { get; }
 
-		public async Task<FeedVersion[]> GetPackageVersions(
+		public async Task<NuGetVersion[]> GetPackageVersions(
 			CancellationToken ct,
 			PackageReference reference,
 			string author = null
@@ -67,7 +68,7 @@ namespace NvGet.Entities
 			Logger.LogInformation(logMessage.ToString().Trim());
 
 			return versions
-				.Select(m => new FeedVersion(m.Version, Url))
+				.Select(m => m.Version)
 				.ToArray();
 		}
 

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using NvGet.Entities;
+using NuGet.Versioning;
 using Uno.Extensions;
 
 namespace NvGet.Extensions
@@ -9,12 +9,12 @@ namespace NvGet.Extensions
 	public static class FeedVersionExtensions
 	{
 		public static bool IsMatchingVersion(
-			this FeedVersion version,
+			this NuGetVersion version,
 			string tag,
 			bool isStrict
 		)
 		{
-			var releaseLabels = version?.Version?.ReleaseLabels;
+			var releaseLabels = version?.ReleaseLabels;
 
 			if(tag.IsNullOrEmpty() || tag == "stable")
 			{

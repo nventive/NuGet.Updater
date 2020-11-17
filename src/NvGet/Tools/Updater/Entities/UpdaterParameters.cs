@@ -58,7 +58,7 @@ namespace NvGet.Tools.Updater.Entities
 		/// <summary>
 		/// Gets the version range overrides for specific packages.
 		/// </summary>
-		public IDictionary<string, (bool forceVersion, VersionRange range)> VersionOverrides { get; } = new Dictionary<string, (bool, VersionRange)>();
+		public IList<VersionOverride> VersionOverrides { get; } = new List<VersionOverride>();
 
 		/// <summary>
 		/// Gets or sets a value indicating whether to actually write the updates to the files.
