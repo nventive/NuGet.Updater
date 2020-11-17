@@ -25,18 +25,18 @@ namespace NvGet.Entities
 
 		public static PackageFeed FromString(string input) => new PackageFeed(input.ToPackageSource());
 
-		private readonly PackageMetadataResource _packageSearchMetadata;
-		private readonly DownloadResource _downloadResource;
-		private readonly PackageUpdateResource _packageUpdateResource;
+		private readonly Lazy<PackageMetadataResource> _packageSearchMetadata;
+		private readonly Lazy<DownloadResource> _downloadResource;
+		private readonly Lazy<PackageUpdateResource> _packageUpdateResource;
 
 		private PackageFeed(PackageSource source)
 		{
 			Url = source.SourceUri;
 			IsPrivate = source.Credentials != null;
 
-			_packageSearchMetadata = source.GetResource<PackageMetadataResource>();
-			_downloadResource = source.GetResource<DownloadResource>();
-			_packageUpdateResource = source.GetResource<PackageUpdateResource>();
+			_packageSearchMetadata = new(() => source.GetResource<PackageMetadataResource>());
+			_downloadResource = new(() => source.GetResource<DownloadResource>());
+			_packageUpdateResource = new(() => source.GetResource<PackageUpdateResource>());
 		}
 
 		public Uri Url { get; }
@@ -53,7 +53,7 @@ namespace NvGet.Entities
 
 			logMessage.AppendLine($"Retrieving package {reference.Identity.Id} from {Url}");
 
-			var versions = await _packageSearchMetadata.GetPackageVersions(ct, reference.Identity.Id);
+			var versions = await _packageSearchMetadata.Value.GetPackageVersions(ct, reference.Identity.Id);
 
 			logMessage.AppendLine(versions.Length > 0 ? $"Found {versions.Length} versions" : "No versions found");
 
@@ -76,7 +76,7 @@ namespace NvGet.Entities
 			PackageIdentity packageIdentity
 		)
 		{
-			var version = await _packageSearchMetadata.GetPackageVersion(ct, packageIdentity);
+			var version = await _packageSearchMetadata.Value.GetPackageVersion(ct, packageIdentity);
 
 			if(version == null)
 			{
@@ -94,14 +94,14 @@ namespace NvGet.Entities
 		   string downloadLocation
 	   )
 		{
-			var version = await _packageSearchMetadata.GetPackageVersion(ct, packageIdentity);
+			var version = await _packageSearchMetadata.Value.GetPackageVersion(ct, packageIdentity);
 
 			if (version == null) //Package with this version doesn't exist in the source, skipping.
 			{
 				return null;
 			}
 
-			var downloadResult = await _downloadResource.DownloadPackage(ct, packageIdentity, downloadLocation, Logger);
+			var downloadResult = await _downloadResource.Value.DownloadPackage(ct, packageIdentity, downloadLocation, Logger);
 
 			var localPackagePath = Path.Combine(downloadLocation, $"{packageIdentity}.nupkg");
 
@@ -112,7 +112,7 @@ namespace NvGet.Entities
 
 		public async Task<bool> PushPackage(CancellationToken ct, LocalPackage package)
 		{
-			var version = await _packageSearchMetadata.GetPackageVersion(ct, package.Identity);
+			var version = await _packageSearchMetadata.Value.GetPackageVersion(ct, package.Identity);
 
 			if(version != null)
 			{
@@ -120,7 +120,7 @@ namespace NvGet.Entities
 				return false;
 			}
 
-			return await _packageUpdateResource.PushPackage(ct, package, Logger);
+			return await _packageUpdateResource.Value.PushPackage(ct, package, Logger);
 		}
 
 		public override int GetHashCode() => Url.GetHashCode();
