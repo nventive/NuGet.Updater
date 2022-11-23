@@ -18,6 +18,8 @@ namespace NvGet.Extensions
 					return "Directory.Build.targets";
 				case FileType.DirectoryTargets:
 					return "Directory.Build.props";
+				case FileType.CentralPackageManagement:
+					return "Directory.Packages.props";
 				default:
 					return default;
 			}

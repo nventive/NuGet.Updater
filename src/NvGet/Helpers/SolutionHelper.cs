@@ -59,6 +59,16 @@ namespace NvGet.Helpers
 				}
 			}
 
+			if(fileType.HasFlag(FileType.CentralPackageManagement))
+			{
+				const FileType currentTarget = FileType.CentralPackageManagement;
+
+				foreach(var file in await GetDirectoryFiles(ct, solutionPath, currentTarget, log))
+				{
+					packages.AddRange(await GetFileReferences(ct, file, currentTarget));
+				}
+			}
+
 			if(fileType.HasFlag(FileType.Nuspec))
 			{
 				foreach(var f in await GetNuspecFiles(ct, solutionPath, log))

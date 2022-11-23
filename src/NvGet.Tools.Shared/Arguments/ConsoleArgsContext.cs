@@ -44,7 +44,7 @@ namespace NvGet.Tools.Arguments
 				{ "version=|versions=|v=", "The target {version} to use; latest stable is always considered; can be specified multiple times", TrySet(x => context.Parameters.TargetVersions.Add(x)) },
 				{ "ignorePackages=|ignore=|i=", "A specific {package} to ignore; can be specified multiple times", TrySet(x => context.Parameters.PackagesToIgnore.Add(x)) },
 				{ "updatePackages=|update=|u=", "A specific {package} to update; not specifying this will update all packages found; can be specified multiple times", TrySet(x => context.Parameters.PackagesToUpdate.Add(x)) },
-				{ "packageAuthor=|a=", "The {author} of the packages to update; used for public packages only", TrySet(x => context.Parameters.PackageAuthor = x)},
+				{ "packageAuthor=|packageAuthors=|a=", "A comma separated list of {authors} of the packages to update; used for public packages only", TrySet(x => context.Parameters.PackageAuthors = x)},
 				{ "outputFile=|of=", "The {path} to a markdown file where the update summary will be written", TrySet(x => context.SummaryFile = x) },
 				{ "allowDowngrade|d", "Whether package downgrade is allowed", TrySet(x => context.Parameters.IsDowngradeAllowed = true)},
 				{ "useNuGetorg|n", "Whether to use packages from NuGet.org", TrySet(_ => context.Parameters.Feeds.Add(PackageFeed.NuGetOrg)) },
