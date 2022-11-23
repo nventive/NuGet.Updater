@@ -34,8 +34,13 @@ namespace NvGet.Contracts
 		DirectoryTargets = 16,
 
 		/// <summary>
+		/// Directory.Packages.props files.
+		/// </summary>
+		CentralPackageManagement = 32,
+
+		/// <summary>
 		/// All the supported file types.
 		/// </summary>
-		All = Nuspec | Csproj | DirectoryProps | DirectoryTargets,
+		All = Nuspec | Csproj | DirectoryProps | DirectoryTargets | CentralPackageManagement,
 	}
 }
