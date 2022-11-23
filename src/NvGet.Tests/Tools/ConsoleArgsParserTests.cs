@@ -96,8 +96,8 @@ namespace NvGet.Tests.Tools
 		[DataTestMethod]
 		[DataRow(nameof(UpdaterParameters.SolutionRoot), "--solution=" + NotExistingFilePath, NotExistingFilePath)]
 		[DataRow(nameof(UpdaterParameters.SolutionRoot), "-s=" + NotExistingFilePath, NotExistingFilePath)]
-		[DataRow(nameof(UpdaterParameters.PackageAuthor), "--packageAuthor=" + SomeText, SomeText)]
-		[DataRow(nameof(UpdaterParameters.PackageAuthor), "-a=" + SomeText, SomeText)]
+		[DataRow(nameof(UpdaterParameters.PackageAuthors), "--packageAuthor=" + SomeText, SomeText)]
+		[DataRow(nameof(UpdaterParameters.PackageAuthors), "-a=" + SomeText, SomeText)]
 		[DataRow(nameof(UpdaterParameters.IsDowngradeAllowed), "--allowDowngrade", true)]
 		[DataRow(nameof(UpdaterParameters.IsDowngradeAllowed), "-d", true)]
 		[DataRow(nameof(UpdaterParameters.Strict), "--strict", true)]
@@ -107,7 +107,7 @@ namespace NvGet.Tests.Tools
 			Func<UpdaterParameters, object> propertySelector = propertyName switch
 			{
 				nameof(UpdaterParameters.SolutionRoot) => x => x.SolutionRoot,
-				nameof(UpdaterParameters.PackageAuthor) => x => x.PackageAuthor,
+				nameof(UpdaterParameters.PackageAuthors) => x => x.PackageAuthors,
 				nameof(UpdaterParameters.IsDowngradeAllowed) => x => x.IsDowngradeAllowed,
 				nameof(UpdaterParameters.Strict) => x => x.Strict,
 				nameof(UpdaterParameters.IsDryRun) => x => x.IsDryRun,

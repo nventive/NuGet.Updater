@@ -36,8 +36,9 @@ namespace NvGet.Extensions
 
 			var packageReferences = document.SelectElements("PackageReference");
 			var dotnetCliReferences = document.SelectElements("DotNetCliToolReference");
+			var packageVersionReferences = document.SelectElements("PackageVersion");
 
-			foreach(var packageReference in packageReferences.Concat(dotnetCliReferences))
+			foreach(var packageReference in packageReferences.Concat(dotnetCliReferences).Concat(packageVersionReferences))
 			{
 				var packageId = new[] { "Include", "Update", "Remove" }
 					.Select(packageReference.GetAttribute)

@@ -35,9 +35,9 @@ namespace NvGet.Tools.Updater.Extensions
 				yield return $"- Fetching packages from {MarkdownHelper.CodeBlocksEnumeration(parameters.Feeds.Select(s => s.Url.OriginalString))}";
 			}
 
-			if(parameters.PackageAuthor.HasValue())
+			if(parameters.PackageAuthors.HasValue())
 			{
-				yield return $"- Limiting to public packages authored by {MarkdownHelper.Bold(parameters.PackageAuthor)}";
+				yield return $"- Limiting to public packages authored by {MarkdownHelper.Bold(parameters.PackageAuthors)}";
 			}
 
 			yield return $"- Using {MarkdownHelper.CodeBlocksEnumeration(parameters.TargetVersions)} versions {(parameters.Strict ? "(exact match)" : "")}";
@@ -96,9 +96,13 @@ namespace NvGet.Tools.Updater.Extensions
 				return new FeedVersion(manualVersion.range.MinVersion);
 			}
 
+			var authors = parameters.PackageAuthors?.Split(',') is { Length: > 0 } value
+				? value
+				: new string[] { null }; // Invoke GetPackageVersions with a null parameter
+
 			var availableVersions = await Task.WhenAll(parameters
 				.Feeds
-				.Select(f => f.GetPackageVersions(ct, reference, parameters.PackageAuthor))
+				.SelectMany(f => authors.Select(author => f.GetPackageVersions(ct, reference, author)))
 			);
 
 			var versionsPerTarget = availableVersions

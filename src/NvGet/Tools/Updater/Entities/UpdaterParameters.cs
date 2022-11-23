@@ -51,9 +51,9 @@ namespace NvGet.Tools.Updater.Entities
 		public ICollection<string> PackagesToUpdate { get; } = new List<string>();
 
 		/// <summary>
-		/// Gets or sets the name of the author of the packages to update; used with NuGet.org; packages from private feeds are assumed to be required.
+		/// Gets or sets the name of the authors of the packages to update; used with NuGet.org; packages from private feeds are assumed to be required. Multiple authors can be provided with a comma separated list.
 		/// </summary>
-		public string PackageAuthor { get; set; }
+		public string PackageAuthors { get; set; }
 
 		/// <summary>
 		/// Gets the version range overrides for specific packages.
