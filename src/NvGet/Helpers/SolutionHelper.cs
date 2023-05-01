@@ -171,7 +171,7 @@ namespace NvGet.Helpers
 			var document = await file.LoadDocument(ct);
 			var references = Array.Empty<PackageIdentity>();
 
-			if(target.HasAnyFlag(FileType.Csproj, FileType.DirectoryProps, FileType.DirectoryTargets))
+			if(target.HasAnyFlag(FileType.Csproj, FileType.DirectoryProps, FileType.DirectoryTargets, FileType.CentralPackageManagement))
 			{
 				references = document.GetPackageReferences();
 			}
