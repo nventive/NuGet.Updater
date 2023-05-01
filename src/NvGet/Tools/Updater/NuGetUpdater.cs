@@ -170,7 +170,7 @@ namespace NvGet.Tools.Updater
 					{
 						updates = document.UpdateDependencies(currentOperation);
 					}
-					else if(fileType.HasAnyFlag(FileType.DirectoryProps, FileType.DirectoryTargets, FileType.Csproj))
+					else if(fileType.HasAnyFlag(FileType.DirectoryProps, FileType.DirectoryTargets, FileType.Csproj, FileType.CentralPackageManagement))
 					{
 						updates = document.UpdatePackageReferences(currentOperation);
 					}

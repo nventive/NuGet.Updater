@@ -33,8 +33,9 @@ namespace NvGet.Tools.Updater.Extensions
 
 			var packageReferences = document.SelectElements("PackageReference", $"[@Include='{packageId}' or @Update='{packageId}']");
 			var dotnetCliReferences = document.SelectElements("DotNetCliToolReference", $"[@Include='{packageId}' or @Update='{packageId}']");
+			var packageVersions = document.SelectElements("PackageVersion", $"[@Include='{packageId}' or @Update='{packageId}']");
 
-			foreach(var packageReference in packageReferences.Concat(dotnetCliReferences))
+			foreach(var packageReference in packageReferences.Concat(dotnetCliReferences).Concat(packageVersions))
 			{
 				var packageVersion = packageReference.GetAttributeOrChild("Version");
 
