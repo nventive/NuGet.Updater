@@ -19,7 +19,7 @@ namespace NvGet.Tests.Tools
 		private const string SomePublicFeed = "https://pkgs.dev.azure.com/qwe/_packaging/asd/nuget/v3/index.json";
 		private const string SomePrivateFeed = "https://pkgs.dev.azure.com/qwe/_packaging/asd/nuget/v3/index.json|hunter2";
 		private const string PinnedVersionJsonPath = @"Resources\version_overrides.json";
-		
+
 		[TestMethod]
 		public void Given_HelpArgument_ContextIsHelp()
 		{
@@ -161,10 +161,10 @@ namespace NvGet.Tests.Tools
 		[DeploymentItem(PinnedVersionJsonPath)]
 		public void Given_UpdaterParametersArgument_ContextTargetVersionIsSet()
 		{
-			var arguments = new[] { "--versionOverrides=" + PinnedVersionJsonPath };
+			var arguments = new[] { $"--versionOverrides={PinnedVersionJsonPath}" };
 			var context = ConsoleArgsContext.Parse(arguments);
 
-			Assert.IsFalse(context.HasError);
+			Assert.IsFalse(context.HasError, context.Errors.FirstOrDefault()?.Exception?.Message);
 
 			var actualValues = (ICollection)context.Parameters.VersionOverrides;
 			var expectedValues = ConsoleArgsContext.LoadOverrides(PinnedVersionJsonPath);
