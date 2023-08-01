@@ -17,6 +17,46 @@ namespace NvGet.Tools.Updater.Extensions
 	public static class XmlDocumentExtensions
 	{
 		/// <summary>
+		/// Runs an <see cref="UpdateOperation"/> on Project Properties contained in a <see cref="XmlDocument"/>.
+		/// </summary>
+		/// <param name="document"></param>
+		/// <param name="operation"></param>
+		/// <returns></returns>
+		public static IEnumerable<UpdateOperation> UpdateProjectProperties(
+			this XmlDocument document,
+			UpdateOperation operation,
+			ICollection<(string PropertyName, string PackageId)> projectProperties)
+		{
+			var operations = new List<UpdateOperation>();
+
+			var packageId = operation.PackageId;
+
+			foreach(var prop in projectProperties.Where(x=>x.PackageId==operation.PackageId))
+			{
+				var docProp = document.SelectElements(prop.PropertyName).FirstOrDefault();
+				if(docProp is null)
+				{
+					continue;
+				}
+
+				var packageVersion = docProp.InnerText;
+				if(packageVersion is { Length: > 0 })
+				{
+					var currentOperation = operation.WithPreviousVersion(packageVersion);
+
+					if(currentOperation.ShouldProceed())
+					{
+						docProp.InnerText = currentOperation.UpdatedVersion.ToString();
+					}
+
+					operations.Add(currentOperation);
+				}
+			}
+
+			return operations;
+		}
+
+		/// <summary>
 		/// Runs an <see cref="UpdateOperation"/> on the PackageReferences contained in a <see cref="XmlDocument"/>.
 		/// </summary>
 		/// <param name="document"></param>
@@ -88,7 +128,7 @@ namespace NvGet.Tools.Updater.Extensions
 				if(node != null)
 				{
 					node.InnerText = value;
-				} 
+				}
 			}
 		}
 
@@ -113,7 +153,7 @@ namespace NvGet.Tools.Updater.Extensions
 				if(!versionNodeValue.Contains("{", System.StringComparison.OrdinalIgnoreCase))
 				{
 					var currentOperation = operation.WithPreviousVersion(versionNodeValue);
-					
+
 					if(currentOperation.ShouldProceed())
 					{
 						node.SetAttribute("version", currentOperation.UpdatedVersion.ToString());

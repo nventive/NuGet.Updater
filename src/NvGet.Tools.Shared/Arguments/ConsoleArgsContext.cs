@@ -53,13 +53,14 @@ namespace NvGet.Tools.Arguments
 				{ "dryrun", "Runs the updater but doesn't write the updates to files.", TrySet(_ => context.Parameters.IsDryRun = true) },
 				{ "result|r=", "The path to the file where the update result should be saved.", TrySet(x => context.ResultFile = x) },
 				{ "versionOverrides=", "The path to a JSON file to force specifc versions to be used; format should be the same as the result file", TryParseAndSet(LoadOverrides, x => context.Parameters.VersionOverrides.AddRange(x)) },
+				{ "projectProperties=", "The path to a JSON file that lists pairs of csproj property names and corresponding package Id, so that updater can update project properties as necessary", TryParseAndSet(LoadProjectProperties, x => context.Parameters.ProjectProperties.AddRange(x)) },
 			};
 
 			Action<string> TrySet(Action<string> set)
 			{
 				return value =>
 				{
-					if (context != null)
+					if(context != null)
 					{
 						try
 						{
@@ -142,5 +143,40 @@ namespace NvGet.Tools.Arguments
 				}
 			}
 		}
+
+		internal static IEnumerable<(string PropertyName, string PackageId)> LoadProjectProperties(string inputPathOrUrl)
+		{
+			var results =
+				LoadFromStreamAsync()
+					.GetAwaiter()
+					.GetResult();
+			return results;
+
+			async Task<IEnumerable<(string PropertyName, string PackageId)>> LoadFromStreamAsync()
+			{
+				var jsonSerializer = JsonSerializer.CreateDefault();
+
+				if(inputPathOrUrl.StartsWith("http://") || inputPathOrUrl.StartsWith("https://"))
+				{
+					using(var httpClient = new HttpClient())
+					using(var stream = await httpClient.GetStreamAsync(inputPathOrUrl))
+					using(var jsonTextReader = new JsonTextReader(new StreamReader(stream, Encoding.UTF8)))
+					{
+						return jsonSerializer.Deserialize<IEnumerable<(string PropertyName, string PackageId)>>(jsonTextReader);
+					}
+				}
+				else
+				{
+					using(var jsonTextReader = new JsonTextReader(File.OpenText(inputPathOrUrl)))
+					{
+						return jsonSerializer.Deserialize<IEnumerable<PackageProp>>(jsonTextReader).Select(x => (x.PropertyName, x.PackageId));
+					}
+				}
+			}
+		}
 	}
+
+#pragma warning disable SA1313 // Parameter names should begin with lower-case letter
+	public record PackageProp(string PropertyName, string PackageId);
+#pragma warning restore SA1313 // Parameter names should begin with lower-case letter
 }

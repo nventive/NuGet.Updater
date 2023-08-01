@@ -108,7 +108,7 @@ namespace NvGet.Tools.Updater
 		internal async Task<UpdaterPackage[]> GetPackages(CancellationToken ct)
 		{
 			var packages = new List<UpdaterPackage>();
-			var references = await SolutionHelper.GetPackageReferences(ct, _parameters.SolutionRoot, _parameters.UpdateTarget, _log);
+			var references = await SolutionHelper.GetPackageReferences(ct, _parameters.SolutionRoot, _parameters.UpdateTarget, _log, _parameters.ProjectProperties);
 
 			_log.Write($"Found {references.Length} references");
 
@@ -123,7 +123,7 @@ namespace NvGet.Tools.Updater
 					(_parameters.PackagesToUpdate.Any() && !_parameters.PackagesToUpdate.Contains(reference.Identity.Id))
 				)
 				{
-					_log.Write(new UpdateOperation(reference.Identity, isIgnored: true)); 
+					_log.Write(new UpdateOperation(reference.Identity, isIgnored: true));
 					continue;
 				}
 
@@ -173,6 +173,8 @@ namespace NvGet.Tools.Updater
 					else if(fileType.HasAnyFlag(FileType.DirectoryProps, FileType.DirectoryTargets, FileType.Csproj, FileType.CentralPackageManagement))
 					{
 						updates = document.UpdatePackageReferences(currentOperation);
+						var propertyUpdates = document.UpdateProjectProperties(currentOperation, _parameters.ProjectProperties);
+						updates = updates.Concat(propertyUpdates);
 					}
 
 					if(!_parameters.IsDryRun && updates.Any(u => u.ShouldProceed()))

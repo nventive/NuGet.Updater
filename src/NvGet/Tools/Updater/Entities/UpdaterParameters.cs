@@ -61,6 +61,11 @@ namespace NvGet.Tools.Updater.Entities
 		public IDictionary<string, (bool forceVersion, VersionRange range)> VersionOverrides { get; } = new Dictionary<string, (bool, VersionRange)>();
 
 		/// <summary>
+		/// Gets the csproj properties that should be updated for corresponding package.
+		/// </summary>
+		public ICollection<(string PropertyName, string PackageId)> ProjectProperties { get; } = new List<(string PropertyNaem, string PackageId)>();
+
+		/// <summary>
 		/// Gets or sets a value indicating whether to actually write the updates to the files.
 		/// </summary>
 		public bool IsDryRun { get; set; }
