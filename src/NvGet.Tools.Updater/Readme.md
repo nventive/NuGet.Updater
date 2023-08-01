@@ -62,7 +62,7 @@ nugetupdater -s=MySolution.sln -n --allowDowngrade
 ```
 nugetupdater -s=MySolution.sln -n -v=dev -v=stable --allowDowngrade --versionOverrides=versions.json
 ```
-Versions.json example:
+versions.json example:
 ```
 [
   {
@@ -75,3 +75,22 @@ Versions.json example:
   }
 ]
 ```
+
+- Update versions tracked in project properties. eg:
+```xml
+<UnoVersion>4.9.26</UnoVersion>
+```
+
+```
+nugetupdater -s=MySolution.sln -n -v=dev -v=stable --allowDowngrade --projectProperties=properties.json
+```
+properties.json example:
+```
+[
+  {
+    "PropertyName": "UnoVersion",
+    "PackageId": "Uno.UI"
+  }
+]
+```
+In this case the `UnoVersion` property will be updated to the latest version of `Uno.UI` found in the solution.
