@@ -28,7 +28,7 @@ namespace NvGet.Helpers
 			ICollection<(string PropertyName, string PackageId)>? projectProperties = default
 		)
 		{
-			projectProperties??= Array.Empty<(string PropertyName, string PackageId)>();
+			projectProperties ??= Array.Empty<(string PropertyName, string PackageId)>();
 
 			log.LogInformation($"Retrieving references from files in {solutionPath}");
 

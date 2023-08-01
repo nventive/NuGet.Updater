@@ -31,7 +31,7 @@ namespace NvGet.Tools.Updater.Extensions
 
 			var packageId = operation.PackageId;
 
-			foreach(var prop in projectProperties.Where(x=>x.PackageId==operation.PackageId))
+			foreach(var prop in projectProperties.Where(x=> x.PackageId == packageId))
 			{
 				var docProp = document.SelectElements(prop.PropertyName).FirstOrDefault();
 				if(docProp is null)

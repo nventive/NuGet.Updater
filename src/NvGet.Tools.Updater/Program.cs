@@ -53,6 +53,7 @@ namespace NvGet.Tools.Updater
 			{
 				Console.Error.WriteLine($"Failed to update nuget packages: {ex.Message}");
 				Console.Error.WriteLine($"{ex}");
+				Environment.Exit(-1);
 			}
 		}
 
