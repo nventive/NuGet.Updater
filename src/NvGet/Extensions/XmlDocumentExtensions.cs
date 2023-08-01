@@ -26,6 +26,35 @@ namespace NvGet.Extensions
 	public static class XmlDocumentExtensions
 	{
 		/// <summary>
+		/// Retrieves the ProjectProperties that need updating from the given XmlDocument.
+		/// </summary>
+		/// <param name="document"></param>
+		/// <returns>A Dictionary where the key is the id of a package and the value its version.</returns>
+		public static PackageIdentity[] GetProjectProperties(this XmlDocument document, ICollection<(string PropertyName, string PackageId)> projectProperties)
+		{
+			var references = new List<PackageIdentity>();
+
+			foreach(var prop in projectProperties)
+			{
+				var docProp = document.SelectElements(prop.PropertyName).FirstOrDefault();
+				if(docProp is null)
+				{
+					continue;
+				}
+
+				var docPropIdentity = CreatePackageIdentity(prop.PackageId, docProp.InnerText);
+				if(docPropIdentity is not null)
+				{
+					references.Add(docPropIdentity);
+				}
+			}
+
+			return references
+				.Trim()
+				.ToArray();
+		}
+
+		/// <summary>
 		/// Retrieves the PackageReferences from the given XmlDocument. If a package is present multiple time, only the first version will be returned.
 		/// </summary>
 		/// <param name="document"></param>

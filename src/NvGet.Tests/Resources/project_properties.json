@@ -1,0 +1,4 @@
+﻿[
+  { "PropertyName": "UnoExtensionsVersion", "PackageId": "Uno.Extensions.Core" },
+  { "PropertyName": "UnoVersion", "PackageId": "Uno.WinUI" }
+]

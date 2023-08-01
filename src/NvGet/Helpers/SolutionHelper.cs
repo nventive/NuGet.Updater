@@ -24,9 +24,12 @@ namespace NvGet.Helpers
 			CancellationToken ct,
 			string solutionPath,
 			FileType fileType,
-			ILogger log
+			ILogger log,
+			ICollection<(string PropertyName, string PackageId)>? projectProperties = default
 		)
 		{
+			projectProperties ??= Array.Empty<(string PropertyName, string PackageId)>();
+
 			log.LogInformation($"Retrieving references from files in {solutionPath}");
 
 			var packages = new List<PackageReference>();
@@ -35,7 +38,7 @@ namespace NvGet.Helpers
 			{
 				foreach(var f in await GetProjectFiles(ct, solutionPath, log))
 				{
-					packages.AddRange(await GetFileReferences(ct, f, FileType.Csproj));
+					packages.AddRange(await GetFileReferences(ct, f, FileType.Csproj, projectProperties));
 				}
 			}
 
@@ -45,7 +48,7 @@ namespace NvGet.Helpers
 
 				foreach(var file in await GetDirectoryFiles(ct, solutionPath, currentTarget, log))
 				{
-					packages.AddRange(await GetFileReferences(ct, file, currentTarget));
+					packages.AddRange(await GetFileReferences(ct, file, currentTarget, projectProperties));
 				}
 			}
 
@@ -55,7 +58,7 @@ namespace NvGet.Helpers
 
 				foreach(var file in await GetDirectoryFiles(ct, solutionPath, currentTarget, log))
 				{
-					packages.AddRange(await GetFileReferences(ct, file, currentTarget));
+					packages.AddRange(await GetFileReferences(ct, file, currentTarget, projectProperties));
 				}
 			}
 
@@ -65,7 +68,7 @@ namespace NvGet.Helpers
 
 				foreach(var file in await GetDirectoryFiles(ct, solutionPath, currentTarget, log))
 				{
-					packages.AddRange(await GetFileReferences(ct, file, currentTarget));
+					packages.AddRange(await GetFileReferences(ct, file, currentTarget, projectProperties));
 				}
 			}
 
@@ -73,7 +76,7 @@ namespace NvGet.Helpers
 			{
 				foreach(var f in await GetNuspecFiles(ct, solutionPath, log))
 				{
-					packages.AddRange(await GetFileReferences(ct, f, FileType.Nuspec));
+					packages.AddRange(await GetFileReferences(ct, f, FileType.Nuspec, projectProperties));
 				}
 			}
 
@@ -161,7 +164,7 @@ namespace NvGet.Helpers
 			return files;
 		}
 
-		private static async Task<PackageReference[]> GetFileReferences(CancellationToken ct, string file, FileType target)
+		private static async Task<PackageReference[]> GetFileReferences(CancellationToken ct, string file, FileType target, ICollection<(string PropertyName, string PackageId)> projectProperties)
 		{
 			if(file.IsNullOrEmpty())
 			{
@@ -173,7 +176,7 @@ namespace NvGet.Helpers
 
 			if(target.HasAnyFlag(FileType.Csproj, FileType.DirectoryProps, FileType.DirectoryTargets, FileType.CentralPackageManagement))
 			{
-				references = document.GetPackageReferences();
+				references = document.GetPackageReferences().Concat(document.GetProjectProperties(projectProperties)).ToArray();
 			}
 			else if(target.HasFlag(FileType.Nuspec))
 			{
