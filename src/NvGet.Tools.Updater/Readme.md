@@ -82,7 +82,7 @@ versions.json example:
 ```
 
 ```
-nugetupdater -s=MySolution.sln -n -v=dev -v=stable --allowDowngrade --projectProperties=properties.json
+nugetupdater -s=MySolution.sln -n -v=dev -v=stable --allowDowngrade --updateProperties=properties.json
 ```
 properties.json example:
 ```

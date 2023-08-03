@@ -53,7 +53,7 @@ namespace NvGet.Tools.Arguments
 				{ "dryrun", "Runs the updater but doesn't write the updates to files.", TrySet(_ => context.Parameters.IsDryRun = true) },
 				{ "result|r=", "The path to the file where the update result should be saved.", TrySet(x => context.ResultFile = x) },
 				{ "versionOverrides=", "The path to a JSON file to force specifc versions to be used; format should be the same as the result file", TryParseAndSet(LoadOverrides, x => context.Parameters.VersionOverrides.AddRange(x)) },
-				{ "projectProperties=", "The path to a JSON file that lists pairs of csproj property names and corresponding package Id, so that updater can update project properties as necessary", TryParseAndSet(LoadProjectProperties, x => context.Parameters.ProjectProperties.AddRange(x)) },
+				{ "updateProperties=", "The path to a JSON file that lists pairs of csproj property names and corresponding package Id, so that updater can update project properties as necessary", TryParseAndSet(LoadUpdateProperties, x => context.Parameters.UpdateProperties.AddRange(x)) },
 			};
 
 			Action<string> TrySet(Action<string> set)
@@ -144,7 +144,7 @@ namespace NvGet.Tools.Arguments
 			}
 		}
 
-		internal static IEnumerable<(string PropertyName, string PackageId)> LoadProjectProperties(string inputPathOrUrl)
+		internal static IEnumerable<(string PropertyName, string PackageId)> LoadUpdateProperties(string inputPathOrUrl)
 		{
 			var results =
 				LoadFromStreamAsync()

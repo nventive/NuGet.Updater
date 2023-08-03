@@ -22,16 +22,16 @@ namespace NvGet.Tools.Updater.Extensions
 		/// <param name="document"></param>
 		/// <param name="operation"></param>
 		/// <returns></returns>
-		public static IEnumerable<UpdateOperation> UpdateProjectProperties(
+		public static IEnumerable<UpdateOperation> UpdateUpdateProperties(
 			this XmlDocument document,
 			UpdateOperation operation,
-			ICollection<(string PropertyName, string PackageId)> projectProperties)
+			ICollection<(string PropertyName, string PackageId)> updateProperties)
 		{
 			var operations = new List<UpdateOperation>();
 
 			var packageId = operation.PackageId;
 
-			foreach(var prop in projectProperties.Where(x=> x.PackageId == packageId))
+			foreach(var prop in updateProperties.Where(x=> x.PackageId == packageId))
 			{
 				var docProp = document.SelectElements(prop.PropertyName).FirstOrDefault();
 				if(docProp is null)
