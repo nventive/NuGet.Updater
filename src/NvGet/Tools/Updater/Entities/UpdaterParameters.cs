@@ -63,7 +63,7 @@ namespace NvGet.Tools.Updater.Entities
 		/// <summary>
 		/// Gets the csproj properties that should be updated for corresponding package.
 		/// </summary>
-		public ICollection<(string PropertyName, string PackageId)> ProjectProperties { get; } = new List<(string PropertyNaem, string PackageId)>();
+		public ICollection<(string PropertyName, string PackageId)> UpdateProperties { get; } = new List<(string PropertyNaem, string PackageId)>();
 
 		/// <summary>
 		/// Gets or sets a value indicating whether to actually write the updates to the files.
